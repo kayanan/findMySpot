@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react@17/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@17/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+
+    <!-- To make the map appear, you must add your apikey -->
+    <script src="https://js.api.mappable.world/v3/?apikey=<YOUR_APIKEY>&lang=en_US" type="text/javascript"></script>
+
+    <script
+      data-plugins="transform-modules-umd"
+      data-presets="react, typescript"
+      type="text/babel"
+      src="./common.ts"
+    ></script>
+    <script
+      data-plugins="transform-modules-umd"
+      data-presets="react, typescript"
+      type="text/babel"
+      src="../variables.ts"
+    ></script>
+    <script data-plugins="transform-modules-umd" data-presets="react, typescript" type="text/babel">
+      import type {LngLat, RouteFeature} from '@mappable-world/mappable-types';
+      import {fetchRoute, getPointStr, MARGIN, RoutesEnum} from './common';
+      import {INITIAL_ROUTE_POINTS, LINE_STYLE, LOCATION, MARKER_A_COLOR, MARKER_B_COLOR} from '../variables';
+
+      window.map = null;
+
+      main();
+      async function main() {
+        // For each object in the JS API, there is a React counterpart
+        // To use the React version of the API, include the module @mappable-world/mappable-reactify
+        const [mappableReact] = await Promise.all([
+          mappable.import('@mappable-world/mappable-reactify'),
+          mappable.ready
+        ]);
+        const reactify = mappableReact.reactify.bindTo(React, ReactDOM);
+        const {MMap, MMapDefaultSchemeLayer, MMapDefaultFeaturesLayer, MMapFeature, MMapControls, MMapControl} =
+          reactify.module(mappable);
+
+        // Import the package to add a default marker
+        const {MMapDefaultMarker} = reactify.module(
+          await mappable.import('@mappable-world/mappable-default-ui-theme')
+        );
+
+        const {useState, useCallback, useEffect} = React;
+
+        function App() {
+          const [location, setLocation] = useState(LOCATION);
+          const [waypointA, setWaypointA] = useState({
+            coordinates: INITIAL_ROUTE_POINTS[0],
+            subtitle: getPointStr(INITIAL_ROUTE_POINTS[0])
+          });
+          const [waypointB, setWaypointB] = useState({
+            coordinates: INITIAL_ROUTE_POINTS[1],
+            subtitle: getPointStr(INITIAL_ROUTE_POINTS[1])
+          });
+          const [route, setRoute] = useState < RouteFeature > null;
+          const [tab, setTab] = useState(RoutesEnum.Driving);
+
+          // Get and process route data during the first rendering
+          useEffect(() => {
+            fetchRoute(waypointA.coordinates, waypointB.coordinates).then(routeHandler);
+          }, []);
+
+          // The handler functions for updating the coordinates and subtitle of the marker when dragging
+          const onDragMovePointAHandler = useCallback((coordinates: LngLat) => {
+            setWaypointA({
+              coordinates: coordinates,
+              subtitle: getPointStr(coordinates)
+            });
+          }, []);
+          const onDragMovePointBHandler = useCallback((coordinates: LngLat) => {
+            setWaypointB({
+              coordinates: coordinates,
+              subtitle: getPointStr(coordinates)
+            });
+          }, []);
+
+          // The handler function for updating route data after dragging the marker
+          const onDragEndHandler = useCallback(() => {
+            fetchRoute(waypointA.coordinates, waypointB.coordinates).then(routeHandler);
+          }, [waypointA, waypointB]);
+
+          const buildDrivingRoute = useCallback(() => {
+            fetchRoute(waypointA.coordinates, waypointB.coordinates, 'driving').then(routeHandler);
+            setTab(RoutesEnum.Driving);
+          }, [waypointA, waypointB]);
+          const buildTruckRoute = useCallback(() => {
+            fetchRoute(waypointA.coordinates, waypointB.coordinates, 'truck').then(routeHandler);
+            setTab(RoutesEnum.Truck);
+          }, [waypointA, waypointB]);
+          const buildWalkingRoute = useCallback(() => {
+            fetchRoute(waypointA.coordinates, waypointB.coordinates, 'walking').then(routeHandler);
+            setTab(RoutesEnum.Walking);
+          }, [waypointA, waypointB]);
+          const buildTransitRoute = useCallback(() => {
+            fetchRoute(waypointA.coordinates, waypointB.coordinates, 'transit').then(routeHandler);
+            setTab(RoutesEnum.Transit);
+          }, [waypointA, waypointB]);
+
+          /* A handler function that updates the route line
+  and shifts the map to the new route boundaries, if they are available. */
+          const routeHandler = useCallback((newRoute: RouteFeature) => {
+            // If the route is not found, then we alert a message and clear the route line
+            if (!newRoute) {
+              alert('Route not found');
+              setRoute(null);
+              return;
+            }
+
+            setRoute(newRoute);
+            if (newRoute.properties.bounds) {
+              setLocation({bounds: newRoute.properties.bounds, duration: 300});
+            }
+          }, []);
+          return (
+            // Initialize the map and pass initialization parameters
+            <MMap location={location} showScaleInCopyrights={true} ref={(x) => (map = x)} margin={MARGIN}>
+              {/* Add a map scheme layer */}
+              <MMapDefaultSchemeLayer />
+              {/* Add a layer of geo objects to display markers and line */}
+              <MMapDefaultFeaturesLayer />
+
+              {/* Add route start and end markers to the map */}
+              <MMapDefaultMarker
+                coordinates={waypointA.coordinates}
+                title="Point A"
+                subtitle={waypointA.subtitle}
+                draggable
+                size="normal"
+                iconName="fallback"
+                color={MARKER_A_COLOR}
+                onDragMove={onDragMovePointAHandler}
+                onDragEnd={onDragEndHandler}
+              />
+              <MMapDefaultMarker
+                coordinates={waypointB.coordinates}
+                title="Point B"
+                subtitle={waypointB.subtitle}
+                draggable
+                size="normal"
+                iconName="fallback"
+                color={MARKER_B_COLOR}
+                onDragMove={onDragMovePointBHandler}
+                onDragEnd={onDragEndHandler}
+              />
+
+              {/* Add the route line to the map when it becomes available */}
+              {route && <MMapFeature {...route} style={LINE_STYLE} />}
+
+              {/* Add a shared container for controls to the map.
+                Using MMapControls you can change the position of the control */}
+              <MMapControls position="top left">
+                <MMapControl transparent>
+                  {/* Add a custom information message control to the map */}
+                  <div className="info-window">Drag any marker to rebuild the route</div>
+                </MMapControl>
+              </MMapControls>
+              <MMapControls position="top right">
+                <MMapControl transparent>
+                  <div className="tabs__pills">
+                    <button
+                      id={RoutesEnum.Driving}
+                      className={`tab__button ${tab === RoutesEnum.Driving && 'active'}`}
+                      onClick={buildDrivingRoute}
+                    >
+                      Driving
+                    </button>
+                    <hr className={`divider ${[RoutesEnum.Truck, RoutesEnum.Driving].includes(tab) && 'hidden'}`} />
+                    <button
+                      id={RoutesEnum.Truck}
+                      className={`tab__button ${tab === RoutesEnum.Truck && 'active'}`}
+                      onClick={buildTruckRoute}
+                    >
+                      Truck
+                    </button>
+                    <hr className={`divider ${[RoutesEnum.Truck, RoutesEnum.Walking].includes(tab) && 'hidden'}`} />
+                    <button
+                      id={RoutesEnum.Walking}
+                      className={`tab__button ${tab === RoutesEnum.Walking && 'active'}`}
+                      onClick={buildWalkingRoute}
+                    >
+                      Walking
+                    </button>
+                    <hr className={`divider ${[RoutesEnum.Transit, RoutesEnum.Walking].includes(tab) && 'hidden'}`} />
+                    <button
+                      id={RoutesEnum.Transit}
+                      className={`tab__button ${tab === RoutesEnum.Transit && 'active'}`}
+                      onClick={buildTransitRoute}
+                    >
+                      Transit
+                    </button>
+                  </div>
+                </MMapControl>
+              </MMapControls>
+            </MMap>
+          );
+        }
+
+        ReactDOM.render(
+          <React.StrictMode>
+            <App />
+          </React.StrictMode>,
+          document.getElementById('app')
+        );
+      }
+    </script>
+
+    <!-- prettier-ignore -->
+    <style> html, body, #app { width: 100%; height: 100%; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; } .toolbar { position: absolute; z-index: 1000; top: 0; left: 0; display: flex; align-items: center; padding: 16px; } .toolbar a { padding: 16px; }  </style>
+    <link rel="stylesheet" href="./common.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
