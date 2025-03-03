@@ -1,15 +1,13 @@
 import { Router } from 'express';
-import {
-  roleAdminRouter,
-  userAdminRouter,
-} from '@/modules';
+import locationAdminRouter from '@/modules/location/routes/admin/v1/index';
 
 
 const adminRouter: Router = Router();
 
 
-// adminRouter.use('/users', userAdminRouter);
-// adminRouter.use('/roles', roleAdminRouter);
+adminRouter.use('/province', locationAdminRouter.provinceAdminRouter);
+adminRouter.use('/district', locationAdminRouter.districtAdminRouter);
+adminRouter.use('/city', locationAdminRouter.cityAdminRouter);
 
 
 export default adminRouter;

@@ -1,53 +1,61 @@
-import express, { Request, Response ,Application,NextFunction} from 'express';
+import express, { Request, Response, Application, NextFunction } from "express";
 import cors from "cors";
-import helmet from 'helmet';
-import compression from 'compression';
-import router from './routes';
+import helmet from "helmet";
+import compression from "compression";
+import router from "./routes";
+import mongoConnect from "./dbs/mongo/index";
+import logger from "./dbs/logger/logger";
+import morgan from "morgan";
 
-const appMiddleWare=(app:Application)=>{
-    app.use(cors());
-   
-  app.use(
-    express.json({
-      limit: '5mb', // TO be moved to config,
-    })
-  );
+const appMiddleware = (app: Application) => {
+  app.use(cors({
+    origin: "http://localhost:5173", // Allow only your frontend
+    credentials: true, // Allow cookies & authentication headers
+    methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+  }));
 
-  // parse urlencoded request body
+  app.use(express.json({ limit: "5mb" }));
+
   app.use(
     express.urlencoded({
       extended: false,
       parameterLimit: 10,
-      limit: '5mb',
+      limit: "5mb",
     })
   );
 
- // set security HTTP headers
- app.use(helmet());
-   
-    // app.use();
+  app.use(helmet());
 
-  // enables the "gzip" / "deflate" compression for response
   app.use(compression({ threshold: 2048 }));
 
-  app.use('/ping', (req: Request, res: Response) => {
-     res.status(200).send({ message: 'Pong ' }).end();
+  // Logging HTTP requests using Morgan
+  //app.use(morgan("combined", { stream: { write: (message) => logger.info(message.trim()) } }));
+  app.use(morgan("dev"))
+
+  mongoConnect();
+
+  app.use("/ping", (req: Request, res: Response) => {
+    res.status(200).send({ message: "Pong" }).end();
   });
-router(app);
-  // All unhandled routes
+
+  router(app);
+
+  // Handle 404 errors
   app.use((req: Request, res: Response, next: NextFunction) => {
-    const error: any = new Error('Page not found!');
+    const error: any = new Error("Page not found!");
     error.status = 404;
     next(error);
   });
 
-  // All unhandled errors
-  app.use((error: any, req: Request, res: Response) => {
-    res.status(error.status || 500);
-    res.json({
+  // Handle other errors
+  app.use((error: any, req: Request, res: Response,next:NextFunction) => {
+    logger.error(`Error: ${error.message} | Status: ${error.status || 500}`);
+    
+    res.status(error.status || 500).json({
       message: error.message,
     });
   });
-}
+};
 
-export default appMiddleWare;
+export default appMiddleware;
