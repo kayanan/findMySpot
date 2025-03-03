@@ -9,7 +9,7 @@ import { statusOptions } from "../../../utils/DropdownOptions";
 
 const UpdateDistrict = () => {
   const location = useLocation();
-  const { District,Province } = location.state || {};
+  const { District,Province,status } = location.state || {};
   const navigate = useNavigate();
   const { id } = useParams();
   const [provincesOption,setProvincesOption]=useState([]);
@@ -24,7 +24,7 @@ const UpdateDistrict = () => {
   useEffect(() => {
     const fetchProvinces = async () => {
       try {
-        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/province`, { withCredentials: true });
+        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/province`, { withCredentials: true });
         if(data.provinces){
           const refinedOption=data.provinces.map((province)=>{
             return{value:province._id,label:province.name}
@@ -76,7 +76,7 @@ const UpdateDistrict = () => {
     try {
     
       await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/admin/district/${id}`,
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/district/${id}`,
         formData,
         {
           headers: { "Content-Type": "application/json" },
@@ -85,7 +85,7 @@ const UpdateDistrict = () => {
       );
       toast.success("District updated successfully!");
       setTimeout(() => navigate(`/province/view/${Province._id}`,{
-        state: { Province:Province },
+        state: {Province,status },
       }), 500);
     } catch (error) {
       toast.error("Failed to update District. Please try again.");
@@ -101,7 +101,7 @@ const UpdateDistrict = () => {
       </h1>
       <Link
         to={`/province/view/${Province._id}`}
-        state={{ Province:Province  }}
+        state={{Province ,status }}
         className="mb-6 inline-flex items-center text-gray-600 hover:text-cyan-600"
       >
         <FaArrowLeft className="mr-2" /> Back to District List
@@ -125,15 +125,7 @@ const UpdateDistrict = () => {
             {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
           </div>
           <div>
-          <Dropdown
-            label="Status"
-            name="status"
-            options={statusOptions}
-            formData={formData}
-            setFormData={setFormData}
-            errors={errors}
-            setErrors={setErrors}
-          />
+         
           <Dropdown
             label="Province"
             name="provinceId"

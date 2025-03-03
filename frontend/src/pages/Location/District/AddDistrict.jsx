@@ -9,7 +9,7 @@ import { statusOptions } from "../../../utils/DropdownOptions";
 
 const AddDistrict = () => {
    const location = useLocation();
-   const { Province } = location.state || {};
+   const { Province ,status} = location.state || {};
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
@@ -42,13 +42,13 @@ const AddDistrict = () => {
       return;
     }
     try {
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/district`, formData, {
+      await axios.post(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/district`, formData, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
       toast.success("District added successfully!");
       setTimeout(() => navigate(`/province/view/${Province._id}`,{
-        state: {Province:Province },
+        state: {Province ,status},
       }), 300);
     } catch (error) {
       toast.error("Error adding District. Please try again.");
@@ -62,7 +62,7 @@ const AddDistrict = () => {
       </h1>
       <Link
         to={`/province/view/${Province._id}`}
-        state={{ Province:Province  }}
+        state={{ Province ,status }}
         className="mb-6 inline-flex items-center text-gray-600 hover:text-cyan-600"
       >
         <FaArrowLeft className="mr-2" /> Back to District List

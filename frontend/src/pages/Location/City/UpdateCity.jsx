@@ -9,7 +9,7 @@ import { statusOptions } from "../../../utils/DropdownOptions";
 
 const UpdateCity = () => {
   const location = useLocation();
-  const { City,District ,Province} = location.state || {};
+  const { City,District ,Province,status} = location.state || {};
   const navigate = useNavigate();
   const { id } = useParams();
   const [districtOption,setDistrictsOption]=useState([]);
@@ -24,7 +24,7 @@ const UpdateCity = () => {
   useEffect(() => {
     const fetchDistricts = async () => {
       try {
-        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/district`, { withCredentials: true });
+        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/district`, { withCredentials: true });
         if(data.districts){
           const refinedOption=data.districts.map((district)=>{
             return{value:district._id,label:district.name}
@@ -75,7 +75,7 @@ const UpdateCity = () => {
     setIsSubmitting(true);
     try {
       await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/admin/city/${id}`,
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/city/${id}`,
         formData,
         {
           headers: { "Content-Type": "application/json" },
@@ -84,7 +84,7 @@ const UpdateCity = () => {
       );
       toast.success("City updated successfully!");
       setTimeout(() => navigate(`/district/view/${District._id}`,{
-        state: { District:District ,Province:Province},
+        state: { District:District ,Province:Province,status},
       }), 500);
     } catch (error) {
       toast.error("Failed to update City. Please try again.");
@@ -100,7 +100,7 @@ const UpdateCity = () => {
       </h1>
       <Link
         to={`/district/view/${District._id}`}
-        state={{ District:District ,Province:Province }}
+        state={{District ,Province,status }}
         className="mb-6 inline-flex items-center text-gray-600 hover:text-cyan-600"
       >
         <FaArrowLeft className="mr-2" /> Back to City List
@@ -124,15 +124,6 @@ const UpdateCity = () => {
             {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
           </div>
           <div>
-          <Dropdown
-            label="Status"
-            name="status"
-            options={statusOptions}
-            formData={formData}
-            setFormData={setFormData}
-            errors={errors}
-            setErrors={setErrors}
-          />
           <Dropdown
             label="District"
             name="districtId"

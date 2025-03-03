@@ -1,45 +1,37 @@
-import { Menu } from "@headlessui/react";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { EyeIcon, PencilAltIcon, GlobeAltIcon,TrashIcon } from "@heroicons/react/outline";
+import {
+  EyeIcon,
+  PencilAltIcon,
+  TrashIcon,
+} from "@heroicons/react/outline";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const Dropdown = ({ label, options, filterName, selectedValue, onChange }) => (
-  <Menu as="div" className="relative inline-block text-left w-full">
-    <Menu.Button className="w-full p-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
-      {selectedValue ? options.find((option) => option.value === selectedValue)?.label || label : label}
-    </Menu.Button>
-    <Menu.Items className="absolute mt-2 w-full bg-white border border-gray-200 rounded shadow-lg z-10">
-      {options.map((option) => (
-        <Menu.Item key={option.value}>
-          {({ active }) => (
-            <div
-              onClick={() => onChange(filterName, option.value)}
-              className={`cursor-pointer px-4 py-2 ${active ? "bg-cyan-500 text-white" : "text-gray-700"}`}
-            >
-              {option.label}
-            </div>
-          )}
-        </Menu.Item>
-      ))}
-    </Menu.Items>
-  </Menu>
-);
+import ToggleGroup from "../../../utils/ToggleGroup";
+import { statusOptions } from "../../../utils/DropdownOptions";
 
 const ProvinceList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state || {};
   const [provinces, setProvinces] = useState([]);
-  const [status, setStatus] = useState("active");
+  const [status, setStatus] = useState(state?.status || "active");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const provincesPerPage = 5;
+  const provincesPerPage = 10;
+  const [deleted, setDeleted] = useState(true);
 
   useEffect(() => {
     const fetchProvinces = async () => {
       setLoading(true);
       try {
-        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/province`, { withCredentials: true });
+        const { data } = await axios.get(
+          `${import.meta.env.VITE_BACKEND_APP_URL}/province`,
+          { withCredentials: true }
+        );
         setProvinces(data.provinces);
       } catch (error) {
         console.error("Error fetching provinces:", error.message);
@@ -48,43 +40,97 @@ const ProvinceList = () => {
       }
     };
     fetchProvinces();
-  }, []);
+  }, [deleted]);
 
-  // const handleDelete = async (e) => {
-  //   e.preventDefault();
+  const handleDelete = async (id) => {
+    try {
+      if (!window.confirm("Are you sure you want to delete this item?")) {
+        return;
+      }
 
-  //   if (Object.values(errors).some((error) => error)) {
-  //     toast.error("Please fix validation errors before submitting.");
-  //     return;
-  //   }
-  //   try {
+      await axios.delete(
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/province/${id}`,
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+      toast.error("Province deleted!");
+      setTimeout(() => navigate("/province", { state: { status } }), 300);
+      setDeleted((prev) => !prev);
+    } catch (error) {
+      toast.error("Error adding Province. Please try again.");
+    }
+  };
+
+  const handleActiveReactive = async (province) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to ${
+          province.status === "active" ? "deactivate" : "activate"
+        } this province?`
+      )
+    ) {
+      return;
+    }
+    try {
       
-  //     await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/province`, formData, {
-  //       headers: { "Content-Type": "application/json" },
-  //       withCredentials: true,
-  //     });
-  //     toast.success("Province added successfully!");
-  //     setTimeout(() => navigate("/province"), 300);
-  //   } catch (error) {
-  //     toast.error("Error adding Province. Please try again.");
-  //   }
-  // };
+      let data = {};
+      if (province.status === "active") {
+        data = { ...province, status: "inactive" };
+      } else {
+        data = { ...province, status: "active" };
+      }
 
+      await axios.put(
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/province/${province._id}`,
+        data,
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+      if(province.status === "active"){
+         toast.error("Province deactivated!");
+      }
+      else{
+        toast.success("Province activated!");
+      }
+     
+      setTimeout(() => navigate("/province", { state: { status } }), 300);
+      setDeleted((prev) => !prev);
+    } catch (error) {
+      toast.error("Error updating Province. Please try again.");
+    }
+  };
 
-  const filteredProvinces = provinces.filter((province) =>
-    province.status === status && (searchTerm ? province.name?.toLowerCase().includes(searchTerm.toLowerCase()) : true)
+  const filteredProvinces = provinces.filter(
+    (province) =>
+      province.status === status &&
+      (searchTerm
+        ? province.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        : true)
   );
 
   const indexOfLastProvince = currentPage * provincesPerPage;
   const indexOfFirstProvince = indexOfLastProvince - provincesPerPage;
-  const currentProvinces = filteredProvinces.slice(indexOfFirstProvince, indexOfLastProvince);
+  const currentProvinces = filteredProvinces.slice(
+    indexOfFirstProvince,
+    indexOfLastProvince
+  );
   const totalPages = Math.ceil(filteredProvinces.length / provincesPerPage);
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-cyan-500">Provinces</h1>
-        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+      <div
+        className={`flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 ${
+          !(status === "active") ? "pr-96" : ""
+        }`}
+      >
+        <h1 className="text-2xl sm:text-3xl font-bold text-cyan-500">
+          Provinces
+        </h1>
+        <div className={`flex items-center gap-3 w-full sm:w-auto`}>
           <input
             type="text"
             placeholder="Search provinces..."
@@ -92,20 +138,20 @@ const ProvinceList = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full sm:w-64 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-cyan-500"
           />
-          <Dropdown
-            label="Status"
-            filterName="status"
-            selectedValue={status}
-            options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]}
-            onChange={(filterName, value) => setStatus(value)}
+          <ToggleGroup
+            value={status}
+            setValue={setStatus}
+            values={statusOptions}
           />
         </div>
-        <button
-          onClick={() => navigate("/province/add")}
-          className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-md shadow-md transition w-full sm:w-auto"
-        >
-          Add Province
-        </button>
+        {status === "active" && (
+          <button
+            onClick={() => navigate("/province/add", { state: { status } })}
+            className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-md shadow-md transition w-full sm:w-auto"
+          >
+            Add Province
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -117,42 +163,64 @@ const ProvinceList = () => {
           <table className="w-full table-auto text-sm">
             <thead>
               <tr className="bg-gray-100 text-gray-700">
-                <th className="py-3 px-4 font-semibold">Icon</th>
+                <th className="py-3 px-4 font-semibold">#</th>
                 <th className="py-3 px-4 font-semibold">Name</th>
                 <th className="py-3 px-4 font-semibold text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {currentProvinces.map((province) => (
+              {currentProvinces.map((province,index) => (
                 <tr key={province._id} className="border-t hover:bg-cyan-50">
                   <td className="py-3 px-4 flex justify-center items-center">
-                    <GlobeAltIcon className="h-8 w-8 text-cyan-600" />
+                  {index+1}
                   </td>
                   <td className="py-3 px-4">{province.name}</td>
-                  <td className="py-3 px-4 flex justify-center space-x-2">
+                  <td className="py-3 px-4 flex justify-center  gap-2 space-x-2">
                     <Link
                       to={`/province/view/${province._id}`}
-                      state= {{ Province: province }}
+                      state={{ Province: province, status }}
                       className="bg-gray-400 hover:bg-gray-600 text-white px-3 py-2 rounded-full"
                     >
                       <EyeIcon className="h-5 w-5" />
                     </Link>
+                    {status === "active" && (
+                      <button
+                        onClick={() =>
+                          navigate(`/province/update/${province._id}`, {
+                            state: { Province: province, status },
+                          })
+                        }
+                        className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded-full"
+                      >
+                        <PencilAltIcon className="h-5 w-5" />
+                      </button>
+                    )}
+                    
+
                     <button
-                      onClick={() => navigate(`/province/update/${province._id}`,{
-                        state: { Province: province },
-                      })}
-                      className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded-full"
+                      onClick={() => {
+                        handleActiveReactive(province);
+                      }}
+                      className={`px-4 py-2 rounded-md font-semibold transition-colors duration-200 ${
+                        (province.status === "active")
+                          ? "bg-gray-300 hover:bg-gray-600"
+                          : "bg-green-500 text-white hover:bg-green-600"
+                      }`}
                     >
-                      <PencilAltIcon className="h-5 w-5" />
+                      {province.status === "active"
+                        ? " Deactive"
+                        : "Activate"}
                     </button>
-                    <button
-                      onClick={() => navigate(`/province/update/${province._id}`,{
-                        state: { Province: province },
-                      })}
-                      className="bg-red-500 hover:bg-cyan-600 text-white px-3 py-2 rounded-full"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
+                    {status === "active" && (
+                      <button
+                        onClick={() => {
+                          handleDelete(province._id);
+                        }}
+                        className="bg-red-500 hover:bg-red-700 text-white px-3 py-2 rounded-full"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -178,6 +246,7 @@ const ProvinceList = () => {
           )}
         </div>
       )}
+      <ToastContainer />
     </div>
   );
 };

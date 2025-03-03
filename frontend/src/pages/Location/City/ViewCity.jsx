@@ -4,14 +4,14 @@ import { GlobeAltIcon } from "@heroicons/react/outline";
 
 const ViewCity = () => {
   const location = useLocation();
-  const { City ,District,Province} = location.state || {};
+  const { City ,District,Province,status} = location.state || {};
 
   return (
     <div className="container mx-auto p-6">
       {/* Back Button */}
       <Link
         to={`/district/view/${District._id}`}
-        state={{ District:District , City:City,Province:Province}}
+        state={{ District ,City,Province,status}}
         className="mb-6 inline-flex items-center text-gray-600 hover:text-cyan-600"
       >
         <FaArrowLeft className="mr-2" />

@@ -7,9 +7,11 @@ import "react-toastify/dist/ReactToastify.css";
 import Dropdown from "../../../utils/DropdownInner";
 import { statusOptions } from "../../../utils/DropdownOptions";
 
+
 const UpdateProvince = () => {
+ 
   const location = useLocation();
-  const { Province } = location.state || {};
+  const { Province,status } = location.state || {};
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -53,7 +55,7 @@ const UpdateProvince = () => {
     try {
     
       await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/admin/province/${id}`,
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/province/${id}`,
         formData,
         {
           headers: { "Content-Type": "application/json" },
@@ -61,7 +63,8 @@ const UpdateProvince = () => {
         }
       );
       toast.success("Parent Shop updated successfully!");
-      setTimeout(() => navigate("/province"), 500);
+      setTimeout(() => navigate("/province",{
+        state: {status }}), 500);
     } catch (error) {
       toast.error("Failed to update Parent Shop. Please try again.");
     } finally {
@@ -76,13 +79,14 @@ const UpdateProvince = () => {
       </h1>
       <Link
         to="/Province"
+        state={{ status  }}
         className="mb-6 inline-flex items-center text-gray-600 hover:text-cyan-600"
       >
         <FaArrowLeft className="mr-2" /> Back to Parent Shop List
       </Link>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Parent Shop Name and Owner */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-1 px-48">
           <div>
             <label className="block text-gray-700">Province Name</label>
             <input
@@ -98,17 +102,6 @@ const UpdateProvince = () => {
             />
             {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
           </div>
-          <div>
-          <Dropdown
-            label="Status"
-            name="status"
-            options={statusOptions}
-            formData={formData}
-            setFormData={setFormData}
-            errors={errors}
-            setErrors={setErrors}
-          />
-        </div>
           
         </div>
 

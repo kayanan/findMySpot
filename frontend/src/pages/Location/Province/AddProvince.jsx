@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link ,useLocation} from "react-router-dom";
 import axios from "axios";
 import { FaArrowLeft } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
@@ -8,6 +8,8 @@ import Dropdown from "../../../utils/DropdownInner";
 import { statusOptions } from "../../../utils/DropdownOptions";
 
 const AddProvince = () => {
+  const location = useLocation();
+      const {status} = location.state || {};
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
@@ -40,7 +42,7 @@ const AddProvince = () => {
     }
     try {
       
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/province`, formData, {
+      await axios.post(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/province`, formData, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
@@ -58,6 +60,7 @@ const AddProvince = () => {
       </h1>
       <Link
         to="/province"
+        state={{status}}
         className="mb-6 inline-flex items-center text-gray-600 hover:text-cyan-600"
       >
         <FaArrowLeft className="mr-2" /> Back to Province List

@@ -5,14 +5,14 @@ import CityList from "../City/CityList";
 
 const ViewDistrict = () => {
   const location = useLocation();
-  const { District, Province } = location.state || {};
+  const { District, Province,status } = location.state || {};
 
   return (
     <div className="container mx-auto p-6">
       {/* Back Button */}
       <Link
         to={`/province/view/${Province._id}`}
-        state={{ Province: Province }}
+        state={{Province ,status}}
         className="mb-6 inline-flex items-center text-gray-600 hover:text-cyan-600"
       >
         <FaArrowLeft className="mr-2" />
