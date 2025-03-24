@@ -5,8 +5,6 @@ import { FaArrowLeft } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Dropdown from "../../../utils/DropdownInner";
-import { statusOptions } from "../../../utils/DropdownOptions";
-
 const UpdateDistrict = () => {
   const location = useLocation();
   const { District,Province,status } = location.state || {};
@@ -16,7 +14,7 @@ const UpdateDistrict = () => {
 
   const [formData, setFormData] = useState({
     name: District?.name || "",
-    status: District?.status || statusOptions[0]["value"],
+    isActive: District?.isActive || true,
     provinceId:Province?._id || ""
   });
   const [errors, setErrors] = useState({});

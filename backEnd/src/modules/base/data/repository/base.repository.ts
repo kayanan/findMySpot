@@ -7,7 +7,6 @@ async function create<T>(
   payload: Partial<T>
 ): Promise<string> {
   const newDocument = new model(payload);
-  
   const { _id } = await newDocument.save();
   return _id as string;
 }
@@ -29,21 +28,29 @@ async function findAll<T>(
   skip = 0,
   limit = 10,
   sort: Record<string, 1 | -1> = { createdAt: -1 },
-  includeFields: string[] = []
+  includeFields: string[] = [],
+  populateFields: { path: string; select?: string }[] = [] // Updated type for population
 ): Promise<{ totalCount: number; items: T[] }> {
   const projection = includeFields.length
     ? includeFields.join(' ')
     : '';
 
-  const items = await model
+  let queryBuilder = model
     .find(query)
     .sort(sort)
     .select(projection)
     .skip(skip)
-    .limit(limit)
-    .exec();
+    .limit(limit);
 
-  const totalCount = await model.countDocuments();
+  // Apply population with field selection
+  if (populateFields.length) {
+    populateFields.forEach(({ path, select }) => {
+      queryBuilder = queryBuilder.populate({ path, select });
+    });
+  }
+
+  const items = await queryBuilder.exec();
+  const totalCount = await model.countDocuments(query);
 
   return { totalCount, items };
 }

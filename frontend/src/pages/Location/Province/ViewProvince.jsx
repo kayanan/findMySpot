@@ -36,12 +36,12 @@ const ViewProvince = () => {
             <h3 className="text-xl font-bold">Province Details</h3>
             <span
               className={`text-base font-semibold px-2 py-1 rounded ${
-                Province.status === "active"
+                Province.isActive === true
                   ? "bg-green-100 text-green-800"
                   : "bg-red-100 text-red-800"
               }`}
             >
-              {Province.status}
+              {Province.isActive ? "Active" : "Inactive"}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-4">

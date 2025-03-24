@@ -13,7 +13,7 @@ const AddProvince = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
-    status: statusOptions[0]["value"], // Default status value
+    isActive: statusOptions[0]["value"], // Default status value
   });
 
   const [errors, setErrors] = useState({});
@@ -87,7 +87,7 @@ const AddProvince = () => {
           <div>
           <Dropdown
             label="Status"
-            name="status"
+            name="isActive"
             options={statusOptions}
             formData={formData}
             setFormData={setFormData}

@@ -2,8 +2,9 @@ import UserRepository from '../data/repository/user.repository';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { UserModel } from '../data/dtos/user.dto';
-import * as EmailService from '../../base/services/email.service';
-import { EmailTemplateType } from '@/modules/base/enums/email.template.type';
+import { sendSMS } from '../../base/services/sms.service';
+//import * as EmailService from '../../base/services/email.service';
+//import { EmailTemplateType } from '@/modules/base/enums/email.template.type';
 import { ChangePasswordRequest } from '../controller/request/change.password.request';
 import UserValidator from '../validators/user.validator';
 import {
@@ -25,7 +26,7 @@ import {
 } from '../controller/request/create.user.request';
 import { UserListRequest } from '../controller/request/user.list.request';
 import { isValidObjectId } from 'mongoose';
-import AssetService from '../../asset/service/asset.service';
+//import AssetService from '../../asset/service/asset.service';
 import BaseRepository from '@/modules/base/data/repository/base.repository';
 import { RoleDTO } from '@/modules/user/data/dtos/role.dto';
 
@@ -34,15 +35,15 @@ const getUsers = async (
 ): Promise<UserListResponse> => {
   const list: UserListResponse =
     await UserRepository.findUsers(listReq);
-  for (let user of list.users) {
-    user.profileImage = user.profileImage?.toString();
-    if (user.profileImage) {
-      const url = await AssetService.getAssetUrl(user?.profileImage);
-      if (url !== null) {
-        user = { ...user, profileImage: url } as UserModel;
-      }
-    }
-  }
+  // for (let user of list.users) {
+  //   user.profileImage = user.profileImage?.toString();
+  //   // if (user.profileImage) {
+  //   //   const url = await AssetService.getAssetUrl(user?.profileImage);
+  //   //   if (url !== null) {
+  //   //     user = { ...user, profileImage: url } as UserModel;
+  //   //   }
+  //   // }
+  // }
   return {
     status: true,
     totalCount: list.total,
@@ -59,20 +60,21 @@ const getUser = async (req: any): Promise<UserProfileResponse> => {
     throw new Error('User not found');
   }
   user;
-  if (user.profileImage) {
-    const url = await AssetService.getAssetUrl(user?.profileImage);
-    console.log(url);
-    if (url !== null) {
-      console.log(typeof url);
-      user.profileImage = url;
-    }
-  }
+  // if (user.profileImage) {
+  //   const url = await AssetService.getAssetUrl(user?.profileImage);
+  //   console.log(url);
+  //   if (url !== null) {
+  //     console.log(typeof url);
+  //     user.profileImage = url;
+  //   }
+  // }
   return { status: true, user } as UserProfileResponse;
 };
 
 const saveUser = async (
   createUserRequest: CreateUserRequest
 ): Promise<CreatedUpdatedResponse> => {
+ 
   const valResult =
     UserValidator.saveUserValidator(createUserRequest);
   if (valResult.error) throw new Error(valResult.error.message);
@@ -85,6 +87,7 @@ const saveUser = async (
   if (id != null) {
     return { status: true, id } as CreatedUpdatedResponse;
   }
+  
   throw new Error('User not inserted');
 };
 
@@ -138,6 +141,7 @@ const login = async (req: any) => {
 const forgotPassword = async (
   forgotPasswordRequest: ForgotPasswordRequest
 ): Promise<BaseResponse> => {
+
   if (forgotPasswordRequest.email == null)
     throw new Error('Email not found');
   const user = await UserRepository.findByEmail(
@@ -147,16 +151,17 @@ const forgotPassword = async (
   const otp = await UserRepository.setPasswordResetOtp(
     user._id!.toString()
   );
-  const emailSent = await EmailService.send(
-    user?.email ?? '',
-    EmailTemplateType.forgotPassword,
-    {
-      expiresIn: process.env.OTP_EXPIRES_HOURS,
-      otp,
-      name: user.firstName,
-    }
-  );
-  if (!emailSent) throw new Error('Email not sent');
+  // const emailSent = await EmailService.send(
+  //   user?.email ?? '',
+  //   EmailTemplateType.forgotPassword,
+  //   {
+  //     expiresIn: process.env.OTP_EXPIRES_HOURS,
+  //     otp,
+  //     name: user.firstName,
+  //   }
+  // );
+  const smsSent=await sendSMS(otp,user?.phoneNumber!);
+  if (smsSent) throw new Error('SMS not sent');
 
   return {
     status: true,
@@ -192,14 +197,14 @@ const resetPassword = async (
   );
   if (!passwordChanged)
     throw new Error('Error while updating the password');
-  const emailSent = await EmailService.send(
-    user.email ?? '',
-    EmailTemplateType.changePassword,
-    {
-      name: user.firstName,
-    }
-  );
-  if (!emailSent) throw new Error('Email not sent');
+  // const emailSent = await EmailService.send(
+  //   user.email ?? '',
+  //   EmailTemplateType.changePassword,
+  //   {
+  //     name: user.firstName,
+  //   }
+  // );
+  // if (!emailSent) throw new Error('Email not sent');
   const resetOTP = await UserRepository.resetPasswordResetOtp(
     user._id!.toString()
   );

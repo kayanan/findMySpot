@@ -14,7 +14,7 @@ const AddCity = () => {
   const [formData, setFormData] = useState({
     name: "",
     districtId:District._id,
-    status: statusOptions[0]["value"], // Default status value
+    isActive: true, // Default status value
   });
 
   const [errors, setErrors] = useState({});
@@ -48,7 +48,7 @@ const AddCity = () => {
       });
       toast.success("District added successfully!");
       setTimeout(() => navigate(`/district/view/${District._id}`,{
-        state: {District:District ,Province:Province,City:City,status},
+        state: {District:District ,Province:Province,City:City,status:status },
       }), 300);
     } catch (error) {
       toast.error("Error adding District. Please try again.");

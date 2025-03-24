@@ -8,7 +8,7 @@ import { checkAdmin, checkToken } from '@/src/middlewares/check-auth';
 const userAdminRouter: Router = Router();
 
 // User routes
-userAdminRouter.get('/list', checkToken, checkAdmin, getUsers);
+userAdminRouter.get('/list', getUsers);
 userAdminRouter.post(
   '/update',
   checkToken,

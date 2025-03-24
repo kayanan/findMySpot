@@ -62,6 +62,7 @@ export const createOneCity = async (
     res.status(201).json(result);
   } catch (error: any) {
 res.status(400).json({ status: false, message: error.message });
+console.log(error)
   }
 };
 

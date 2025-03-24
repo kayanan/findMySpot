@@ -7,16 +7,17 @@ export const checkToken = async (
   req: any,
   res: Response,
   next: NextFunction
-) => {
+)=> {
   try {
     if (!req.headers.authorization) throw new Error();
     const token = req.headers.authorization.split(' ')[1];
     req.userData = jwt.verify(token, process.env.SECRET!) as UserJWT;
     next();
   } catch (error) {
-    return res.status(401).json({
+     res.status(401).json({
       message: 'Unauthorized',
     });
+    return;
   }
 };
 
@@ -31,9 +32,10 @@ export const checkAdmin = async (
     }
     next();
   } catch (error) {
-    return res.status(403).json({
+    res.status(403).json({
       message: 'Forbidden',
     });
+    return 
   }
 };
 
@@ -43,7 +45,7 @@ export const checkServiceProvider = async (
   next: NextFunction
 ) => {
   try {
-    if (!req.userData || req.userData.role !== RoleTypeEnum.STAFF)
+    if (!req.userData || req.userData.role !== RoleTypeEnum.OWNER)
       throw new Error('Unauthorized');
     next();
   } catch (error) {
@@ -61,7 +63,7 @@ export const checkAdminOrServiceProvider = async (
   try {
     if (
       !req.userData ||
-      (req.userData.role != RoleTypeEnum.STAFF &&
+      (req.userData.role != RoleTypeEnum.OWNER &&
         req.userData.role != RoleTypeEnum.ADMIN)
     )
       throw new Error('Unauthorized');

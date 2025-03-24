@@ -4,7 +4,6 @@ import axios from "axios";
 import { FaArrowLeft } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Dropdown from "../../../utils/DropdownInner";
 import { statusOptions } from "../../../utils/DropdownOptions";
 
 
@@ -17,7 +16,7 @@ const UpdateProvince = () => {
 
   const [formData, setFormData] = useState({
     name: Province?.name || "",
-    status: Province?.status || statusOptions[0]["value"],
+    isActive: Province?.isActive || statusOptions[0]["value"],
   });
 
   const [errors, setErrors] = useState({});
@@ -85,7 +84,7 @@ const UpdateProvince = () => {
         <FaArrowLeft className="mr-2" /> Back to Parent Shop List
       </Link>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Parent Shop Name and Owner */}
+        {/* Province Name and Owner */}
         <div className="grid grid-cols-1 md:grid-cols-1 px-48">
           <div>
             <label className="block text-gray-700">Province Name</label>

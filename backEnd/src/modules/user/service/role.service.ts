@@ -53,7 +53,7 @@ const createRole = async (
   if (!valResult.success) {
     throw new Error(valResult?.error.issues[0].message);
   }
-  const roleId = await BaseRepository.create(RoleDTO, roleData);
+  const roleId = await BaseRepository.create(RoleDTO, valResult.data);
   return { status: true, id: roleId };
 };
 

@@ -49,6 +49,7 @@ export const saveUser = async (req: Request, res: Response) => {
       );
     res.status(201).json(response);
   } catch (error: any) {
+    console.log(error.message)
     res.status(400).json(errorResponse(error.message));
   }
 };

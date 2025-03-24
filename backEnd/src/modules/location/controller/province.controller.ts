@@ -8,7 +8,6 @@ import {
 } from '../service/province.service';
 import { ListRequest } from '../../base/controller/request/list.request';
 import { ProvinceRequest } from '../controller/request/create.province';
-import { compile } from 'morgan';
 
 // Controller for getting all provinces
 export const getAllProvinces = async (req: Request, res: Response) => {

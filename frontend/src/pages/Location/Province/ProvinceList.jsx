@@ -17,7 +17,7 @@ const ProvinceList = () => {
   const location = useLocation();
   const state = location.state || {};
   const [provinces, setProvinces] = useState([]);
-  const [status, setStatus] = useState(state?.status || "active");
+  const [isActive, setIsActive] = useState(state?.status ?? true);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,31 +56,23 @@ const ProvinceList = () => {
         }
       );
       toast.error("Province deleted!");
-      setTimeout(() => navigate("/province", { state: { status } }), 300);
+      setTimeout(() => navigate("/province", { state: { isActive } }), 300);
       setDeleted((prev) => !prev);
     } catch (error) {
-      toast.error("Error adding Province. Please try again.");
+      toast.error("Error deleting Province. Please try again.");
     }
   };
 
   const handleActiveReactive = async (province) => {
     if (
       !window.confirm(
-        `Are you sure you want to ${
-          province.status === "active" ? "deactivate" : "activate"
-        } this province?`
+        `Are you sure you want to ${province.isActive ? "deactivate" : "activate"} this province?`
       )
     ) {
       return;
     }
     try {
-      
-      let data = {};
-      if (province.status === "active") {
-        data = { ...province, status: "inactive" };
-      } else {
-        data = { ...province, status: "active" };
-      }
+      const data = { ...province, isActive: !province.isActive };
 
       await axios.put(
         `${import.meta.env.VITE_BACKEND_ADMIN_URL}/province/${province._id}`,
@@ -90,14 +82,14 @@ const ProvinceList = () => {
           withCredentials: true,
         }
       );
-      if(province.status === "active"){
-         toast.error("Province deactivated!");
-      }
-      else{
+      
+      if (province.isActive) {
+        toast.error("Province deactivated!");
+      } else {
         toast.success("Province activated!");
       }
-     
-      setTimeout(() => navigate("/province", { state: { status } }), 300);
+
+      setTimeout(() => navigate("/province", { state: { isActive } }), 300);
       setDeleted((prev) => !prev);
     } catch (error) {
       toast.error("Error updating Province. Please try again.");
@@ -106,7 +98,7 @@ const ProvinceList = () => {
 
   const filteredProvinces = provinces.filter(
     (province) =>
-      province.status === status &&
+      province.isActive === isActive &&
       (searchTerm
         ? province.name?.toLowerCase().includes(searchTerm.toLowerCase())
         : true)
@@ -123,9 +115,7 @@ const ProvinceList = () => {
   return (
     <div className="p-4 max-w-7xl mx-auto">
       <div
-        className={`flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 ${
-          !(status === "active") ? "pr-96" : ""
-        }`}
+        className={`flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 `}
       >
         <h1 className="text-2xl sm:text-3xl font-bold text-cyan-500">
           Provinces
@@ -139,14 +129,14 @@ const ProvinceList = () => {
             className="w-full sm:w-64 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-cyan-500"
           />
           <ToggleGroup
-            value={status}
-            setValue={setStatus}
+            value={isActive}
+            setValue={setIsActive}
             values={statusOptions}
           />
         </div>
-        {status === "active" && (
+        { (
           <button
-            onClick={() => navigate("/province/add", { state: { status } })}
+            onClick={() => navigate("/province/add", { state: { isActive } })}
             className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-md shadow-md transition w-full sm:w-auto"
           >
             Add Province
@@ -169,25 +159,25 @@ const ProvinceList = () => {
               </tr>
             </thead>
             <tbody>
-              {currentProvinces.map((province,index) => (
+              {currentProvinces.map((province, index) => (
                 <tr key={province._id} className="border-t hover:bg-cyan-50">
                   <td className="py-3 px-4 flex justify-center items-center">
-                  {index+1}
+                    {index + 1}
                   </td>
                   <td className="py-3 px-4">{province.name}</td>
-                  <td className="py-3 px-4 flex justify-center  gap-2 space-x-2">
+                  <td className="py-3 px-4 flex justify-center gap-2 space-x-2">
                     <Link
                       to={`/province/view/${province._id}`}
-                      state={{ Province: province, status }}
-                      className="bg-gray-400 hover:bg-gray-600 text-white px-3 py-2 rounded-full"
+                      state={{ Province: province, status:isActive }}
+                      className="bg-teal-400 hover:bg-teal-600 text-white px-3 py-2 rounded-full"
                     >
                       <EyeIcon className="h-5 w-5" />
                     </Link>
-                    {status === "active" && (
+                    {isActive &&  (
                       <button
                         onClick={() =>
                           navigate(`/province/update/${province._id}`, {
-                            state: { Province: province, status },
+                            state: { Province: province, status:isActive },
                           })
                         }
                         className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded-full"
@@ -195,27 +185,20 @@ const ProvinceList = () => {
                         <PencilAltIcon className="h-5 w-5" />
                       </button>
                     )}
-                    
 
                     <button
-                      onClick={() => {
-                        handleActiveReactive(province);
-                      }}
+                      onClick={() => handleActiveReactive(province)}
                       className={`px-4 py-2 rounded-md font-semibold transition-colors duration-200 ${
-                        (province.status === "active")
+                        province.isActive
                           ? "bg-gray-300 hover:bg-gray-600"
                           : "bg-green-500 text-white hover:bg-green-600"
                       }`}
                     >
-                      {province.status === "active"
-                        ? " Deactive"
-                        : "Activate"}
+                      {province.isActive ? "Deactivate" : "Activate"}
                     </button>
-                    {status === "active" && (
+                    {isActive && (
                       <button
-                        onClick={() => {
-                          handleDelete(province._id);
-                        }}
+                        onClick={() => handleDelete(province._id)}
                         className="bg-red-500 hover:bg-red-700 text-white px-3 py-2 rounded-full"
                       >
                         <TrashIcon className="h-5 w-5" />

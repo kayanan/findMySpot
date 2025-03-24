@@ -34,6 +34,7 @@ export const getRole = async (req: Request, res: Response) => {
 };
 
 export const createRole = async (req: Request, res: Response) => {
+  console.log(req.body);
   try {
     const response: CreatedUpdatedResponse =
       await RoleService.createRole(
@@ -42,6 +43,7 @@ export const createRole = async (req: Request, res: Response) => {
     res.status(201).json(response);
   } catch (error: any) {
     res.status(400).json(errorResponse(error.message));
+    console.log(error);
   }
 };
 

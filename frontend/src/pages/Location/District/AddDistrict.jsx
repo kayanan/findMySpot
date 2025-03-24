@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link,useLocation } from "react-router-dom";
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import { FaArrowLeft } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -14,7 +14,7 @@ const AddDistrict = () => {
   const [formData, setFormData] = useState({
     name: "",
     provinceId:Province._id,
-    status: statusOptions[0]["value"], // Default status value
+    isActive: true, // Default status value
   });
 
   const [errors, setErrors] = useState({});

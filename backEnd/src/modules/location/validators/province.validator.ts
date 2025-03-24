@@ -1,5 +1,5 @@
 import { z } from "zod";
-import {Status} from "../data/dtos/province.dto"
+
 
 export const createUpdateProvincealidator = (data: any) => {
   const schema = z.object({
@@ -9,7 +9,7 @@ export const createUpdateProvincealidator = (data: any) => {
         invalid_type_error: "Name should be a type of 'String'",
       })
       .min(1, "Name should have a minimum length of 1"),
-    status: z.enum([Status.ACTIVE,Status.INACTIVE]),
+    isActive: z.boolean(),
     description: z
       .string({
         invalid_type_error: "Description should be a type of 'String'",

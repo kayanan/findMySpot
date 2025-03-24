@@ -1,4 +1,4 @@
-import { DistrictDTO, DistrictModel,Status } from '../data/dtos/district.dto';
+import { DistrictDTO, DistrictModel} from '../data/dtos/district.dto';
 import { CityDTO } from '../data/dtos/city.dto';
 import districtRepository from '../data/repository/district.repository';
 import BaseRepository from '@/modules/base/data/repository/base.repository';
@@ -82,12 +82,12 @@ export const updateDistrict = async (
   const district: DistrictModel | null =
     await BaseRepository.updateById(DistrictDTO, id, validatedResult.data);
 
-    if(validatedResult.data.status==="inactive"){
-          await districtRepository.updateMany(CityDTO,{districtId:id},{status:Status.INACTIVE});
+    if(validatedResult.data.isActive===false){
+          await districtRepository.updateMany(CityDTO,{districtId:id},{isActive:false});
          
         }
-        if(validatedResult.data.status==="active"){
-         await districtRepository.updateMany(CityDTO,{districtId:id},{status:Status.ACTIVE});
+        if(validatedResult.data.isActive===true){
+         await districtRepository.updateMany(CityDTO,{districtId:id},{isActive:true});
           
         }
   if (district == null) throw new Error('Update fail');

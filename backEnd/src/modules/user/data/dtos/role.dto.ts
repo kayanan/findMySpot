@@ -1,17 +1,17 @@
 import { Schema, model } from 'mongoose';
 import { BaseDTO } from '../../../base/data/dtos/base.dto';
-import { RoleTypeEnum } from '@/modules/user/enums/role';
-
 export interface RoleModel extends BaseDTO {
   name: string;
   type: string;
+  isActive?: boolean;
   description?: string;
 }
 
 const RoleSchema = new Schema<RoleModel>(
   {
-    name: { type: String, unique: true, required: true },
-    type: { type: String, enum: RoleTypeEnum, required: true },
+    
+    type: { type: String, required: true, uppercase: true, unique: true },
+    isActive: { type: Boolean, default: true },
     description: { type: String },
     isDeleted: { type: Boolean, default: false },
   },

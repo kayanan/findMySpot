@@ -11,6 +11,7 @@
     "skipLibCheck": true,
     "baseUrl": "./",
     "paths": {
+      "@/src/*":["src/*"],
       "@/utils/*": ["src/utils/*"],
       "@/utils": ["src/utils/index.ts"],
       "@/modules/*": ["src/modules/*"],

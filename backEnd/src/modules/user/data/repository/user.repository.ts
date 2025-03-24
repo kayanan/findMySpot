@@ -35,17 +35,12 @@ async function findUsers(
       },
     ];
   }
-  if (listReq.isPremiumCustomer != null) {
-    query.isPremiumCustomer = listReq.isPremiumCustomer;
-  }
+  
   if (listReq.approvalStatus != null) {
     query.approvalStatus = listReq.approvalStatus;
   }
   if (listReq.isActive != null) {
     query.isActive = listReq.isActive;
-  }
-  if (listReq.isAdvertismentsEnabled != null) {
-    query.isAdvertismentsEnabled = listReq.isAdvertismentsEnabled;
   }
   if (listReq.isVerified != null) {
     query.isVerified = listReq.isVerified;
@@ -69,8 +64,11 @@ async function findUsers(
 
 async function saveUser(
   userPayload: CreateUserRequest
+  
 ): Promise<string | null> {
   const newUser = new UserDTO(userPayload);
+  newUser.isActive = true;
+  newUser.isVerified = true;
   const { _id } = await newUser.save();
   return _id as string;
 }
@@ -101,8 +99,8 @@ async function setPasswordResetOtp(userId: string): Promise<string> {
     },
     {
       otp: `${otp}`,
-      otpExpiresAt: HelperUtil.addHours(
-        Number(process.env.OTP_EXPIRES_HOURS)
+      otpExpiresAt: HelperUtil.addMinute(
+        Number(process.env.OTP_EXPIRES_MINUTE)
       ),
     }
   );

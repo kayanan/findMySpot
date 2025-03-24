@@ -5,7 +5,6 @@ import { FaArrowLeft } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Dropdown from "../../../utils/DropdownInner";
-import { statusOptions } from "../../../utils/DropdownOptions";
 
 const UpdateCity = () => {
   const location = useLocation();
@@ -16,7 +15,7 @@ const UpdateCity = () => {
 
   const [formData, setFormData] = useState({
     name: City?.name || "",
-    status: City?.status || statusOptions[0]["value"],
+    isActive: City?.isActive || true,
     districtId:District?._id || ""
   });
   const [errors, setErrors] = useState({});
@@ -84,7 +83,7 @@ const UpdateCity = () => {
       );
       toast.success("City updated successfully!");
       setTimeout(() => navigate(`/district/view/${District._id}`,{
-        state: { District:District ,Province:Province,status},
+        state: { District:District ,Province:Province,status:status },
       }), 500);
     } catch (error) {
       toast.error("Failed to update City. Please try again.");

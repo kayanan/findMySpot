@@ -3,27 +3,26 @@ import bcrypt from 'bcryptjs';
 import { BaseDTO } from '../../../base/data/dtos/base.dto';
 
 export interface UserModel extends BaseDTO {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  role: ObjectId;
-  address1?: string;
-  address2?: string;
-  city?: string;
-  phoneNumber?: string;
-  otp?: string;
-  otpExpiresAt?: Date;
-  facebookId?: string;
-  googleId?: string;
-  profileImage?: string;
-  isVerified?: boolean;
-  isPremiumCustomer?: boolean;
-  isAvailability?: boolean;
-  isAdvertisementsEnabled?: boolean;
-  isActive?: boolean;
-  approvalStatus?: boolean;
-  bankDetails?: Array<BankDetail>;
+   firstName: string;
+   lastName: string;
+   nic: string;
+   email: string;
+   password: string;
+   role: ObjectId;
+   address1?: string;
+   address2?: string;
+   city?: ObjectId;
+   phoneNumber?: string;
+   otp?: string;
+   otpExpiresAt?: Date;
+   profileImage?: string;
+   isVerified?: boolean;
+   isPremiumCustomer?: boolean;
+   isActive?: boolean;
+   approvalStatus?: boolean;
+   vehicle: Array<String>;
+   bankDetails?: Array<BankDetail>;
+   isDeleted: boolean;
 }
 
 export interface BankDetail {
@@ -40,7 +39,7 @@ const UserSchema = new Schema<UserModel>(
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Role',
-      required: true,
+      required: false,
       index: 1,
     },
     //Asset
@@ -51,6 +50,15 @@ const UserSchema = new Schema<UserModel>(
     },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
+    nic: {
+      type: String,
+      required: true,
+      unique: true,
+      match: [
+        /^(\d{9}[V|v])|(\d{4}\s?\d{4}\s?\d{4})$/,
+        "Please enter a valid Sri Lankan NIC number.",
+      ],
+    },
     email: {
       type: String,
       required: true,
@@ -61,19 +69,34 @@ const UserSchema = new Schema<UserModel>(
     password: { type: String, required: true },
     address1: { type: String },
     address2: { type: String },
-    facebookId: { type: String },
-    googleId: { type: String },
-    phoneNumber: { type: String },
-    city: { type: String },
+    phoneNumber: [
+      {
+        type: String,
+        required: true,
+        match: [
+          /^(?:\+94|0)(7\d{8}|1\d{8}|2\d{7})$/,
+          "Please enter a valid Sri Lankan phone number.",
+        ],
+      },
+    ],
+    city: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'City',
+      required: false,
+  
+    },
     otp: { type: String },
     otpExpiresAt: { type: Date },
     isDeleted: { type: Boolean, default: false },
     isPremiumCustomer: { type: Boolean, default: false },
-    isVerified: { type: Boolean, default: false },
-    isAvailability: { type: Boolean, default: false },
-    isAdvertisementsEnabled: { type: Boolean, default: false },
     isActive: { type: Boolean, default: false },
     approvalStatus: { type: Boolean, default: false },
+    vehicle: [
+      {
+        number: { type: String, required: true },
+        isDefault: { type: Boolean, required: true, default: false },
+      },
+    ],
     bankDetails: [
       {
         name: { type: String, required: true },

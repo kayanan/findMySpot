@@ -35,12 +35,12 @@ const ViewCity = () => {
             <h3 className="text-xl font-bold">City Details</h3>
             <span
               className={`text-base font-semibold px-2 py-1 rounded ${
-                City.status === "active"
+                City.isActive === true
                   ? "bg-green-100 text-green-800"
                   : "bg-red-100 text-red-800"
               }`}
             >
-              {City.status}
+              {City.isActive === true ? "Active" : "Inactive"}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-4">

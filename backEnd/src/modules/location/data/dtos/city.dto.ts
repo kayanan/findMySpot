@@ -1,12 +1,9 @@
 import { Schema, model } from "mongoose";
 import { BaseDTO } from "../../../base/data/dtos/base.dto";
-export enum Status {
-  ACTIVE = "active",
-  INACTIVE = "inactive",
-}
+
 export interface CityModel extends BaseDTO {
   name: string;
-  status:Status;
+  isActive: boolean;
   districtId: Schema.Types.ObjectId | String;
   isDeleted: boolean;
   description?: string;
@@ -15,7 +12,7 @@ export interface CityModel extends BaseDTO {
 const CitySchema = new Schema<CityModel>(
   {
     name: { type: String, unique: true, required: true },
-     status:{type:String,required:true,enum:Object.values(Status) ,default:Status.ACTIVE},
+    isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
     districtId: {
       type: Schema.Types.ObjectId,

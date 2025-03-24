@@ -1,7 +1,8 @@
 export interface ProvinceRequest {
   name: string;
-  status:string;
+  isActive: boolean;
   description: string;
+  isDeleted?: boolean;
 }
 
 export interface UpdateProvince extends ProvinceRequest {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import {Status} from "../data/dtos/city.dto"
+
 
 
 export const createUpdateCityValidator = (data: any) => {
@@ -17,7 +17,7 @@ export const createUpdateCityValidator = (data: any) => {
         invalid_type_error: "Description should be a type of 'String'",
       })
       .min(10, "Description should have a minimum length of 10").optional(),
-            status: z.enum([Status.ACTIVE,Status.INACTIVE]),
+    isActive: z.boolean(),
   });
 
   return schema.safeParse(data);

@@ -121,7 +121,7 @@ const saveUserValidator = (data: any) => {
     role: z.string({
       required_error: 'Password is required',
       invalid_type_error: `Password should be a type of 'string'`,
-    }),
+    }).optional(),
   });
   return schema.safeParse(data);
 };

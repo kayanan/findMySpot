@@ -1,5 +1,5 @@
 import { ProvinceDTO ,ProvinceModel} from '../data/dtos/province.dto';
-import { DistrictDTO,DistrictModel,Status} from "../data/dtos/district.dto";
+import { DistrictDTO,DistrictModel} from "../data/dtos/district.dto";
 import { CityDTO } from '../data/dtos/city.dto';
 import BaseRepository from '@/modules/base/data/repository/base.repository';
 
@@ -84,22 +84,22 @@ export const updateProvince = async (
   }
   const province: ProvinceModel | null =
     await BaseRepository.updateById(ProvinceDTO, id, validatedResult.data);
-    if(validatedResult.data.status==="inactive"){
-      const inactiveDistrict=await districtRepository.updateMany(DistrictDTO,{provinceId:id},{status:Status.INACTIVE});
+    if(validatedResult.data.isActive===false){
+      const inactiveDistrict=await districtRepository.updateMany(DistrictDTO,{provinceId:id},{isActive:false});
      console.log(inactiveDistrict)
       const filtreData=inactiveDistrict?.map((data:DistrictModel)=>{
         return data._id
       })
       
-      const city=await districtRepository.updateMany(CityDTO,{districtId:{$in:filtreData}},{status:Status.INACTIVE});
+      const city=await districtRepository.updateMany(CityDTO,{districtId:{$in:filtreData}},{isActive:false});
       
     }
-    if(validatedResult.data.status==="active"){
-      const activeDistrict=await districtRepository.updateMany(DistrictDTO,{provinceId:id},{status:Status.ACTIVE});
+    if(validatedResult.data.isActive===true){
+      const activeDistrict=await districtRepository.updateMany(DistrictDTO,{provinceId:id},{isActive:true});
       const filtreData=activeDistrict?.map((data:DistrictModel)=>{
         return data._id
       })
-      const city=await districtRepository.updateMany(CityDTO,{districtId:{$in:filtreData}},{status:Status.ACTIVE});
+      const city=await districtRepository.updateMany(CityDTO,{districtId:{$in:filtreData}},{isActive:true});
       
     }
   if (province == null) throw new Error('update fail');
