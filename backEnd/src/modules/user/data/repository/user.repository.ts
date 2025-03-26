@@ -37,39 +37,66 @@ async function findUsers(
   }
   
   if (listReq.approvalStatus != null) {
-    query.approvalStatus = listReq.approvalStatus;
+    query.approvalStatus = listReq.approvalStatus === 'true';
   }
   if (listReq.isActive != null) {
-    query.isActive = listReq.isActive;
+    query.isActive = listReq.isActive === 'true';
   }
   if (listReq.isVerified != null) {
-    query.isVerified = listReq.isVerified;
+    query.isVerified = listReq.isVerified === 'true';
   }
   if (listReq.role) {
-    query.role = listReq.role;
+    query["role.type"]=listReq.role
   }
   const total = await findTotalUsers(query);
-  const users = await UserDTO.find(query)
-    .populate('role', '_id type')
-    .select('-password -__v')
-    .skip(
-      HelperUtil.pageSkip(
+
+
+  const users = await UserDTO.aggregate([
+    
+   
+    {
+      $lookup: {
+        from: 'roles',
+        localField: 'role',
+        foreignField: '_id',
+        as: 'role'
+      }
+    },
+     {$unwind: '$role'},
+    
+
+    {
+      $match:query
+    },
+    {
+      $project: {
+    
+        password: 0,
+        otp: 0,
+        otpExpiresAt: 0,
+        isDeleted: 0,
+        __v: 0,}
+      },
+      {$skip:HelperUtil.pageSkip(
         listReq.skip ?? 0,
         listReq.limit ?? Number(process.env.PAGINATION_LIMIT)
-      )
-    )
-    .limit(listReq.limit ?? Number(process.env.PAGINATION_LIMIT));
+      )},
+      {$limit:listReq.limit ?? Number(process.env.PAGINATION_LIMIT)},
+    
+  ]);
   return { total, users };
 }
 
 async function saveUser(
   userPayload: CreateUserRequest
-  
 ): Promise<string | null> {
+  console.log(userPayload);
   const newUser = new UserDTO(userPayload);
-  newUser.isActive = true;
-  newUser.isVerified = true;
+  
+ 
   const { _id } = await newUser.save();
+  await updateUser({isActive: true, isVerified: true}, _id as string);
+
   return _id as string;
 }
 
@@ -173,7 +200,7 @@ async function updateUser(
     }
   )) as unknown as UpdateUserRequest;
 
-  return updateUser.id;
+  return updateUser.id!;
 }
 
 async function adminUpdateUser(

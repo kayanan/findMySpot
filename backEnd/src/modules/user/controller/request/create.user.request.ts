@@ -2,25 +2,27 @@ import { ObjectId } from 'mongoose';
 import { BankDetail } from '../../data/dtos/user.dto';
 
 export interface UserRequest {
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface CreateUserRequest extends UserRequest {
-  email: string;
-  password: string;
-  nic:string;
-  mobile:string;
-  role?: string;
+  email?: string;
+  password?: string;
+  nic?:string;
+  phoneNumber?:string;
+  role?: ObjectId;
 }
 
 export interface UpdateUserRequest extends UserRequest {
-  id: string;
+  id?: string;
   address1?: string;
   address2?: string;
-  nic:string;
   city?: ObjectId;
-  vehicle:Array<string>;
+  isActive?: boolean;
+  isVerified?: boolean;
+  isDeleted?: boolean;
+  vehicle?:Array<string>;
   phoneNumbe?: string;
   profileImage?: string;
   bankDetails?: Array<BankDetail>;

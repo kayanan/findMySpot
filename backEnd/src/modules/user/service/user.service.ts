@@ -79,11 +79,11 @@ const saveUser = async (
     UserValidator.saveUserValidator(createUserRequest);
   if (valResult.error) throw new Error(valResult.error.message);
   const checkUser = await UserRepository.findByEmail(
-    createUserRequest.email
+    createUserRequest.email!
   );
   if (checkUser !== null) throw new Error('User already exists');
   const id: string | null =
-    await UserRepository.saveUser(createUserRequest);
+    await UserRepository.saveUser(valResult.data);
   if (id != null) {
     return { status: true, id } as CreatedUpdatedResponse;
   }

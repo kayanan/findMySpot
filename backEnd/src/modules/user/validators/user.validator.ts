@@ -1,6 +1,7 @@
 import { z } from 'zod';
 const phoneNumberPattern =
-  /^(?:0|0094|\+94)?(?:(7)(0|1|2|3|4|5|6|7|8|9)\d)\d{6}$/;
+ /^07[01245678][0-9]{7}$/;
+const nicPattern = /^([0-9]{9}[vVxX]|[0-9]{12})$/;
 
 const loginValidator = (data: any) => {
   const schema = z.object({
@@ -76,6 +77,9 @@ const resetPasswordValidator = (data: any) => {
 
 const saveUserValidator = (data: any) => {
   const schema = z.object({
+    role: z.any({
+      required_error: 'Role is required',
+    }),
     firstName: z
       .string({
         required_error: 'FirstName is required',
@@ -118,11 +122,23 @@ const saveUserValidator = (data: any) => {
       .nonempty({
         message: 'Password cannot be an empty field ',
       }),
-    role: z.string({
-      required_error: 'Password is required',
-      invalid_type_error: `Password should be a type of 'string'`,
-    }).optional(),
+    phoneNumber: z
+      .string({
+        required_error: 'PhoneNumber is required',
+        invalid_type_error: `PhoneNumber should be a type of 'string'`,
+      })
+      .regex(phoneNumberPattern, {
+        message: `Phone number should have a maximum length of {#limit}`,
+      }).transform((val) => val.replace(/^07/, '947')),
+      nic: z.string({
+        required_error: 'NIC is required',
+        invalid_type_error: `NIC should be a type of 'string'`,
+      }).regex(nicPattern, {
+        message: `NIC should have a maximum length of {#limit}`,
+      }),
   });
+  console.log(data)
+  console.log(schema.safeParse(data))
   return schema.safeParse(data);
 };
 

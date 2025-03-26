@@ -24,7 +24,7 @@ import Register from "./pages/auth/RegisterCustomer";
  import UserList from "./pages/User/Customer/UserList";
 // import AddUser from "./pages/User/AddUser";
 // //import UpdateUser from "./pages/User/UpdateUser";
-// import ViewUser from "./pages/User/ViewUser";
+ import ViewCustomer from "./pages/User/Customer/ViewCustomer";
 // // user import end
 
 // role import start
@@ -87,6 +87,7 @@ const AppRoutes = () => {
             
             {/* <Route path="/user" element={<Navigate to="/user" replace />} /> */}
             <Route path="/user" element={<UserList />} />
+            <Route path="/user/view/:id" element={<ViewCustomer />} />
             <Route path="/role/add" element={<AddRole />} />
             <Route path="/role/update/:id" element={<UpdateRole />} />
             <Route path="/role/view/:id" element={<ViewRole />} />

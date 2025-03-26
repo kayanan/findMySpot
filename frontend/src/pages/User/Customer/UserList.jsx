@@ -26,7 +26,7 @@ const UserList = () => {
       setLoading(true);
       try {
         const { data } = await axios.get(
-          `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/list?isActive=true`,
+          `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/list?isActive=${status}&role=CUSTOMER`,
           { withCredentials: true }
         );
         console.log(data.users);
@@ -39,7 +39,7 @@ const UserList = () => {
       }
     };
     fetchUsers();
-  }, []);
+  }, [status]);
 
   const filteredUsers = users.filter(
     (user) =>
@@ -111,10 +111,10 @@ const UserList = () => {
                       className="h-10 w-10 rounded-full object-cover mx-auto"
                     />
                   </td>
-                  <td className="py-3 px-4 text-center">{user.firstName}</td>
-                  <td className="py-3 px-4 text-center">{user.lastName}</td>
-                  <td className="py-3 px-4 text-center">{user.nic}</td>
-                  <td className="py-3 px-4 text-center">{user.phoneNumber}</td>
+                  <td className="py-3 px-4 text-center">{user?.firstName}</td>
+                  <td className="py-3 px-4 text-center">{user?.lastName}</td>
+                  <td className="py-3 px-4 text-center">{user?.nic}</td>
+                  <td className="py-3 px-4 text-center">{user?.phoneNumber.toString().replace(/^94/, '0')}</td>
                   <td className="py-3 px-4 flex justify-center gap-2">
                     <Link
                       to={`/user/view/${user._id}`}

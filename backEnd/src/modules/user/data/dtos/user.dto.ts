@@ -74,7 +74,7 @@ const UserSchema = new Schema<UserModel>(
         type: String,
         required: true,
         match: [
-          /^(?:\+94|0)(7\d{8}|1\d{8}|2\d{7})$/,
+          /^947[01245678][0-9]{7}$/,
           "Please enter a valid Sri Lankan phone number.",
         ],
       },

@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
-import { FaCar, FaParking } from "react-icons/fa";
+import { FaCar, FaParking, FaUserPlus, FaUser } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
@@ -15,6 +15,7 @@ export default function CustomerRegistration() {
     } = useForm();
 
     const password = watch("password", "");
+    const [signupAs, setSignupAs] = useState(null);
     const [roles, setRoles] = useState();
     useEffect(() => {
         const fetchRoles = async () => {
@@ -31,14 +32,16 @@ export default function CustomerRegistration() {
         };
         fetchRoles();
     }, []);
-
+    
     const onSubmit = async (data) => {
         delete data.confirmPassword;
-        data.role = roles.find(role => role?.type === "CUSTOMER")._id;
+        data.role = roles.find(role => role?.type === signupAs)._id;
+        console.log(data);
         try {
             const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/signup`, data);
             toast.success("Registration successful!", {
                 onClose: () => {
+                    setSignupAs(null);
                     reset();
                 },
                 autoClose: 1500,
@@ -52,7 +55,37 @@ export default function CustomerRegistration() {
     return (
         <div className="flex min-h-screen bg-gradient-to-br from-cyan-500 to-blue-600">
             <div className="m-auto w-full max-w-2xl p-4 sm:p-8">
-                <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg">
+                {!signupAs && (
+                    <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-xl p-8 max-w-md mx-auto">
+                        <div className="flex flex-col items-center justify-center space-y-6 mb-6">
+                            <div className="flex items-center space-x-3 mb-2">
+                                <FaUserPlus className="text-3xl text-cyan-500" />
+                                <h2 className="text-2xl font-bold text-cyan-700">Sign up as</h2>
+                            </div>
+                            <p className="text-gray-600 text-center text-lg font-bold mb-6">Choose your account type to get started</p>
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+                                <button
+                                    onClick={() => setSignupAs("CUSTOMER")}
+                                    className="w-full sm:w-48 bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-4 rounded-lg shadow-md transition duration-200 flex items-center justify-center space-x-2 min-h-[100px]"
+                                >
+                                    <FaUser className="text-2xl" />
+                                    <span className="text-lg">Customer</span>
+                                </button>
+                                <button
+                                    onClick={() => setSignupAs("PARKING_OWNER")}
+                                    className="w-full sm:w-48 bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-4 rounded-lg shadow-md transition duration-200 flex items-center justify-center space-x-2 min-h-[100px]"
+                                >
+                                    <FaParking className="text-2xl" />
+                                    <span className="text-lg">Parking Owner</span>
+                                </button>
+                            </div>
+                        </div>
+                        <Link to="/" className="block text-center text-gray-600 rounded-lg p-2 hover:text-gray-800">
+                            Already have an account? <span className="text-cyan-500">Sign in here</span>
+                        </Link>
+                    </div>
+                )}
+                {signupAs && (<div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg">
                     <div className="p-4">
                         <div className="flex items-center justify-center mb-2 space-x-4">
                             <FaParking className="h-10 w-10 text-cyan-600" />
@@ -62,7 +95,7 @@ export default function CustomerRegistration() {
                             Find My Spot
                         </h2>
                         <h2 className="text-2xl font-bold text-center text-cyan-700 mb-2">
-                            Customer Registration
+                            {`${signupAs?.split("_").join(" ").charAt(0).toUpperCase() + signupAs?.split("_").join(" ").slice(1).toLowerCase()} Registration`}
                         </h2>
                         <p className="text-center text-gray-500">
                             Register to find your perfect parking spot
@@ -79,7 +112,7 @@ export default function CustomerRegistration() {
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
                                     placeholder="Enter your first name"
                                 />
-                                {errors.firstname && <p className="text-red-500 text-sm mt-1">{errors.firstname.message}</p>}
+                                {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>}
                             </div>
 
                             <div>
@@ -90,7 +123,7 @@ export default function CustomerRegistration() {
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
                                     placeholder="Enter your last name"
                                 />
-                                {errors.lastname && <p className="text-red-500 text-sm mt-1">{errors.lastname.message}</p>}
+                                {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>}
                             </div>
                         </div>
 
@@ -116,7 +149,7 @@ export default function CustomerRegistration() {
                                 <input
 
                                     type="tel"
-                                    {...register("mobile", {
+                                    {...register("phoneNumber", {
                                         required: "Mobile number is required",
                                         pattern: {
                                             value: /^[0-9]{10}$/,
@@ -126,7 +159,7 @@ export default function CustomerRegistration() {
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
                                     placeholder="Eg: 0712345678"
                                 />
-                                {errors.mobile && <p className="text-red-500 text-sm mt-1">{errors.mobile.message}</p>}
+                                {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber.message}</p>}
                             </div>
                         </div>
 
@@ -154,9 +187,9 @@ export default function CustomerRegistration() {
                                     type="password"
                                     {...register("password", {
                                         required: "Password is required",
-                                        minLength: {
-                                            value: 8,
-                                            message: "Password must be at least 8 characters"
+                                        pattern: {
+                                            value: /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/,
+                                            message: "Password must be at least 8 characters and contain an uppercase letter, lowercase letter, and number"
                                         }
                                     })}
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
@@ -192,7 +225,7 @@ export default function CustomerRegistration() {
                             Already have an account? <span className="text-cyan-500">Sign in here</span>
                         </Link>
                     </form>
-                </div>
+                </div>)}
 
                 <div className="mt-4 text-center text-white text-sm">
                     <p>

@@ -1,8 +1,8 @@
 import { ListRequest } from '../../../base/controller/request/list.request';
 
 export interface UserListRequest extends ListRequest {
-  isVerified?: boolean;
-  isActive?: boolean;
-  approvalStatus?: boolean;
+  isVerified?: string;
+  isActive?: string;
+  approvalStatus?: string;
   role?: string;
 }

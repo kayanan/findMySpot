@@ -52,11 +52,8 @@ const Login = () => {
             <h2 className="text-2xl font-bold text-center text-cyan-700">
               Find My Spot
             </h2>
-            <h2 className="text-2xl font-bold text-center text-cyan-700">
-              Parking Management System
-            </h2>
             <p className="text-center text-gray-500">
-              Sign in to manage your parking system
+              Sign in to manage and book your parking spot
             </p>
           </div>
           <form onSubmit={handleSubmit} className="p-4 space-y-6">
