@@ -16,7 +16,7 @@ import zxcvbn from "zxcvbn"; // For password strength analysis
 import DropdownInner from "../../../utils/DropdownInner";
 import { designationOptions } from "../../../utils/DropdownOptions";
 
-const AddUser = () => {
+const AddCustomer = () => {
   const navigate = useNavigate(); // For programmatic navigation
   // Form data state to manage user input
   const [formData, setFormData] = useState({
@@ -530,4 +530,4 @@ const AddUser = () => {
   );
 };
 
-export default AddUser;
+export default AddCustomer;

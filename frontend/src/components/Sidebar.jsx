@@ -12,7 +12,7 @@ const Sidebar = ({ isOpen }) => {
       icon: UsersIcon,
       subLink: [
         { name: "Paking Owner", path: "/owner", icon: MapIcon },
-        { name: "Customers", path: "/user", icon: IdentificationIcon },
+        { name: "Customers", path: "/customer", icon: IdentificationIcon },
         { name: "Roles", path: "/role", icon: MapIcon },
       ],
     },

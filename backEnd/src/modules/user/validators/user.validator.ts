@@ -137,8 +137,6 @@ const saveUserValidator = (data: any) => {
         message: `NIC should have a maximum length of {#limit}`,
       }),
   });
-  console.log(data)
-  console.log(schema.safeParse(data))
   return schema.safeParse(data);
 };
 
@@ -236,9 +234,10 @@ const updateUserValidator = (data: any) => {
 };
 
 const adminUpdateUserValidator = (data: any) => {
+  console.log(data)
   const schema = z.object({
-    id: z.string({
-      required_error: 'Name is required',
+    _id: z.string({
+      required_error: 'Id is required',
     }),
     firstName: z
       .string({
@@ -264,32 +263,24 @@ const adminUpdateUserValidator = (data: any) => {
       .regex(phoneNumberPattern, {
         message: `Phone number should have a maximum length of {#limit}`,
       }),
-    address1: z.string({
-      required_error: 'Address1 is required',
-      invalid_type_error: `Address1 should be a type of 'string'`,
-    }),
-    address2: z.string({
-      required_error: 'Address2 is required',
-      invalid_type_error: `Address2 should be a type of 'string'`,
-    }),
-    city: z
-      .string({
-        required_error: 'City is required',
-        invalid_type_error: `City should be a type of 'string'`,
-      })
-      .max(20, {
-        message: `City should have a maximum length of {#limit}`,
-      }),
-    profileImage: z.string(),
-    facebookId: z.string({
-      invalid_type_error: `FacebookId should be a type of 'string'`,
-    }),
-    googleId: z.string({
-      invalid_type_error: `GoogleId should be a type of 'string'`,
-    }),
-    bankDetails: z.array(
+    address1: z.object({
+      line1: z.string().optional().nullable(), 
+      line2: z.string().optional().nullable(),
+      city: z.string().optional().nullable(),
+      country: z.string().optional().nullable(),
+      postalCode: z.string().optional().nullable(),
+    }).optional().nullable(),
+    address2: z.object({
+      line1: z.string().optional().nullable(),
+      line2: z.string().optional().nullable(),
+      city: z.string().optional().nullable(),
+      country: z.string().optional().nullable(),
+      postalCode: z.string().optional().nullable(),
+    }).optional().nullable(),
+    profileImage: z.string().optional().nullable(),
+    cardDetails: z.array(
       z.object({
-        name: z
+        nameOnCard: z
           .string({
             required_error: 'Name is required',
             invalid_type_error: `Name should be a type of 'string'`,
@@ -297,42 +288,46 @@ const adminUpdateUserValidator = (data: any) => {
           .nonempty({
             message: 'Name cannot be an empty field ',
           }),
-        branch: z
+        cardNumber: z
           .string({
             required_error: 'Branch is required',
             invalid_type_error: `Branch should be a type of 'string'`,
           })
           .nonempty({
-            message: 'Branch cannot be an empty field ',
+            message: 'Card Number cannot be an empty field ',
           }),
-        accountNo: z
+        expiryDate: z
           .string({
-            required_error: 'AccountNo is required',
-            invalid_type_error: `AccountNo should be a type of 'string'`,
+            required_error: 'Expiry Date is required',
+            invalid_type_error: `Expiry Date should be a type of 'string'`,
           })
           .nonempty({
-            message: 'AccountNo cannot be an empty field ',
+            message: 'Expiry Date cannot be an empty field ',
           }),
-        accountHolderName: z
+        cvv: z
           .string({
-            required_error: 'AccountHolderName is required',
-            invalid_type_error: `AccountHolderName should be a type of 'string'`,
+            required_error: 'CVV is required',
+            invalid_type_error: `CVV should be a type of 'string'`,
           })
           .nonempty({
-            message: 'AccountHolderName cannot be an empty field ',
+            message: 'CVV cannot be an empty field ',
           }),
-        isDefault: z.boolean({
+          isDefault: z.string({
           required_error: 'IsDefault is required',
           invalid_type_error: `IsDefault should be a type of 'boolean'`,
         }),
+
       })
-    ),
-    isPremiumCustomer: z.boolean(),
-    isVerified: z.boolean(),
-    isAvailability: z.boolean(),
-    isAdvertisementsEnabled: z.boolean(),
-    isActive: z.boolean(),
-    approvalStatus: z.boolean(),
+    ).optional().nullable(),
+    vehicleDetails: z.array(
+      z.object({
+        number: z.string(),
+        isDefault: z.boolean(),
+      })
+    ).optional().nullable(),
+    isVerified: z.string().optional().nullable(),
+    isActive: z.string().optional().nullable(),
+    approvalStatus: z.string().optional().nullable(),
   });
   return schema.safeParse(data);
 };

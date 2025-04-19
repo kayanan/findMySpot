@@ -9,8 +9,8 @@ import { checkToken } from '@/src/middlewares/check-auth';
 const userRouter: Router = Router();
 
 // User routes
-userRouter.get('/profile', checkToken, getUser);
+userRouter.get('/profile/:id', getUser);
 userRouter.post('/signup', saveUser);
-userRouter.post('/update', checkToken, updateUser);
+userRouter.patch('/update/:id', updateUser);
 
 export default userRouter;

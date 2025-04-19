@@ -11,7 +11,7 @@ const appMiddleware = (app: Application) => {
   app.use(cors({
     origin: "http://localhost:5173", // Allow only your frontend
     credentials: true, // Allow cookies & authentication headers
-    methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allowed HTTP methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
   }));
 
@@ -19,7 +19,7 @@ const appMiddleware = (app: Application) => {
 
   app.use(
     express.urlencoded({
-      extended: false,
+      extended: true,
       parameterLimit: 10,
       limit: "5mb",
     })
@@ -49,9 +49,9 @@ const appMiddleware = (app: Application) => {
   });
 
   // Handle other errors
-  app.use((error: any, req: Request, res: Response,next:NextFunction) => {
+  app.use((error: any, req: Request, res: Response, next: NextFunction) => {
     logger.error(`Error: ${error.message} | Status: ${error.status || 500}`);
-    
+
     res.status(error.status || 500).json({
       message: error.message,
     });

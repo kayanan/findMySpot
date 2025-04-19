@@ -35,7 +35,7 @@ export const getUsers = async (req: Request, res: Response) => {
 export const getUser = async (req: Request, res: Response) => {
   try {
     const response: UserProfileResponse =
-      await UserService.getUser(req);
+      await UserService.getUser(req.params.id);
     res.status(200).json(response);
   } catch (error: any) {
     res.status(400).json(errorResponse(error.message));
@@ -103,12 +103,27 @@ export const adminUpdateUser = async (
   res: Response
 ) => {
   try {
+    Object.keys(req.body).forEach(key => {
+      if(req.body[key] instanceof Array){
+        req.body[key].forEach((item,index) => {
+          if(item.includes("{")){
+            req.body[key][index] = JSON.parse(item);
+          }
+        });
+      }
+      else if(req.body[key].includes("{")){
+        console.log(req.body[key],"dodododododododododododododododd------------------")
+        req.body[key] = JSON.parse(req.body[key]);
+      }
+    });
     const response: CreatedUpdatedResponse =
       await UserService.adminUpdateUser(
-        req.body as unknown as AdminUpdateUserRequest
+        req.body as unknown as AdminUpdateUserRequest,
+        req.params.id as string
       );
     res.status(201).json(response);
   } catch (error: any) {
     res.status(400).json(errorResponse(error.message));
+    console.log(error)
   }
 };

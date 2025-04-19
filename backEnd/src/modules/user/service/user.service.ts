@@ -29,6 +29,7 @@ import { isValidObjectId } from 'mongoose';
 //import AssetService from '../../asset/service/asset.service';
 import BaseRepository from '@/modules/base/data/repository/base.repository';
 import { RoleDTO } from '@/modules/user/data/dtos/role.dto';
+import { json } from 'express';
 
 const getUsers = async (
   listReq: UserListRequest
@@ -51,9 +52,9 @@ const getUsers = async (
   } as UserListResponse;
 };
 
-const getUser = async (req: any): Promise<UserProfileResponse> => {
+const getUser = async (id: string): Promise<UserProfileResponse> => {
   const user: UserModel | null = await UserRepository.findById(
-    req.userData.userId
+    id
   );
 
   if (user === null) {
@@ -233,19 +234,21 @@ const updateUser = async (
 };
 
 const adminUpdateUser = async (
-  adminUpdateUserRequest: AdminUpdateUserRequest
+  adminUpdateUserRequest: AdminUpdateUserRequest,
+  id: string
 ): Promise<CreatedUpdatedResponse> => {
+  
   const valResult = UserValidator.adminUpdateUserValidator(
     adminUpdateUserRequest
   );
   if (valResult.error) throw new Error(valResult.error.message);
 
-  const id: string | null = await UserRepository.adminUpdateUser(
+  const updatedId: string | null = await UserRepository.adminUpdateUser(
     adminUpdateUserRequest,
-    adminUpdateUserRequest.id
+    id
   );
-  if (id != null) {
-    return { status: true, id } as CreatedUpdatedResponse;
+  if (updatedId != null) {
+    return { status: true, id: updatedId  } as CreatedUpdatedResponse;
   }
   throw new Error('User not Updated');
 };

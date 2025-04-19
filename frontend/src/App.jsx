@@ -20,18 +20,19 @@ import AddCity from "./pages/Location/City/AddCity";
 import UpdateCity from "./pages/Location/City/UpdateCity";
 import ViewCity from "./pages/Location/City/ViewCity";
 import Register from "./pages/auth/RegisterCustomer";
-// // user import start
- import UserList from "./pages/User/Customer/UserList";
-// import AddUser from "./pages/User/AddUser";
-// //import UpdateUser from "./pages/User/UpdateUser";
- import ViewCustomer from "./pages/User/Customer/ViewCustomer";
+
+// //  customer import start
+import CustomerList from "./pages/User/Customer/CustomerList";
+//import AddCustomer from "./pages/User/Customer/AddCustomer";
+import UpdateCustomer from "./pages/User/Customer/UpdateCustomer";
+import ViewCustomer from "./pages/User/Customer/ViewCustomer";
 // // user import end
 
 // role import start
- import RoleList from "./pages/User/Role/RoleList";
- import AddRole from "./pages/User/Role/AddRole";
- import UpdateRole from "./pages/User/Role/UpdateRole";
- import ViewRole from "./pages/User/Role/ViewRole";
+import RoleList from "./pages/User/Role/RoleList";
+import AddRole from "./pages/User/Role/AddRole";
+import UpdateRole from "./pages/User/Role/UpdateRole";
+import ViewRole from "./pages/User/Role/ViewRole";
 
 // role import end
 
@@ -42,9 +43,8 @@ const AppRoutes = () => {
     <div className="flex">
       <Sidebar isOpen={isSidebarOpen} />
       <div
-        className={`flex-1 transition-all duration-300 ${
-          isSidebarOpen ? "ml-64" : ""
-        }`}
+        className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-64" : ""
+          }`}
       >
         <Navbar
           isSidebarOpen={isSidebarOpen}
@@ -52,8 +52,8 @@ const AppRoutes = () => {
         />
         <div className="pt-0">
           <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/customer/register" element={<Register />} />
+            <Route path="/" element={<Login />} />
+            <Route path="/customer/register" element={<Register />} />
             {/* ------------Location Route Start-------- */}
             {/* province route start */}
             <Route path="/province" element={<ProvinceList />} />
@@ -81,16 +81,20 @@ const AppRoutes = () => {
             {/* <Route path="/user/view/:id" element={<ViewUser />} /> */}
             {/* user route end */}
 
-             {/* role route start */}
-               <Route path="/role" element={<RoleList/>} />
-             {/* role route end */}
-            
-            {/* <Route path="/user" element={<Navigate to="/user" replace />} /> */}
-            <Route path="/user" element={<UserList />} />
-            <Route path="/user/view/:id" element={<ViewCustomer />} />
+            {/* role route start */}
+            <Route path="/role" element={<RoleList />} />
             <Route path="/role/add" element={<AddRole />} />
             <Route path="/role/update/:id" element={<UpdateRole />} />
             <Route path="/role/view/:id" element={<ViewRole />} />
+            {/* role route end */}
+
+            {/* customer route start */}
+            {/* <Route path="/user" element={<Navigate to="/user" replace />} /> */}
+            <Route path="/customer" element={<CustomerList />} />
+            <Route path="/customer/view/:id" element={<ViewCustomer />} />
+            <Route path="/customer/update/:id" element={<UpdateCustomer />} />
+            {/* customer route end */}
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

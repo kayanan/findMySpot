@@ -10,7 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import ToggleGroup from "../../../utils/ToggleGroup";
 import { statusOptions } from "../../../utils/DropdownOptions";
 
-const UserList = () => {
+const CustomerList = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state || {};
@@ -48,7 +48,7 @@ const UserList = () => {
         ? user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.nic?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.mobile?.toLowerCase().includes(searchTerm.toLowerCase())
+          user.phoneNumber?.toString().replace(/^94/, '0')?.toLowerCase().includes(searchTerm.toLowerCase())
         : true)
   );
 
@@ -117,7 +117,7 @@ const UserList = () => {
                   <td className="py-3 px-4 text-center">{user?.phoneNumber.toString().replace(/^94/, '0')}</td>
                   <td className="py-3 px-4 flex justify-center gap-2">
                     <Link
-                      to={`/user/view/${user._id}`}
+                      to={`/customer/view/${user._id}`}
                       state={{ user }}
                       className="bg-teal-400 hover:bg-teal-600 text-white px-3 py-2 rounded-full"
                     >
@@ -125,7 +125,7 @@ const UserList = () => {
                     </Link>
                     <button
                       onClick={() =>
-                        navigate(`/user/update/${user._id}`, {
+                        navigate(`/customer/update/${user._id}`, {
                           state: { user },
                         })
                       }
@@ -163,4 +163,4 @@ const UserList = () => {
   );
 };
 
-export default UserList;
+export default CustomerList;

@@ -67,9 +67,8 @@ const ViewCustomer = () => {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-bold text-cyan-700">Customer Details</h3>
             <span
-              className={`text-base font-semibold px-3 py-1 rounded-full ${
-                customer.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-              }`}
+              className={`text-base font-semibold px-3 py-1 rounded-full ${customer.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                }`}
             >
               {customer.isActive ? "Active" : "Inactive"}
             </span>
@@ -122,13 +121,25 @@ const ViewCustomer = () => {
                 <p className="text-base font-semibold">{customer.role?.type?.replace(/_/g, ' ')}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <FaCar className="text-cyan-500 text-xl" />
-              <div>
-                <p className="text-sm font-medium text-gray-500">Vehicle Numbers</p>
-                { customer.vehicle?.length > 0 ? customer.vehicle?.map((vehicle, index) => (
-                  <span key={index} className="text-base font-semibold">{vehicle}</span>
-                )) : <span className="text-base font-semibold">Not provided</span>}
+            <div className="flex items-center space-x-2">
+              <FaCar className="text-gray-500" />
+              <p className="text-sm font-medium text-gray-500">Vehicle Numbers</p>
+              <div className="flex flex-wrap gap-2">
+               
+                {customer?.vehicle?.map((vehicle, index) => (
+                  <div
+                    key={index}
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${vehicle.isDefault
+                      ? 'bg-cyan-100 text-cyan-800 border border-cyan-200'
+                      : 'bg-gray-100 text-gray-800 border border-gray-200'
+                      }`}
+                  >
+                    {vehicle.number}
+                    {vehicle.isDefault && (
+                      <span className="ml-1 text-xs text-cyan-600">(Default)</span>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
             <div className="flex items-center gap-3">
