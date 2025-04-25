@@ -14,7 +14,6 @@ export const deleteParkingSubscriptionFee = async (id: string) => {
 };
 
 export const findParkingSubscriptionFeeById = async (id: string) => {
-  console.log(id)
   return await ParkingSubscriptionFeeDTO.findOne({ _id: id});
 };
 
