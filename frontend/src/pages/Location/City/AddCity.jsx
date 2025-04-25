@@ -42,7 +42,7 @@ const AddCity = () => {
       return;
     }
     try {
-      await axios.post(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/city`, formData, {
+      await axios.post(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/city`, formData, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });

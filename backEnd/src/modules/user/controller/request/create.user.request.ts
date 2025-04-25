@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongoose';
-import { CardDetail } from '../../data/dtos/user.dto';
+import { CardDetail, Address, AccountDetail } from '../../data/dtos/user.dto';
 
 export interface UserRequest {
   firstName?: string;
@@ -15,32 +15,37 @@ export interface CreateUserRequest extends UserRequest {
 }
 
 export interface UpdateUserRequest extends UserRequest {
-  id?: string;
-  address1?: string;
-  address2?: string;
-  city?: ObjectId;
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  nic?:string;
+  address?: Address;
   isActive?: boolean;
-  isVerified?: boolean;
   isDeleted?: boolean;
   vehicle?:Array<string>;
-  phoneNumbe?: string;
+  phoneNumber?: string;
   profileImage?: string;
   bankDetails?: Array<CardDetail>;
+  accountDetails?: Array<AccountDetail>;
+  cardDetails?: Array<CardDetail>;
 }
 
 export interface AdminUpdateUserRequest extends UserRequest {
   id: string;
-  isPremiumCustomer?: boolean;
-  nic:string;
-  isVerified?: boolean;
-  isAvailability?: boolean;
-  isAdvertismentsEnabled?: boolean;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  nic?:string;
+  phoneNumber?:string;
+  role?: ObjectId;
   isActive?: boolean;
-  vehicle:Array<{number:string,isDefault:boolean}>;
+  vehicle?:Array<{number:string,isDefault:boolean}>;
   approvalStatus?: boolean;
-  address1?: string;
-  address2?: string;
-  city?: string;
+  address?: Address;
   profileImage?: string;
   bankDetails?: Array<CardDetail>;
+  accountDetails?: Array<AccountDetail>;
+  isDeleted?: boolean;
+  cardDetails?: Array<CardDetail>;
 }

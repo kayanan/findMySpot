@@ -26,3 +26,16 @@ export const designationOptions = [
   { value: "PARKING_MANAGER", label: "PARKING MANAGER" },
   { value: "CUSTOMER", label: "CUSTOMER" },
 ];
+
+// Approval Status Options
+export const approvalStatusOptions = [
+  { value: "true", label: "Approved" },
+  { value: "false", label: "Pending" },
+];
+
+// Status Options
+export const isActiveOptions = [
+  { value: "true", label: "Active" },
+  { value: "false", label: "Inactive" },
+];
+

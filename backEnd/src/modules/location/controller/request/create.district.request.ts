@@ -6,3 +6,10 @@ export interface CreateUpdateDistrictRequest {
   description: string;
   isDeleted?: boolean;
 }
+
+export interface DistrictListRequest {
+  provinceId?:string;
+  search?: string;
+  skip?: number;
+  limit?: number;
+}

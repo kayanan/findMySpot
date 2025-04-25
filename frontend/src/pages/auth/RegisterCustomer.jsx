@@ -1,22 +1,30 @@
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaCar, FaParking, FaUserPlus, FaUser } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { useState, useEffect } from "react";
+
 export default function CustomerRegistration() {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const defaultValues = location.state?.userData || {};
     const {
         register,
         handleSubmit,
         watch,
         reset,
         formState: { errors, isSubmitting },
-    } = useForm();
+    } = useForm({
+        defaultValues: defaultValues
+    });
 
     const password = watch("password", "");
-    const [signupAs, setSignupAs] = useState(null);
+    const [signupAs, setSignupAs] = useState(location.state?.signupAs || null);
     const [roles, setRoles] = useState();
+    const [formData, setFormData] = useState(null);
+
     useEffect(() => {
         const fetchRoles = async () => {
             try {
@@ -32,11 +40,18 @@ export default function CustomerRegistration() {
         };
         fetchRoles();
     }, []);
-    
+
     const onSubmit = async (data) => {
         delete data.confirmPassword;
-        data.role = roles.find(role => role?.type === signupAs)._id;
-        console.log(data);
+        data.role = [roles.find(role => role?.type === signupAs)._id];
+        data.approvalStatus = false;
+        if (signupAs === "PARKING_OWNER") {
+            data.isActive = false;
+            setFormData(data);
+            navigate("/parking-owner/spot-details", { state: { userData: data } });
+            return;
+        }
+
         try {
             const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/signup`, data);
             toast.success("Registration successful!", {
@@ -46,7 +61,6 @@ export default function CustomerRegistration() {
                 },
                 autoClose: 1500,
             });
-
         } catch (error) {
             toast.error(error.message || "Registration failed. Please try again.");
         }
@@ -147,7 +161,6 @@ export default function CustomerRegistration() {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Mobile</label>
                                 <input
-
                                     type="tel"
                                     {...register("phoneNumber", {
                                         required: "Mobile number is required",
@@ -213,13 +226,20 @@ export default function CustomerRegistration() {
                             </div>
                         </div>
 
-                        <button
+                        {signupAs === "CUSTOMER" && <button
                             type="submit"
                             className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? "Registering..." : "Register"}
-                        </button>
+                        </button>}
+                        {signupAs === "PARKING_OWNER" && <button
+                            type="submit"
+                            className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200"
+                            disabled={isSubmitting}
+                        >
+                            Next
+                        </button>}
 
                         <Link to="/" className="block text-center text-gray-600 rounded-lg p-2 hover:text-gray-800">
                             Already have an account? <span className="text-cyan-500">Sign in here</span>

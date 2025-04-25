@@ -5,6 +5,6 @@ export interface UserJWT extends JwtPayload {
   firstName: string;
   lastName: string;
   email: string;
-  role: RoleTypeEnum;
+  role: Array<RoleTypeEnum>;
   userId: string;
 }

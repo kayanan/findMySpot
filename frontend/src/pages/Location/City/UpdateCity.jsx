@@ -23,7 +23,7 @@ const UpdateCity = () => {
   useEffect(() => {
     const fetchDistricts = async () => {
       try {
-        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/district`, { withCredentials: true });
+        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/district`, { withCredentials: true });
         if(data.districts){
           const refinedOption=data.districts.map((district)=>{
             return{value:district._id,label:district.name}
@@ -74,7 +74,7 @@ const UpdateCity = () => {
     setIsSubmitting(true);
     try {
       await axios.put(
-        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/city/${id}`,
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/city/${id}`,
         formData,
         {
           headers: { "Content-Type": "application/json" },

@@ -3,7 +3,7 @@ import { BaseDTO } from '../../../base/data/dtos/base.dto';
 import { HttpMethodEnum } from '@/modules/base/enums/http.method.enum';
 
 export interface PermissionModel extends BaseDTO {
-  role: ObjectId;
+  role: Array<ObjectId>;
   access: AccessLevel;
   description?: string;
 }
@@ -28,7 +28,7 @@ const AccessSchema = new Schema<AccessLevel>(
 const PermissionSchema = new Schema<PermissionModel>(
   {
     role: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: [mongoose.Schema.Types.ObjectId],
       ref: 'Role',
       required: true,
     },

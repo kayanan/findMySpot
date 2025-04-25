@@ -54,7 +54,7 @@ const UpdateProvince = () => {
     try {
     
       await axios.put(
-        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/province/${id}`,
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/province/${id}`,
         formData,
         {
           headers: { "Content-Type": "application/json" },

@@ -3,6 +3,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation
 } from "react-router-dom";
 import { useState } from "react";
 import Navbar from "./components/Navbar";
@@ -20,7 +21,11 @@ import AddCity from "./pages/Location/City/AddCity";
 import UpdateCity from "./pages/Location/City/UpdateCity";
 import ViewCity from "./pages/Location/City/ViewCity";
 import Register from "./pages/auth/RegisterCustomer";
-
+// parking subscription fee import start
+import ListSubscriptionFees from "./pages/ParkingSubscriptionFee/ListSubscriptionFees";
+import AddSubscriptionFee from "./pages/ParkingSubscriptionFee/AddSubscriptionFee"; 
+import UpdateSubscriptionFee from "./pages/ParkingSubscriptionFee/UpdateSubscriptionFee";
+// parking subscription fee import end
 // //  customer import start
 import CustomerList from "./pages/User/Customer/CustomerList";
 //import AddCustomer from "./pages/User/Customer/AddCustomer";
@@ -36,8 +41,16 @@ import ViewRole from "./pages/User/Role/ViewRole";
 
 // role import end
 
+// parking owner import start
+import ParkingOwnerList from "./pages/User/ParkingOwner/ParkingOwnerList";
+import UpdateParkingOwner from "./pages/User/ParkingOwner/UpdateParkingOwner";
+import ViewParkingOwner from "./pages/User/ParkingOwner/ViewParkingOwner";
+import ParkingSpotDetails from "./pages/User/ParkingOwner/ParkingSpotDetails";
+// parking owner import end
+
 const AppRoutes = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const location = useLocation();
 
   return (
     <div className="flex">
@@ -95,6 +108,19 @@ const AppRoutes = () => {
             <Route path="/customer/update/:id" element={<UpdateCustomer />} />
             {/* customer route end */}
 
+            {/* parking owner route start */}
+            <Route path="/owner" element={<ParkingOwnerList />} />
+            <Route path="/owner/view/:id" element={<ViewParkingOwner />} />
+            <Route path="/owner/update/:id" element={<UpdateParkingOwner />} />
+            <Route path="/parking-owner/spot-details" element={<ParkingSpotDetails />} />
+            {/* parking owner route end */}
+
+            {/* parking subscription fee route start */}
+            <Route path="/parking-subscription-fee" element={<ListSubscriptionFees key={location.state?.key}/>} />
+            <Route path="/parking-subscription-fee/add" element={<AddSubscriptionFee />} />
+            <Route path="/parking-subscription-fee/update/:id" element={<UpdateSubscriptionFee />} />
+            {/* parking subscription fee route end */}
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
@@ -104,6 +130,8 @@ const AppRoutes = () => {
 };
 
 const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   return (
     <Router>
       <AppRoutes />

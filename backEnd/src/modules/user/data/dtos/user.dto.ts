@@ -8,19 +8,17 @@ export interface UserModel extends BaseDTO {
   nic: string;
   email: string;
   password: string;
-  role: ObjectId;
-  address1?: Address;
-  address2?: Address;
+  role: Array<ObjectId>;
+  address?: Address;
   phoneNumber?: string;
   otp?: string;
   otpExpiresAt?: Date;
   profileImage?: string;
-  isVerified?: boolean;
-  isPremiumCustomer?: boolean;
   isActive?: boolean;
   approvalStatus?: boolean;
-  vehicle: Array<{ name: String, isDefault: boolean }>;
+  vehicle: Array<{ vehicleNumber: String, isDefault: boolean }>;
   cardDetails?: Array<CardDetail>;
+  accountDetails?: Array<AccountDetail>;
   isDeleted: boolean;
 }
 export interface Address {
@@ -40,13 +38,21 @@ export interface CardDetail {
   isDefault: boolean;
 }
 
+export interface AccountDetail {
+  accountHolderName: string;
+  accountNumber: string;
+  bankName: string;
+  branchName: string;
+  isDefault: boolean;
+}
+
 const UserSchema = new Schema<UserModel>(
   {
     //Role
     role: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: [mongoose.Schema.Types.ObjectId],
       ref: 'Role',
-      required: false,
+      required: true,
       index: 1,
     },
     //Asset
@@ -73,42 +79,33 @@ const UserSchema = new Schema<UserModel>(
       match:
         /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/,
     },
-    password: { type: String, required: true },
-    address1: {
+    password: { type: String },
+    address: {
       line1: { type: String, required: true },
       line2: { type: String },
       city: { type: String, required: true },
       district: { type: String, required: true },
       province: { type: String, required: true },
-      zipCode: { type: String, required: true },
-    },
-    address2: {
-      line1: { type: String, required: true },
-      line2: { type: String },
-      city: { type: String, required: true },
-      district: { type: String, required: true },
-      province: { type: String, required: true },
-      zipCode: { type: String, required: true },
+      zipCode: { type: String },
     },
     phoneNumber:
     {
       type: String,
       required: true,
       match: [
-        /^947[01245678][0-9]{7}$/,
-        "Please enter a valid Sri Lankan phone number.",
+        /^07[01245678][0-9]{7}$/,
+        "Please enter a valid Sri Lankan Mobile phone number. Eg(0712345678)",
       ],
     },
 
     otp: { type: String },
     otpExpiresAt: { type: Date },
     isDeleted: { type: Boolean, default: false },
-    isPremiumCustomer: { type: Boolean, default: false },
     isActive: { type: Boolean, default: false },
     approvalStatus: { type: Boolean, default: false },
     vehicle: [
       {
-        number: { type: String, required: true },
+        vehicleNumber: { type: String, required: true },
         isDefault: { type: Boolean, required: true, default: false },
       },
     ],
@@ -118,6 +115,15 @@ const UserSchema = new Schema<UserModel>(
         cardNumber: { type: String, required: true, match: [/^[0-9]{16}$/, "Please enter a valid card number."] },
         expiryDate: { type: String, required: true, match: [/^[0-1][0-9]\/[0-9]{2}$/, "Please enter a valid expiry date."] },
         cvv: { type: String, required: true, match: [/^[0-9]{3}$/, "Please enter a valid CVV."] },
+        isDefault: { type: Boolean, required: true, default: false },
+      },
+    ],
+    accountDetails: [
+      {
+        accountHolderName: { type: String, required: true },
+        accountNumber: { type: String, required: true },
+        bankName: { type: String, required: true },
+        branchName: { type: String, required: true },
         isDefault: { type: Boolean, required: true, default: false },
       },
     ],

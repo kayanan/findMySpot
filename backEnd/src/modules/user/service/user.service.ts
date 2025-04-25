@@ -36,15 +36,7 @@ const getUsers = async (
 ): Promise<UserListResponse> => {
   const list: UserListResponse =
     await UserRepository.findUsers(listReq);
-  // for (let user of list.users) {
-  //   user.profileImage = user.profileImage?.toString();
-  //   // if (user.profileImage) {
-  //   //   const url = await AssetService.getAssetUrl(user?.profileImage);
-  //   //   if (url !== null) {
-  //   //     user = { ...user, profileImage: url } as UserModel;
-  //   //   }
-  //   // }
-  // }
+
   return {
     status: true,
     totalCount: list.total,
@@ -61,21 +53,13 @@ const getUser = async (id: string): Promise<UserProfileResponse> => {
     throw new Error('User not found');
   }
   user;
-  // if (user.profileImage) {
-  //   const url = await AssetService.getAssetUrl(user?.profileImage);
-  //   console.log(url);
-  //   if (url !== null) {
-  //     console.log(typeof url);
-  //     user.profileImage = url;
-  //   }
-  // }
   return { status: true, user } as UserProfileResponse;
 };
 
 const saveUser = async (
   createUserRequest: CreateUserRequest
 ): Promise<CreatedUpdatedResponse> => {
- 
+
   const valResult =
     UserValidator.saveUserValidator(createUserRequest);
   if (valResult.error) throw new Error(valResult.error.message);
@@ -88,7 +72,7 @@ const saveUser = async (
   if (id != null) {
     return { status: true, id } as CreatedUpdatedResponse;
   }
-  
+
   throw new Error('User not inserted');
 };
 
@@ -106,11 +90,15 @@ const login = async (req: any) => {
     req.body.password,
     checkUser.password
   );
-  const role = await BaseRepository.findById(
+  const role = await BaseRepository.findAll(
     RoleDTO,
-    checkUser.role.toString()
-  );
-  if (role == null) throw new Error('Role not found');
+    {
+      _id: {
+        $in: checkUser.role
+      }
+    }, 0, 100,
+  )
+  if (role.items.length === 0) throw new Error('Role not found');
 
   if (compareRes) {
     const token = jwt.sign(
@@ -119,7 +107,7 @@ const login = async (req: any) => {
         lastName: checkUser.lastName,
         email: checkUser.email,
         userId: checkUser._id,
-        role: role.type,
+        roles: role.items.map(item => item.type),
       },
       process.env.SECRET!,
       {
@@ -132,7 +120,7 @@ const login = async (req: any) => {
       lastName: checkUser.lastName,
       email: checkUser.email,
       userId: checkUser._id!.toString(),
-      role: role.type,
+      roles: role.items.map(item => item.type),
       accessToken: token,
     } as LoginResponse;
   }
@@ -161,7 +149,7 @@ const forgotPassword = async (
   //     name: user.firstName,
   //   }
   // );
-  const smsSent=await sendSMS(otp,user?.phoneNumber!);
+  const smsSent = await sendSMS(otp, user?.phoneNumber?.replace(/^0/, '94')!);
   if (smsSent) throw new Error('SMS not sent');
 
   return {
@@ -237,7 +225,7 @@ const adminUpdateUser = async (
   adminUpdateUserRequest: AdminUpdateUserRequest,
   id: string
 ): Promise<CreatedUpdatedResponse> => {
-  
+
   const valResult = UserValidator.adminUpdateUserValidator(
     adminUpdateUserRequest
   );
@@ -248,7 +236,7 @@ const adminUpdateUser = async (
     id
   );
   if (updatedId != null) {
-    return { status: true, id: updatedId  } as CreatedUpdatedResponse;
+    return { status: true, id: updatedId } as CreatedUpdatedResponse;
   }
   throw new Error('User not Updated');
 };

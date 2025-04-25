@@ -42,7 +42,7 @@ const AddProvince = () => {
     }
     try {
       
-      await axios.post(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/province`, formData, {
+      await axios.post(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/province`, formData, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });

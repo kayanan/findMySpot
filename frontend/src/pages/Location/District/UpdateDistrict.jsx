@@ -22,7 +22,7 @@ const UpdateDistrict = () => {
   useEffect(() => {
     const fetchProvinces = async () => {
       try {
-        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/province`, { withCredentials: true });
+        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/province`, { withCredentials: true });
         if(data.provinces){
           const refinedOption=data.provinces.map((province)=>{
             return{value:province._id,label:province.name}
@@ -74,7 +74,7 @@ const UpdateDistrict = () => {
     try {
     
       await axios.put(
-        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/district/${id}`,
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/district/${id}`,
         formData,
         {
           headers: { "Content-Type": "application/json" },

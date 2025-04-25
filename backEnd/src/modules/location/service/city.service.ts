@@ -6,7 +6,7 @@ import {
   CityResponse,
 } from '../controller/response/city.response';
 import { isValidObjectId } from 'mongoose';
-import { CreateUpdateCityRequest } from '../controller/request/create.city.request';
+import { CityListRequest, CreateUpdateCityRequest } from '../controller/request/create.city.request';
 import {
   BaseResponse,
   CreatedUpdatedResponse,
@@ -15,7 +15,7 @@ import { createUpdateCityValidator } from '../validators/city.validator';
 
 // Service For getAll Cities
 export const getCities = async (
-  listReq: ListRequest
+  listReq: CityListRequest
 ): Promise<CityListResponse> => {
   const query = { isDeleted: false } as any;
   if (listReq.search) {
@@ -26,6 +26,7 @@ export const getCities = async (
       },
     };
   }
+  if(listReq.districtId) query.districtId=listReq.districtId;
   const cities = await BaseRepository.findAll(
     CityDTO,
     query,

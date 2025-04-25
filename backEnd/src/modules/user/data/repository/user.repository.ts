@@ -42,11 +42,11 @@ async function findUsers(
   if (listReq.isActive != null) {
     query.isActive = listReq.isActive === 'true';
   }
-  if (listReq.isVerified != null) {
-    query.isVerified = listReq.isVerified === 'true';
-  }
   if (listReq.role) {
-    query["role.type"]=listReq.role
+    query["role.type"]={$in:listReq.role}
+  }
+  if (listReq.isDeleted != null) {
+    query.isDeleted = listReq.isDeleted === 'true';
   }
   const total = await findTotalUsers(query);
 
@@ -90,13 +90,8 @@ async function findUsers(
 async function saveUser(
   userPayload: CreateUserRequest
 ): Promise<string | null> {
-  console.log(userPayload);
   const newUser = new UserDTO(userPayload);
-  
- 
-  const { _id } = await newUser.save();
-  await updateUser({isActive: true, isVerified: true}, _id as string);
-
+  const { _id} = await newUser.save();
   return _id as string;
 }
 

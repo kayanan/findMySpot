@@ -29,7 +29,7 @@ const ProvinceList = () => {
       setLoading(true);
       try {
         const { data } = await axios.get(
-          `${import.meta.env.VITE_BACKEND_APP_URL}/province`,
+          `${import.meta.env.VITE_BACKEND_APP_URL}/v1/province`,
           { withCredentials: true }
         );
         setProvinces(data.provinces);
@@ -49,7 +49,7 @@ const ProvinceList = () => {
       }
 
       await axios.delete(
-        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/province/${id}`,
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/province/${id}`,
         {
           headers: { "Content-Type": "application/json" },
           withCredentials: true,
@@ -75,7 +75,7 @@ const ProvinceList = () => {
       const data = { ...province, isActive: !province.isActive };
 
       await axios.put(
-        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/province/${province._id}`,
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/province/${province._id}`,
         data,
         {
           headers: { "Content-Type": "application/json" },

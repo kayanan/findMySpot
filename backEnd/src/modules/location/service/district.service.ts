@@ -8,7 +8,7 @@ import {
   DistrictResponse,
 } from '../controller/response/district.response';
 import { isValidObjectId } from 'mongoose';
-import { CreateUpdateDistrictRequest } from '../controller/request/create.district.request';
+import { CreateUpdateDistrictRequest, DistrictListRequest } from '../controller/request/create.district.request';
 import {
   BaseResponse,
   CreatedUpdatedResponse,
@@ -17,7 +17,7 @@ import { createUpdateDistrictValidator } from '../validators/district.validator'
 
 // Service For getAll Districts
 export const getDistricts = async (
-  listReq: ListRequest
+  listReq: DistrictListRequest
 ): Promise<DistrictListResponse> => {
   const query = { isDeleted: false } as any;
   if (listReq.search) {
@@ -28,6 +28,10 @@ export const getDistricts = async (
       },
     };
   }
+  if (listReq.provinceId) {
+    query.provinceId = listReq.provinceId;
+  }
+
   const districts = await BaseRepository.findAll(
     DistrictDTO,
     query,

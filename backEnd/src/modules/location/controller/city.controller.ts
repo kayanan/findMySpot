@@ -11,7 +11,7 @@ import {
   CityListResponse,
   CityResponse,
 } from "../controller/response/city.response";
-import { CreateUpdateCityRequest } from "../controller/request/create.city.request";
+import { CityListRequest, CreateUpdateCityRequest } from "../controller/request/create.city.request";
 import {
   BaseResponse,
   CreatedUpdatedResponse,
@@ -23,7 +23,8 @@ export const getAllCities = async (
   res: Response
 ): Promise<void> => {
   try {
-    const listRequest: ListRequest = {
+    const listRequest: CityListRequest = {
+      districtId:req.query.districtId  as string|| "",
       search: req.query.search as string,
       skip: Number(req.query.skip) || 0,
       limit: Number(req.query.limit) || 10,

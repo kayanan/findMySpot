@@ -11,7 +11,7 @@ import {
   DistrictListResponse,
   DistrictResponse,
 } from '../controller/response/district.response';
-import { CreateUpdateDistrictRequest } from '../controller/request/create.district.request';
+import { CreateUpdateDistrictRequest, DistrictListRequest } from '../controller/request/create.district.request';
 import { BaseResponse, CreatedUpdatedResponse } from '../../base/controller/responses/base.repsonse';
 
 // Controller for getting all districts
@@ -20,10 +20,11 @@ export const getAllDistricts = async (
   res: Response
 ): Promise<void> => {
   try {
-    const listRequest: ListRequest = {
-      search: req.query.search as string,
-      skip: Number(req.query.skip) || 0,
-      limit: Number(req.query.limit) || 10,
+    const listRequest: DistrictListRequest = {
+      provinceId: req.query?.provinceId as string || "",
+      search: req.query?.search as string || "",
+      skip: Number(req.query?.skip) || 0,
+      limit: Number(req.query?.limit) || 10,
     };
     const result: DistrictListResponse = await getDistricts(listRequest);
      res.status(200).json(result);

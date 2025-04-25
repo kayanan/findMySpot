@@ -16,6 +16,7 @@ const Sidebar = ({ isOpen }) => {
         { name: "Roles", path: "/role", icon: MapIcon },
       ],
     },
+    { name: "Parking Subscription Fee", path: "/parking-subscription-fee", icon: MapIcon },
   ];
 
   return (

@@ -6,4 +6,5 @@ export interface LoginResponse extends BaseResponse {
   email: string;
   userId: string;
   accessToken: string;
+  roles: string[];
 }

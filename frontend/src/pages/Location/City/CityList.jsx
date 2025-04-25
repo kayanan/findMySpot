@@ -30,7 +30,7 @@ const CityList = ({ District, Province }) => {
       setLoading(true);
       try {
         const { data } = await axios.get(
-          `${import.meta.env.VITE_BACKEND_APP_URL}/city`,
+          `${import.meta.env.VITE_BACKEND_APP_URL}/v1/city`,
           { withCredentials: true }
         );
         setCities(data.cities);
@@ -49,7 +49,7 @@ const CityList = ({ District, Province }) => {
         return;
       }
       await axios.delete(
-        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/city/${id}`,
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/city/${id}`,
         { withCredentials: true }
       );
       toast.error("City deleted!");
@@ -84,7 +84,7 @@ const CityList = ({ District, Province }) => {
         isActive: city.isActive === true ? false : true,
       };
       await axios.put(
-        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/city/${city._id}`,
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/city/${city._id}`,
         updatedData,
         {
           headers: { "Content-Type": "application/json" },

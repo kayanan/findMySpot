@@ -42,7 +42,7 @@ const AddDistrict = () => {
       return;
     }
     try {
-      await axios.post(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/district`, formData, {
+      await axios.post(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/district`, formData, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });

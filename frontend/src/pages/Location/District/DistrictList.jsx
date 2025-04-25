@@ -31,7 +31,7 @@ const DistrictList = ({ Province }) => {
       setLoading(true);
       try {
         const { data } = await axios.get(
-          `${import.meta.env.VITE_BACKEND_APP_URL}/district`,
+          `${import.meta.env.VITE_BACKEND_APP_URL}/v1/district`,
           { withCredentials: true }
         );
         setDistricts(data.districts);
@@ -48,7 +48,7 @@ const DistrictList = ({ Province }) => {
     try {
       if (!window.confirm("Are you sure you want to delete this item?")) return;
       await axios.delete(
-        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/district/${id}`,
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/district/${id}`,
         {
           headers: { "Content-Type": "application/json" },
           withCredentials: true,
@@ -78,7 +78,7 @@ const DistrictList = ({ Province }) => {
         isActive: district.isActive === true ? false : true,
       };
       await axios.put(
-        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/district/${district._id}`,
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/district/${district._id}`,
         updatedData,
         {
           headers: { "Content-Type": "application/json" },

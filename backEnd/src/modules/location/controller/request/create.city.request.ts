@@ -6,3 +6,10 @@ export interface CreateUpdateCityRequest {
   description: string;
   isDeleted?: boolean;
 }
+
+export interface CityListRequest {
+  districtId?:string;
+  search?: string;
+  skip?: number;
+  limit?: number;
+}

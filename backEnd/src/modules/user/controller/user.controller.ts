@@ -103,19 +103,19 @@ export const adminUpdateUser = async (
   res: Response
 ) => {
   try {
-    Object.keys(req.body).forEach(key => {
-      if(req.body[key] instanceof Array){
-        req.body[key].forEach((item,index) => {
-          if(item.includes("{")){
-            req.body[key][index] = JSON.parse(item);
-          }
-        });
-      }
-      else if(req.body[key].includes("{")){
-        console.log(req.body[key],"dodododododododododododododododd------------------")
-        req.body[key] = JSON.parse(req.body[key]);
-      }
-    });
+    // Object.keys(req.body).forEach(key => {
+    //   if(req.body[key] instanceof Array){
+    //     req.body[key].forEach((item,index) => {
+    //       if(item.includes("{")){
+    //         req.body[key][index] = JSON.parse(item);
+    //       }
+    //     });
+    //   }
+    //   else if(req.body[key].includes("{")){
+    //     req.body[key] = JSON.parse(req.body[key]);
+    //   }
+    // });
+    
     const response: CreatedUpdatedResponse =
       await UserService.adminUpdateUser(
         req.body as unknown as AdminUpdateUserRequest,
