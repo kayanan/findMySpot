@@ -43,7 +43,12 @@ async function findUsers(
     query.isActive = listReq.isActive === 'true';
   }
   if (listReq.role) {
-    query["role.type"]={$in:listReq.role}
+    if(listReq.role === "PARKING_OWNER"){
+      query["role.type"]=listReq.role
+    }
+    else if(listReq.role === "CUSTOMER"){
+      query["role.type"]=listReq.role
+    }
   }
   if (listReq.isDeleted != null) {
     query.isDeleted = listReq.isDeleted === 'true';

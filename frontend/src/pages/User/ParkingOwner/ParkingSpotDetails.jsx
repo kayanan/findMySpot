@@ -55,8 +55,9 @@ const ParkingSpotDetails = () => {
       }
     };
     const fetchVehicleTypes = async () => {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-subscription-fee/vehicle-types`);
-      console.log(response.data.vehicleTypes);
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/vehicle/types`);
+      console.log(response.data);
+
       setVehicleTypes(response.data.vehicleTypes);
     };
     fetchProvinces();
@@ -351,7 +352,7 @@ const ParkingSpotDetails = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {vehicleTypes.map((type, index) => (
                     <div key={index}>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{type.name}</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{type.vehicleType.toUpperCase()}</label>
                         <input
                             type="number"
                             {...register(`vehicleTypes.${index}.count`)}
