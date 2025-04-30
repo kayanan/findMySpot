@@ -30,7 +30,7 @@ import { isValidObjectId } from 'mongoose';
 import BaseRepository from '@/modules/base/data/repository/base.repository';
 import { RoleDTO } from '@/modules/user/data/dtos/role.dto';
 import { json } from 'express';
-
+import HelperUtil from '../../../utils/helper.util';
 const getUsers = async (
   listReq: UserListRequest
 ): Promise<UserListResponse> => {
@@ -149,7 +149,8 @@ const forgotPassword = async (
   //     name: user.firstName,
   //   }
   // );
-  const smsSent = await sendSMS(otp, user?.phoneNumber?.replace(/^0/, '94')!);
+  const message = `Your OTP is ${otp}. Use this code to reset your password. It will expire in ${process.env?.OTP_EXPIRES_MINUTE} minutes. - FindMySpot`;
+  const smsSent = await sendSMS(user?.phoneNumber?.replace(/^0/, '94')!, message);
   if (smsSent) throw new Error('SMS not sent');
 
   return {
@@ -241,6 +242,16 @@ const adminUpdateUser = async (
   throw new Error('User not Updated');
 };
 
+const sendOTPForMobilNumberVerification = async (phoneNumber: string): Promise<BaseResponse> => {
+  const otp = HelperUtil.generateOtp();
+  const message = `Your OTP is ${otp}. Use this code to verify your mobile number. It will expire in ${process.env?.OTP_EXPIRES_MINUTE} minutes. - FindMySpot`;
+  const smsSent = await sendSMS(phoneNumber, message);
+  if (!smsSent) throw new Error('SMS not sent');
+  return {
+    status: true,
+    message: otp.toString(),
+  } as BaseResponse;
+};
 export default {
   getUsers,
   getUser,
@@ -250,4 +261,5 @@ export default {
   resetPassword,
   updateUser,
   adminUpdateUser,
+  sendOTPForMobilNumberVerification,
 };

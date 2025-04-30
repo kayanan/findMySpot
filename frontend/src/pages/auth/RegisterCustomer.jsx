@@ -11,10 +11,12 @@ export default function CustomerRegistration() {
     const location = useLocation();
     const defaultValues = location.state?.userData || {};
     const {
+        getValues,
         register,
         handleSubmit,
         watch,
         reset,
+        setError,
         formState: { errors, isSubmitting },
     } = useForm({
         defaultValues: defaultValues
@@ -22,8 +24,13 @@ export default function CustomerRegistration() {
 
     const password = watch("password", "");
     const [signupAs, setSignupAs] = useState(location.state?.signupAs || null);
-    const [roles, setRoles] = useState();
+    const [roles, setRoles] = useState(null);
     const [formData, setFormData] = useState(null);
+    const [OTP, setOTP] = useState(null);
+   
+    const [enteredOTP, setEnteredOTP] = useState(null);
+    const [isOTPVerified, setIsOTPVerified] = useState(false);
+
 
     useEffect(() => {
         const fetchRoles = async () => {
@@ -40,6 +47,63 @@ export default function CustomerRegistration() {
         };
         fetchRoles();
     }, []);
+
+    const verifyOTP = async () => {
+        if (Number(enteredOTP) === Number(OTP)) {
+            setIsOTPVerified(true);
+            delete errors.otp;
+
+        }
+        else {
+            setError("otp", { message: "Invalid OTP" });
+        }
+    }
+
+    const sendOTP = async (data) => {
+        if (!data) {
+            setError("phoneNumber", { message: "Mobile number is required" });
+            return;
+        }
+        else if (!/^[0-9]{10}$/.test(data)) {
+            setError("phoneNumber", { message: "Please enter a valid phone number" });
+            return;
+        }
+        else {
+            setError("phoneNumber", { message: "" });
+        }
+        try {
+            // const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/auth/verify-mobile-number`,
+            //     {
+            //         headers: {
+            //             'Content-Type': 'application/json'
+            //         },
+            //         withCredentials: true,
+            //         params: {
+            //             phoneNumber: data
+            //         }
+            //     }
+            // );
+            const response = {
+                data: {
+                    status: true,
+                    message: 1234
+                }
+            }
+            if (response.data.status !== true) {
+                toast.error(response.data.message);
+            } else {
+                toast.success("OTP sent successfully!", {
+                    onClose: () => {
+                        setOTP(response.data.message);
+                    },
+                    autoClose: 1000,
+                });
+            }
+        } catch (error) {
+            toast.error(error.message || "Failed to send OTP. Please try again.");
+        }
+    };
+    console.log(errors);
 
     const onSubmit = async (data) => {
         delete data.confirmPassword;
@@ -159,19 +223,59 @@ export default function CustomerRegistration() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile</label>
-                                <input
-                                    type="tel"
-                                    {...register("phoneNumber", {
-                                        required: "Mobile number is required",
-                                        pattern: {
-                                            value: /^[0-9]{10}$/,
-                                            message: "Please enter a valid 10-digit mobile number"
-                                        }
-                                    })}
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
-                                    placeholder="Eg: 0712345678"
-                                />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile<span className="text-[11px] text-gray-500"> (OTP will be sent to this number)</span></label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="tel"
+                                        onKeyDown={(e) => {
+
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                if (!isOTPVerified) {
+                                                    sendOTP(getValues("phoneNumber"));
+                                                }
+                                            }
+                                        }}
+                                        {...register("phoneNumber", {
+                                            required: "Mobile number is required",
+                                            pattern: {
+                                                value: /^[0-9]{10}$/,
+                                                message: "Please enter a valid 10-digit mobile number"
+                                            },
+                                            onChange: (e) => {
+                                                if (isOTPVerified) {
+                                                    setOTP(null);
+                                                    setEnteredOTP(null);
+                                                    setIsOTPVerified(false);
+                                                }
+                                            }
+                                        })}
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
+                                        placeholder="Eg: 0712345678"
+                                    />
+                                    <button type="button" className={`${isOTPVerified ? "bg-green-500" : "bg-cyan-500"} text-white w-1/3 text-[10px] px-2 py-1 rounded-lg ${isOTPVerified ? "" : "hover:bg-cyan-600"} transition-all duration-200`} onClick={() => sendOTP(getValues("phoneNumber"))} disabled={ isOTPVerified}>{isOTPVerified ? "Verified" : OTP ? "Resend OTP" : "Send OTP"}</button>
+                                </div>
+                                {OTP && !isOTPVerified && (
+                                    <div className="mt-2">
+                                        <input
+                                            type="text"
+                                            value={enteredOTP}
+                                            onChange={(e) => setEnteredOTP(e.target.value)}
+                                            onKeyDown={(e) => {
+
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    verifyOTP();
+                                                }
+                                            }}
+                                            onBlur={() => verifyOTP()}
+                                            className="w-1/3 pl-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
+                                            placeholder="Enter OTP"
+                                        />
+                                        {errors.otp && <p className="text-red-500 text-sm mt-1">{errors.otp.message}</p>}
+                                    </div>
+                                )}
+
                                 {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber.message}</p>}
                             </div>
                         </div>
@@ -228,15 +332,15 @@ export default function CustomerRegistration() {
 
                         {signupAs === "CUSTOMER" && <button
                             type="submit"
-                            className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200"
-                            disabled={isSubmitting}
+                            className={`w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200 ${isSubmitting || !isOTPVerified ? "opacity-50 cursor-not-allowed" : ""}`}
+                            disabled={isSubmitting || !isOTPVerified}
                         >
                             {isSubmitting ? "Registering..." : "Register"}
                         </button>}
                         {signupAs === "PARKING_OWNER" && <button
                             type="submit"
-                            className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200"
-                            disabled={isSubmitting}
+                            className={`w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200 ${isSubmitting || !isOTPVerified ? "opacity-50 cursor-not-allowed" : ""}`}
+                            disabled={isSubmitting || !isOTPVerified}
                         >
                             Next
                         </button>}

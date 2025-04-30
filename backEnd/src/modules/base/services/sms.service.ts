@@ -1,12 +1,12 @@
 import axios from "axios";
 
-export const sendSMS = async (OTP: string, mobileNumber: string) => {
+export const sendSMS = async (mobileNumber: string, message: string) => {
   console.log("hi");
-  const message = await axios.post(
+  const response = await axios.post(
     "https://api.textit.biz/",
     {
       to: mobileNumber.toString(),
-      text: `You requested a password reset. Your OTP is ${OTP}. Use this code to reset your password. It will expire in ${process.env?.OTP_EXPIRES_MINUTE} minutes. - FindMySpot`,
+      text: message,
     },
     {
       headers: {
@@ -17,6 +17,6 @@ export const sendSMS = async (OTP: string, mobileNumber: string) => {
       },
     }
   );
-  console.log(message);
-  return message;
+  console.log(response);
+  return response;
 };

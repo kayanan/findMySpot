@@ -74,6 +74,20 @@ export const sendOTP = async (req: Request, res: Response) => {
     res.status(400).json(errorResponse(error.message));
   }
 };
+
+export const verifyMobileNumberOTP = async (req: Request, res: Response) => {
+  try {
+    const response: BaseResponse = await UserService.sendOTPForMobilNumberVerification(
+      req.query.phoneNumber as string
+    );
+    res.status(200).json(response);
+  } catch (error: any) {
+    console.log(error)
+    res.status(400).json(errorResponse(error.message));
+  }
+};
+
+
 export const changePassword = async (req: Request, res: Response) => {
   try {
     const response: BaseResponse = await UserService.resetPassword(

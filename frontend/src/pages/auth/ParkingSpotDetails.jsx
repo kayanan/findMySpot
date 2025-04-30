@@ -5,7 +5,7 @@ import { FaCar, FaParking } from "react-icons/fa";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import MapComponent from "../../utils/MapComponent";
 const ParkingSpotDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,6 +17,7 @@ const ParkingSpotDetails = () => {
   const [previewImages, setPreviewImages] = useState([]);
   const [userData, setUserData] = useState(null);
   const [vehicleTypes, setVehicleTypes] = useState([]);
+  const [position, setPosition] = useState(null);
 
   const {
     register,
@@ -206,6 +207,7 @@ const ParkingSpotDetails = () => {
               {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
             </div>
 
+
             {/* Address Line 1 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 1</label>
@@ -315,6 +317,7 @@ const ParkingSpotDetails = () => {
             </div>
 
             {/* Coordinates */}
+            <MapComponent setPosition={setPosition} position={position} zoom={15} width="100%" height="300px" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
@@ -327,6 +330,8 @@ const ParkingSpotDetails = () => {
                   })}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
                   placeholder="Enter latitude"
+                  defaultValue={position?.lat}
+                  disabled={true}
                 />
                 {errors.latitude && <p className="text-red-500 text-sm mt-1">{errors.latitude.message}</p>}
               </div>
@@ -341,6 +346,8 @@ const ParkingSpotDetails = () => {
                   })}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
                   placeholder="Enter longitude"
+                  defaultValue={position?.lng}
+                  disabled={true}
                 />
                 {errors.longitude && <p className="text-red-500 text-sm mt-1">{errors.longitude.message}</p>}
               </div>

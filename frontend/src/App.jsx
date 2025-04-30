@@ -45,7 +45,7 @@ import ViewRole from "./pages/User/Role/ViewRole";
 import ParkingOwnerList from "./pages/User/ParkingOwner/ParkingOwnerList";
 import UpdateParkingOwner from "./pages/User/ParkingOwner/UpdateParkingOwner";
 import ViewParkingOwner from "./pages/User/ParkingOwner/ViewParkingOwner";
-import ParkingSpotDetails from "./pages/User/ParkingOwner/ParkingSpotDetails";
+import ParkingSpotDetails from "./pages/auth/ParkingSpotDetails";
 // parking owner import end
 
 const AppRoutes = () => {
