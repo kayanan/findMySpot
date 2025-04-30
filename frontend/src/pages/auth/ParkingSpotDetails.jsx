@@ -15,15 +15,17 @@ const ParkingSpotDetails = () => {
   const [cities, setCities] = useState([]);
   const [images, setImages] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState(location.state?.userData);
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [position, setPosition] = useState(null);
+  const [error, setError] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
+    getValues,
     watch
   } = useForm(
     {
@@ -56,14 +58,20 @@ const ParkingSpotDetails = () => {
       }
     };
     const fetchVehicleTypes = async () => {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/vehicle/types`);
-      console.log(response.data);
-
-      setVehicleTypes(response.data.vehicleTypes);
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-subscription-fee/vehicle-types`);
+      if (response.data.success) {
+        setVehicleTypes(response.data.vehicleTypes || []);
+      } else {
+        toast.error(response.data.message);
+      }
     };
     fetchProvinces();
     fetchVehicleTypes();
   }, []);
+  useEffect(() => {
+    setValue("latitude", position?.lat);
+    setValue("longitude", position?.lng);
+  }, [position]);
 
   // Fetch districts when province is selected
   useEffect(() => {
@@ -126,20 +134,41 @@ const ParkingSpotDetails = () => {
 
   const onSubmit = async (data) => {
     setLoading(true);
+    data.slot = data.slot.filter((item) => Number(item.count) > 0);
+    if (data.slot.length === 0) {
+      setError({
+        slot: "Please add at least one vehicle type"
+      });
+      setLoading(false);
+      return;
+    }
+    else {
+      setError({
+        slot: null
+      });
+    }
 
     try {
-      // First, create the user account
-      const userResponse = await axios.post(
-        `${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/signup`,
-        userData,
-        { withCredentials: true }
-      );
+      if (!data.ownerId) {
+        // First, create the user account
+        const userResponse = await axios.post(
+          `${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/signup`,
+          userData,
+          { withCredentials: true }
+        );
+        console.log(userResponse.data, "userResponse.data.user._id");
+        data.ownerId = userResponse.data.id;
+        setValue("ownerId", userResponse.data.id);
+      }
+
 
       // Then, create the parking spot
       const formDataToSend = new FormData();
       Object.keys(data).forEach(key => {
-        if (key !== 'images') {
-          formDataToSend.append(key, data[key]);
+        if (key !== 'images' && key !== 'slot') {
+          if (data[key]) {
+            formDataToSend.append(key, data[key]);
+          }
         }
       });
 
@@ -147,11 +176,18 @@ const ParkingSpotDetails = () => {
         formDataToSend.append('images', image);
       });
 
-      // Add the user ID to the parking spot data
-      formDataToSend.append('ownerId', userResponse.data.user._id);
+      data.slot.forEach(slot => {
+        formDataToSend.append('slot', JSON.stringify(slot));
+      });
+
+      //Add the user ID to the parking spot data
+      Array.from(formDataToSend.entries()).forEach(([key, value]) => {
+        console.log(key, value);
+      });
+
 
       await axios.post(
-        `${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-spot/create`,
+        `${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-area`,
         formDataToSend,
         {
           headers: {
@@ -164,6 +200,7 @@ const ParkingSpotDetails = () => {
       toast.success("Registration completed successfully");
       navigate("/");
     } catch (error) {
+      console.log(error);
       toast.error(error.response?.data?.message || "Failed to complete registration");
     } finally {
       setLoading(false);
@@ -330,7 +367,7 @@ const ParkingSpotDetails = () => {
                   })}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
                   placeholder="Enter latitude"
-                  defaultValue={position?.lat}
+                  value={Number(position?.lat) || 0}
                   disabled={true}
                 />
                 {errors.latitude && <p className="text-red-500 text-sm mt-1">{errors.latitude.message}</p>}
@@ -346,7 +383,7 @@ const ParkingSpotDetails = () => {
                   })}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
                   placeholder="Enter longitude"
-                  defaultValue={position?.lng}
+                  value={Number(position?.lng) || 0}
                   disabled={true}
                 />
                 {errors.longitude && <p className="text-red-500 text-sm mt-1">{errors.longitude.message}</p>}
@@ -358,18 +395,24 @@ const ParkingSpotDetails = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Types</label>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {vehicleTypes.map((type, index) => (
-                    <div key={index}>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{type.vehicleType.toUpperCase()}</label>
-                        <input
-                            type="number"
-                            {...register(`vehicleTypes.${index}.count`)}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
-                            placeholder="Enter Count"
-                            defaultValue={type.count}
-                        />
-                    </div>
+                  <div key={index}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{type.vehicleType.toUpperCase()}</label>
+                    <input
+                      type="number"
+                      {...register(`slot.${index}.count`)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
+                      placeholder="Enter Count"
+                      defaultValue={0}
+                      onChange={(e) => {
+                        if (!getValues(`slot.${index}.type`)) {
+                          setValue(`slot.${index}.type`, type._id);
+                        }
+                      }}
+                    />
+                  </div>
                 ))}
-            </div>
+              </div>
+              {error.slot && <p className="text-red-500 text-sm mt-1">{error.slot}</p>}
             </div>
 
 
@@ -434,25 +477,25 @@ const ParkingSpotDetails = () => {
               {loading || isSubmitting ? "Completing Registration..." : "Complete Registration"}
             </button>
             <div className="flex justify-between">
-            {/* Back Button */}
-            <button
-              type="button"
-              onClick={() => navigate("/customer/register", { state: { userData: userData ,signupAs:"PARKING_OWNER"} })}
-              className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200 mx-2"
-            >
-              Back
-            </button>
-            {/* Add Another Parking Spot Button */}
-            <button
-              type="button"
-              onClick={() => navigate("/customer/register", { state: { userData: userData ,signupAs:"PARKING_OWNER"} })}
-              className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200 mx-2"
-            >
-              Add Another Parking Spot
-            </button>
-            
+              {/* Back Button */}
+              <button
+                type="button"
+                onClick={() => navigate("/customer/register", { state: { userData: userData, signupAs: "PARKING_OWNER" } })}
+                className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200 mx-2"
+              >
+                Back
+              </button>
+              {/* Add Another Parking Spot Button */}
+              <button
+                type="button"
+                onClick={() => navigate("/customer/register", { state: { userData: userData, signupAs: "PARKING_OWNER" } })}
+                className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200 mx-2"
+              >
+                Add Another Parking Spot
+              </button>
+
             </div>
-            
+
           </form>
         </div>
       </div>

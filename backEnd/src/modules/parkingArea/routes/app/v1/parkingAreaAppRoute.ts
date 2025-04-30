@@ -1,8 +1,8 @@
-// import { RequestHandler, Router } from "express";
-// import { getVehicleTypes } from "../../../controller/vehicle.controller";
+import { RequestHandler, Router } from "express";
+import { createParkingAreaController } from "../../../controller/parkingArea.controller";
 
-// const router = Router();
 
-// router.get("/types", getVehicleTypes as RequestHandler);
+const router = Router();
+router.post("/", createParkingAreaController )
 
-// export default router;
+export default router;

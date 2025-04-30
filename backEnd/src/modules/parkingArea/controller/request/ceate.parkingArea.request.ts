@@ -1,4 +1,4 @@
-import { addressSchema } from "@/modules/parkingArea/data/dtos/parkingArea.dto";
+
 import { ObjectId } from "mongoose";
 export interface CreateUpdateParkingAreaRequest {
     id?: String | ObjectId;
@@ -12,7 +12,12 @@ export interface CreateUpdateParkingAreaRequest {
     email: string;
     images: string[];
     description: string;
-    address: typeof addressSchema;
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    district: string;
+    province: string;
+    postalCode: string;
     fee: number;
     isActive: boolean;
     isDeleted: boolean;

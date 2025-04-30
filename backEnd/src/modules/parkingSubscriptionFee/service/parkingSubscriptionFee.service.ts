@@ -1,4 +1,5 @@
 import { ParkingSubscriptionFeeModel } from "../data/dtos/parkingSubscriptionFee.dto";
+import { VehicleDTO } from "../data/dtos/vehicle.dto";
 import {
   createParkingSubscriptionFee,
   updateParkingSubscriptionFee,
@@ -58,5 +59,13 @@ export const getFeeForVehicle = async (vehicleType: string, count: number) => {
 }; 
 
 export const getVehicleTypes = async () => {
-  return await findVehicleTypes();
+   const vehicleTypes = await findVehicleTypes();
+   const vehicleTypeNames = await VehicleDTO.find({_id:{$in:vehicleTypes}});
+   return vehicleTypeNames.map((vehicleType) => {
+    return {
+      _id: vehicleType._id,
+      vehicleType: vehicleType.vehicleType
+    }
+   });
+
 };

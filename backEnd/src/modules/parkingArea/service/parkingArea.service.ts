@@ -5,12 +5,14 @@ import {
     getParkingAreaById as getParkingAreaByIdRepo,
     getAllParkingAreas as getAllParkingAreasRepo,
     getActiveParkingAreas as getActiveParkingAreasRepo,
+    getParkingAreasByOwnerId as getParkingAreasByOwnerIdRepo,
 } from "../repository/parkingArea.repository";
 import { validateCreateParkingArea, validateUpdateParkingArea } from "../validators/parkingArea.validator";
 import { CreateUpdateParkingAreaRequest } from "../controller/request/ceate.parkingArea.request";
 import { ParkingAreaModel } from "../data/dtos/parkingArea.dto";
 import { createSlot } from "./parkingSlot.service";
 import { CreateUpdateParkingSlotRequest } from "../controller/request/create.parkingSlot.request";
+
 export const createParkingArea = async (parkingAreaData: Partial<CreateUpdateParkingAreaRequest & { longitude: number, latitude: number ,slot: { type: string, count: number }[]}>) => {
     const { error } = validateCreateParkingArea(parkingAreaData);
     if (error) {
@@ -25,15 +27,16 @@ export const createParkingArea = async (parkingAreaData: Partial<CreateUpdatePar
     const slot = parkingAreaData?.slot;
     delete parkingAreaData?.slot;
     const parkingArea = await createParkingAreaRepo(parkingAreaData as unknown as ParkingAreaModel);
+    const parkingAreaId = parkingArea._id as string;
     if (slot) {
-        const slotData = slot.map((item) => ({
+        const slotData = slot.filter((item) => Number(item.count) > 0).map((item) => ({
             slotDetails: {
-                slotType: item.type,
+                vehicleType: item.type,
                 isActive: false,
                 isDeleted: false,
             } as Partial<CreateUpdateParkingSlotRequest>,
             count: item.count as number,
-            parkingAreaId: parkingArea._id as string,
+            parkingAreaId: parkingAreaId,
         }));
         await createSlot(slotData);
     }
@@ -62,6 +65,10 @@ export const getAllParkingAreas = async () => {
 
 export const getActiveParkingAreas = async () => {
     return await getActiveParkingAreasRepo();
+};
+
+export const getParkingAreasByOwnerId = async (ownerId: string) => {
+    return await getParkingAreasByOwnerIdRepo(ownerId);
 };
 
 // export const getParkingAreaByLocation = async (longitude: number, latitude: number) => {

@@ -16,8 +16,8 @@ const locationSchema = z.object({
 
 // Address schema
 const addressSchema = z.object({
-  line1: z.string().min(1, "Line 1 is required"),
-  line2: z.string().optional(),
+  addressLine1: z.string().min(1, "Line 1 is required"),
+  addressLine2: z.string().optional(),
   city: z.string().refine((val) => Types.ObjectId.isValid(val), {
     message: "Invalid city ID",
   }),
@@ -33,12 +33,12 @@ const addressSchema = z.object({
 // Create schema
 const createParkingAreaSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  longitude: z.number(
+  longitude: z.string(
     {
       required_error: "Longitude is required",
     }
   ),
-  latitude: z.number(
+  latitude: z.string(
     {
       required_error: "Latitude is required",
     }
@@ -49,13 +49,23 @@ const createParkingAreaSchema = z.object({
   contactNumber: z.string().min(1, "Contact number is required"),
   email: z.string().email("Invalid email format").optional(),
   images: z.array(z.string().url("Invalid image URL")),
-  description: z.string().min(1, "Description is required"),
-  address: addressSchema,
+  description: z.string().optional(),
+  addressLine1: z.string().min(1, "Line 1 is required"),
+  addressLine2: z.string().optional(),
+  city: z.string().refine((val) => Types.ObjectId.isValid(val), {
+    message: "Invalid city ID",
+  }),
+  district: z.string().refine((val) => Types.ObjectId.isValid(val), {
+    message: "Invalid district ID",
+  }),
+  province: z.string().refine((val) => Types.ObjectId.isValid(val), {
+    message: "Invalid province ID",
+  }),
+  postalCode: z.string().optional(),
   isActive: z.boolean().default(true),
-  fee: z.number().positive().optional(),
   slot: z.array(z.object({
     type: z.string(),
-    count: z.number(),
+    count: z.string(),
   })),
 });
 

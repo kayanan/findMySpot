@@ -35,5 +35,5 @@ export const findActiveFees = async () => {
 }; 
 
 export const findVehicleTypes = async () => {
-  return await ParkingSubscriptionFeeDTO.distinct("vehicleType",{isDeleted:false,endDate:{$gt:new Date()}});
+  return await ParkingSubscriptionFeeDTO.distinct("vehicleType",{isDeleted:false,endDate:{$gte:new Date()}});
 };

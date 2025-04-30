@@ -1,12 +1,14 @@
-// import { RequestHandler, Router } from "express";
-// import { createVehicle, deleteVehicle, getVehicleById,getVehicleTypes, updateVehicle } from "../../../controller/vehicle.controller";
+import { RequestHandler, Router } from "express";
+import {  deleteParkingAreaController, getParkingAreaByIdController, getParkingAreasByOwnerIdController, updateParkingAreaController } from "../../../controller/parkingArea.controller";
+import { getVehicleTypes } from "@/src/modules/parkingSubscriptionFee/controller/vehicle.controller";
 
-// const router = Router();
+const router = Router();
 
-// router.post("/", createVehicle as RequestHandler)
-// router.get("/:id", getVehicleById as RequestHandler);
-// router.patch("/:id", updateVehicle as RequestHandler);
-// router.delete("/:id", deleteVehicle as RequestHandler);
-// router.get("/types", getVehicleTypes as RequestHandler);
 
-// export default router;
+router.get("/:id", getParkingAreaByIdController as RequestHandler);
+router.patch("/:id", updateParkingAreaController as RequestHandler);
+router.delete("/:id", deleteParkingAreaController as RequestHandler);
+router.get("/types", getVehicleTypes as RequestHandler);
+router.get("/owner/:ownerId", getParkingAreasByOwnerIdController as RequestHandler);
+
+export default router;

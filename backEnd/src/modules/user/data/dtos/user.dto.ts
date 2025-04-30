@@ -45,6 +45,13 @@ export interface AccountDetail {
   branchName: string;
   isDefault: boolean;
 }
+const AddressSchema = new Schema<Address>({
+  line1: { type: String, required: true },
+  line2: { type: String },
+  city: { type: String, required: true },
+  district: { type: String, required: true },
+  province: { type: String, required: true },
+});
 
 const UserSchema = new Schema<UserModel>(
   {
@@ -81,12 +88,7 @@ const UserSchema = new Schema<UserModel>(
     },
     password: { type: String },
     address: {
-      line1: { type: String, required: true },
-      line2: { type: String },
-      city: { type: String, required: true },
-      district: { type: String, required: true },
-      province: { type: String, required: true },
-      zipCode: { type: String },
+      type: AddressSchema,
     },
     phoneNumber:
     {

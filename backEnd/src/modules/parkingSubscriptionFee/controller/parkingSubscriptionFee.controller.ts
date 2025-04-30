@@ -124,7 +124,11 @@ export const getFeeForVehicleHandler = async (req: Request, res: Response) => {
 export const getVehicleTypesHandler = async (req: Request, res: Response) => {
   try {
     const vehicleTypes = await getVehicleTypes();
-    res.status(200).json(vehicleTypes);
+    res.status(200).json({
+      count:vehicleTypes.length,
+      vehicleTypes,
+      success:true,
+    });
   } catch (error: unknown) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });

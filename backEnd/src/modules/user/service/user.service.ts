@@ -59,9 +59,9 @@ const getUser = async (id: string): Promise<UserProfileResponse> => {
 const saveUser = async (
   createUserRequest: CreateUserRequest
 ): Promise<CreatedUpdatedResponse> => {
-
   const valResult =
     UserValidator.saveUserValidator(createUserRequest);
+  
   if (valResult.error) throw new Error(valResult.error.message);
   const checkUser = await UserRepository.findByEmail(
     createUserRequest.email!

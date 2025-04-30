@@ -1,5 +1,5 @@
 import { ParkingAreaDTO, ParkingAreaModel } from "../data/dtos/parkingArea.dto";
-
+import { Types } from "mongoose";
 export const createParkingArea = async (parkingAreaData: Partial<ParkingAreaModel>) => {
   const parkingArea = new ParkingAreaDTO(parkingAreaData);
   return await parkingArea.save();
@@ -39,6 +39,16 @@ export const getAllParkingAreas = async () => {
 
 export const getActiveParkingAreas = async () => {
   return await ParkingAreaDTO.find({ isActive: true, isDeleted: false });
+};
+
+export const getParkingAreasByOwnerId = async (ownerId: string) => {
+
+    const parkingAreas = await ParkingAreaDTO.find({ ownerId: new Types.ObjectId(ownerId), isDeleted: { $ne: true } })
+        .populate('city')
+        .populate('district')
+        .populate('province')
+        console.log(parkingAreas);
+        return parkingAreas;
 };
 
 // export const updateAvailableSlots = async (id: string, change: number) => {

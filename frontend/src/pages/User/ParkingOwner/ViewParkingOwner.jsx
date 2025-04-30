@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import { FaArrowLeft, FaEnvelope, FaPhone, FaBuilding, FaParking } from "react-icons/fa";
+import { FaArrowLeft, FaEnvelope, FaPhone, FaBuilding, FaParking, FaCar } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -37,6 +37,7 @@ const SkeletonLoader = () => (
 const ViewParkingOwner = () => {
   const { id } = useParams();
   const [owner, setOwner] = useState(null);
+  const [parkingAreas, setParkingAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -44,15 +45,16 @@ const ViewParkingOwner = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await axios.get(
-        `${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/profile/${id}`,
-        { withCredentials: true }
-      );
-      setOwner(data.user);
+      const [ownerResponse, parkingAreasResponse] = await Promise.all([
+        axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/profile/${id}`, { withCredentials: true }),
+        axios.get(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/parking-area/owner/${id}`, { withCredentials: true })
+      ]);
+      setOwner(ownerResponse.data.user);
+      setParkingAreas(parkingAreasResponse.data.data);
     } catch (err) {
-      console.error("Error fetching parking owner:", err.message);
-      setError("Failed to load parking owner details. Please try again.");
-      toast.error("Failed to load parking owner details. Please try again.", {
+      console.error("Error fetching data:", err.message);
+      setError("Failed to load data. Please try again.");
+      toast.error("Failed to load data. Please try again.", {
         position: "top-center",
         autoClose: 3000,
         hideProgressBar: false,
@@ -99,6 +101,15 @@ const ViewParkingOwner = () => {
       </div>
     );
   }
+
+  const getSlotTypeCount = (slots) => {
+    const countByType = {};
+    slots.forEach(slot => {
+      const type = slot.vehicleType?.name || 'Unknown';
+      countByType[type] = (countByType[type] || 0) + 1;
+    });
+    return countByType;
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -209,6 +220,62 @@ const ViewParkingOwner = () => {
           </div>
         </div>
       </div>
+
+      {/* Parking Areas Section */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold mb-6">Parking Areas</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {parkingAreas.map((area) => {
+            //const slotTypeCount = getSlotTypeCount(area.slots || []);
+            return (
+              <div key={area._id} className="bg-white shadow-md rounded-lg p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-bold">{area?.name}</h3>
+                  <span className={`px-2 py-1 rounded ${
+                    area?.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                  }`}>
+                    {area?.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+                
+                <div className="mb-4">
+                  <p className="text-gray-600 mb-2">{area?.description}</p>
+                  <div className="flex items-center text-gray-600 mb-2">
+                    <FaBuilding className="mr-2" />
+                    <span>{area?.addressLine1},{area?.addressLine2} ,{area?.city?.name}</span>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-2">Parking Slots</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Total Slots:</span>
+                      <span className="font-semibold">{area.slots?.length || 0}</span>
+                    </div>
+                    {/* {Object.entries(slotTypeCount).map(([type, count]) => (
+                      <div key={type} className="flex justify-between">
+                        <span className="text-gray-600">{type}:</span>
+                        <span className="font-semibold">{count}</span>
+                      </div>
+                    ))} */}
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t">
+                  <Link
+                    to={`/parking-area/view/${area._id}`}
+                    className="block w-full bg-cyan-500 hover:bg-cyan-600 text-white text-center py-2 rounded-md transition duration-300"
+                  >
+                    View Details
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <ToastContainer />
     </div>
   );
