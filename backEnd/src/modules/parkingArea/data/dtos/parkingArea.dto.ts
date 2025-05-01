@@ -56,7 +56,7 @@ const ParkingAreaSchema = new Schema<ParkingAreaModel>(
       email: { type: String, required: false },
       images: { type: [String], required: false },
       description: { type: String, required: false },
-      isActive: { type: Boolean, default: true },
+      isActive: { type: Boolean, default: false },
       isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }

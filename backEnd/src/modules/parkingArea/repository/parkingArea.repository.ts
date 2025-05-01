@@ -47,8 +47,14 @@ export const getParkingAreasByOwnerId = async (ownerId: string) => {
         .populate('city')
         .populate('district')
         .populate('province')
-        console.log(parkingAreas);
         return parkingAreas;
+};
+export const updateParkingAreaByOwnerId = async (ownerId: string, data: Partial<ParkingAreaModel>) => {
+  return await ParkingAreaDTO.updateMany({ ownerId: new Types.ObjectId(ownerId) }, { $set: data });
+};
+
+export const deleteParkingAreaByOwnerId = async (ownerId: string) => {
+  return await ParkingAreaDTO.updateMany({ ownerId: new Types.ObjectId(ownerId) }, { $set: { isDeleted: true } });
 };
 
 // export const updateAvailableSlots = async (id: string, change: number) => {

@@ -141,3 +141,21 @@ export const adminUpdateUser = async (
     console.log(error)
   }
 };
+
+export const approveParkingOwner = async (req: Request, res: Response) => {
+  try {
+    const response: BaseResponse = await UserService.approveParkingOwner(req.params.id);
+    res.status(200).json(response);
+  } catch (error: any) {
+    res.status(400).json(errorResponse(error.message));
+  }
+};
+
+export const rejectParkingOwner = async (req: Request, res: Response) => {
+  try {
+    const response: BaseResponse = await UserService.rejectParkingOwner(req.params.id);
+    res.status(200).json(response);
+  } catch (error: any) {
+    res.status(400).json(errorResponse(error.message));
+  }
+};

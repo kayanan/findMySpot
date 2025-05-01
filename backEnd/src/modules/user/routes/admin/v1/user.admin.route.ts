@@ -2,6 +2,8 @@ import { Router } from 'express';
 import {
   getUsers,
   adminUpdateUser,
+  approveParkingOwner,
+  rejectParkingOwner,
 } from '../../../controller/user.controller';
 import { checkAdmin, checkToken } from '@/src/middlewares/check-auth';
 import multer from '@/src/middlewares/multer';
@@ -14,5 +16,12 @@ userAdminRouter.patch(
   multer,
   adminUpdateUser
 );
-
+userAdminRouter.patch(
+  '/approve/:id',
+  approveParkingOwner
+);
+userAdminRouter.patch(
+  '/reject/:id',
+  rejectParkingOwner
+);
 export default userAdminRouter;

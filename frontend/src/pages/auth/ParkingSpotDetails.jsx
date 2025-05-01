@@ -197,7 +197,13 @@ const ParkingSpotDetails = () => {
         }
       );
 
-      toast.success("Registration completed successfully");
+      toast.success("Registration completed successfully", {
+        onClose: () => {
+          navigate("/");
+        },
+        autoClose: 1000,
+      } );
+
       navigate("/");
     } catch (error) {
       console.log(error);

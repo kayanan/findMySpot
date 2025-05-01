@@ -46,6 +46,7 @@ import ParkingOwnerList from "./pages/User/ParkingOwner/ParkingOwnerList";
 import UpdateParkingOwner from "./pages/User/ParkingOwner/UpdateParkingOwner";
 import ViewParkingOwner from "./pages/User/ParkingOwner/ViewParkingOwner";
 import ParkingSpotDetails from "./pages/auth/ParkingSpotDetails";
+import PendingRequest from "./pages/User/ParkingOwner/PendingRequest";
 // parking owner import end
 
 const AppRoutes = () => {
@@ -113,6 +114,7 @@ const AppRoutes = () => {
             <Route path="/owner/view/:id" element={<ViewParkingOwner />} />
             <Route path="/owner/update/:id" element={<UpdateParkingOwner />} />
             <Route path="/parking-owner/spot-details" element={<ParkingSpotDetails />} />
+            <Route path="/owner/pending-request" element={<PendingRequest />} />
             {/* parking owner route end */}
 
             {/* parking subscription fee route start */}

@@ -5,17 +5,16 @@ import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import { EyeIcon, PencilAltIcon } from "@heroicons/react/outline";
 import Dropdown from "../../../utils/Dropdown";
-import { approvalStatusOptions, isActiveOptions } from "../../../utils/DropdownOptions";
+import { isActiveOptions } from "../../../utils/DropdownOptions";
 
-const ParkingOwnerList = () => {
+const PendingRequest = () => {
   const [parkingOwners, setParkingOwners] = useState([]);
   const [filteredOwners, setFilteredOwners] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [filters, setFilters] = useState( {
-    role: "PARKING_OWNER",
-    approvalStatus: "true",
-    isActive: "true"
+    approvalStatus: "false",
+    isActive: "false"
   });
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -27,8 +26,10 @@ const ParkingOwnerList = () => {
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/list`,
+
           { withCredentials: true,
             params: {
+              role: "PARKING_OWNER",
               ...filters
             }
            }
@@ -46,23 +47,8 @@ const ParkingOwnerList = () => {
   }, [filters]);
 
   // Filter owners based on search term
-  useEffect(() => {
-    const lowerSearch = searchTerm.toLowerCase();
-    const filtered = parkingOwners.filter((owner) => {
-      return (
-        owner.firstName.toLowerCase().includes(lowerSearch) ||
-        owner.lastName.toLowerCase().includes(lowerSearch) ||
-        owner.nic?.toLowerCase().includes(lowerSearch) ||
-        owner.mobile?.toLowerCase().includes(lowerSearch)
-      );
-    });
-    setFilteredOwners(filtered);
-  }, [searchTerm, parkingOwners]);
 
-  // Handle dropdown changes
-  const handleFilterChange = (filterName, value) => {
-    setFilters((prev) => ({ ...prev, [filterName]: value }));
-  };
+
 
   // Handle search input
   const handleSearchChange = (e) => {
@@ -89,26 +75,15 @@ const ParkingOwnerList = () => {
       </div>
       
       {/* Filters */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
         
         <h1 className="text-1xl sm:text-2xl font-bold text-gray-500">
-          Approved Parking Owners List
+          Pending Request
         </h1>
 
 
-        {/* Status */}
-        <Dropdown
-          label="Status"
-          filterName="isActive"
-          selectedValue={filters.isActive}
-          options={isActiveOptions}
-          onChange={handleFilterChange}
-        />
-        <Link to="/owner/pending-request" className="ml-10 bg-cyan-500 hover:bg-cyan-600 w-1/2 text-white px-3 py-2 pl-10 rounded-full ">
-        Pending Request
-      </Link>
+     
       </div>
-      
 
       {/* Loading Spinner or Table */}
       {loading ? (
@@ -149,10 +124,10 @@ const ParkingOwnerList = () => {
                         className="h-10 w-10 sm:h-16 sm:w-16 rounded-full object-cover mx-auto"
                       />
                     </td>
-                    <td className="py-3 px-4">{owner.firstName}</td>
-                    <td className="py-3 px-4">{owner.lastName}</td>
-                    <td className="py-3 px-4">{owner.nic}</td>
-                    <td className="py-3 px-4">{owner.phoneNumber}</td>
+                    <td className="py-3 px-4">{owner.firstName || "N/A"}</td>
+                    <td className="py-3 px-4">{owner.lastName || "N/A"}</td>
+                    <td className="py-3 px-4">{owner.nic || "N/A"}</td>
+                    <td className="py-3 px-4">{owner.phoneNumber || "N/A"}</td>
                     <td className="py-3 px-4">
                       <span className={`px-2 py-1 rounded-full text-xs ${
                         owner.approvalStatus ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
@@ -174,13 +149,6 @@ const ParkingOwnerList = () => {
                         className="bg-gray-400 hover:bg-gray-600 text-white px-3 py-2 rounded-full mt-4"
                       >
                         <EyeIcon className="h-5 w-5" />
-                      </Link>
-                      <Link
-                        to={`/owner/update/${owner._id}`}
-                        state={{ filters }}
-                        className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded-full mt-4"
-                      >
-                        <PencilAltIcon className="h-5 w-5" />
                       </Link>
                     </td>
                   </tr>
@@ -251,4 +219,4 @@ const ParkingOwnerList = () => {
   );
 };
 
-export default ParkingOwnerList;
+export default PendingRequest;

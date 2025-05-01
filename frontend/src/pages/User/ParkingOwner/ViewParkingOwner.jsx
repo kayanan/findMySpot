@@ -1,9 +1,9 @@
 // src/pages/User/ParkingOwner/ViewParkingOwner.jsx
 
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import axios from "axios";
-import { FaArrowLeft, FaEnvelope, FaPhone, FaBuilding, FaParking, FaCar } from "react-icons/fa";
+import { FaArrowLeft, FaEnvelope, FaPhone, FaBuilding, FaParking, FaCar, FaCheck, FaTimes } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -37,6 +37,7 @@ const SkeletonLoader = () => (
 const ViewParkingOwner = () => {
   const { id } = useParams();
   const [owner, setOwner] = useState(null);
+  const { filters } = useLocation().state;
   const [parkingAreas, setParkingAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -71,6 +72,56 @@ const ViewParkingOwner = () => {
     fetchParkingOwner();
   }, [id]);
 
+  const getSlotTypeCount = (slots) => {
+    const countByType = {};
+    slots.forEach(slot => {
+      const type = slot?.vehicleType?.vehicleType || 'Unknown';
+      countByType[type] = (countByType[type] || 0) + 1;
+    });
+    return countByType;
+  };
+
+  const handleApprove = async () => {
+    try {
+      await axios.patch(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/approve/${id}`, {}, { withCredentials: true });
+      toast.success("Parking owner approved successfully", {
+        onClose: () => {
+          fetchParkingOwner();
+        },
+        autoClose: 1000,
+      });
+    } catch (err) {
+      console.error("Error approving parking owner:", err.message);
+      toast.error("Error approving parking owner: " + err.message);
+    }
+  };
+
+  const handleReject = async () => {
+    try {
+      await axios.patch(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/reject/${id}`, {}, { withCredentials: true });
+      toast.success("Parking owner rejected successfully");
+      fetchParkingOwner();
+    } catch (err) {
+      console.error("Error rejecting parking owner:", err.message);
+      toast.error("Error rejecting parking owner: " + err.message);
+    }
+  };
+
+  const handleStatusChange = async (isActive) => {
+    try {
+      await axios.patch(
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/status/${id}`,
+        { isActive },
+        { withCredentials: true }
+      );
+      toast.success(`Parking owner ${isActive ? 'activated' : 'deactivated'} successfully`);
+      fetchParkingOwner();
+    } catch (err) {
+      console.error("Error updating status:", err.message);
+      toast.error("Error updating status: " + err.message);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -92,6 +143,7 @@ const ViewParkingOwner = () => {
         <br />
         <Link
           to="/parking-owner"
+          state={{ filters }}
           className="mt-4 inline-flex items-center text-gray-600 hover:text-cyan-600"
         >
           <FaArrowLeft className="mr-2" />
@@ -102,19 +154,10 @@ const ViewParkingOwner = () => {
     );
   }
 
-  const getSlotTypeCount = (slots) => {
-    const countByType = {};
-    slots.forEach(slot => {
-      const type = slot.vehicleType?.name || 'Unknown';
-      countByType[type] = (countByType[type] || 0) + 1;
-    });
-    return countByType;
-  };
-
   return (
     <div className="container mx-auto p-6">
       {/* Back Button */}
-      <Link to="/owner" className="mb-6 inline-flex items-center text-gray-600 hover:text-cyan-600">
+      <Link to="/owner" state={{ filters }} className="mb-6 inline-flex items-center text-gray-600 hover:text-cyan-600">
         <FaArrowLeft className="mr-2" />
         Back to Parking Owner List
       </Link>
@@ -146,18 +189,20 @@ const ViewParkingOwner = () => {
             <div className="flex gap-2">
               <span
                 className={`text-base font-semibold px-2 py-1 rounded ${
-                  owner.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                }`}
-              >
-                {owner.isActive ? "Active" : "Inactive"}
-              </span>
-              <span
-                className={`text-base font-semibold px-2 py-1 rounded ${
                   owner.approvalStatus ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
                 }`}
               >
                 {owner.approvalStatus ? "Approved" : "Pending"}
               </span>
+              {owner.approvalStatus && (
+                <span
+                  className={`text-base font-semibold px-2 py-1 rounded ${
+                    owner.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {owner.isActive ? "Active" : "Inactive"}
+                </span>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -205,18 +250,49 @@ const ViewParkingOwner = () => {
         <div className="bg-white shadow-md rounded-lg p-6">
           <h3 className="text-xl font-bold mb-4">Actions</h3>
           <div className="space-y-4">
-            <Link
-              to={`/parking-owner/update/${owner._id}`}
-              className="block w-full bg-cyan-500 hover:bg-cyan-600 text-white text-center py-2 rounded-md transition duration-300"
-            >
-              Edit Parking Owner
-            </Link>
-            <Link
-              to={`/parking-owner/view/${owner._id}/parkings`}
-              className="block w-full bg-gray-500 hover:bg-gray-600 text-white text-center py-2 rounded-md transition duration-300"
-            >
-              View Parkings
-            </Link>
+            {!owner.approvalStatus ? (
+              <>
+                <button
+                  onClick={handleApprove}
+                  className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md transition duration-300"
+                >
+                  <FaCheck className="text-lg" />
+                  Approve Parking Owner
+                </button>
+                <button
+                  onClick={handleReject}
+                  className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition duration-300"
+                >
+                  <FaTimes className="text-lg" />
+                  Reject Parking Owner
+                </button>
+              </>
+            ) : (
+              <div className="space-y-2">
+                <button
+                  onClick={() => handleStatusChange(true)}
+                  className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md transition duration-300 ${
+                    owner.isActive
+                      ? "bg-green-500 hover:bg-green-600 text-white"
+                      : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                  }`}
+                >
+                  <FaCheck className="text-lg" />
+                  Activate Account
+                </button>
+                <button
+                  onClick={() => handleStatusChange(false)}
+                  className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md transition duration-300 ${
+                    !owner.isActive
+                      ? "bg-red-500 hover:bg-red-600 text-white"
+                      : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                  }`}
+                >
+                  <FaTimes className="text-lg" />
+                  Deactivate Account
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -226,15 +302,15 @@ const ViewParkingOwner = () => {
         <h2 className="text-2xl font-bold mb-6">Parking Areas</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {parkingAreas.map((area) => {
-            //const slotTypeCount = getSlotTypeCount(area.slots || []);
+            const slotTypeCount = getSlotTypeCount(area?.slots || []);
             return (
               <div key={area._id} className="bg-white shadow-md rounded-lg p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-bold">{area?.name}</h3>
                   <span className={`px-2 py-1 rounded ${
-                    area?.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                    area?._doc.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                   }`}>
-                    {area?.isActive ? "Active" : "Inactive"}
+                    {area?._doc.isActive ? "Active" : "Inactive"}
                   </span>
                 </div>
                 
@@ -242,7 +318,7 @@ const ViewParkingOwner = () => {
                   <p className="text-gray-600 mb-2">{area?.description}</p>
                   <div className="flex items-center text-gray-600 mb-2">
                     <FaBuilding className="mr-2" />
-                    <span>{area?.addressLine1},{area?.addressLine2} ,{area?.city?.name}</span>
+                    <span>{area?._doc.addressLine1},{area?._doc.addressLine2} ,{area?._doc.city?.name}</span>
                   </div>
                 </div>
 
@@ -253,12 +329,12 @@ const ViewParkingOwner = () => {
                       <span className="text-gray-600">Total Slots:</span>
                       <span className="font-semibold">{area.slots?.length || 0}</span>
                     </div>
-                    {/* {Object.entries(slotTypeCount).map(([type, count]) => (
+                    {Object.entries(slotTypeCount).map(([type, count]) => (
                       <div key={type} className="flex justify-between">
                         <span className="text-gray-600">{type}:</span>
                         <span className="font-semibold">{count}</span>
                       </div>
-                    ))} */}
+                    ))}
                   </div>
                 </div>
 

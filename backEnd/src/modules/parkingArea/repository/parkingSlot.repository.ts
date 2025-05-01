@@ -48,7 +48,7 @@ export const getSlotsByParkingArea = async (parkingAreaId: string) => {
   return await ParkingSlotDTO.find({
     parkingAreaId,
     isDeleted: false
-  });
+  }).populate('vehicleType');
 };
 
 export const getSlotByNumberAndArea = async (parkingAreaId: string, slotNumber: number) => {
@@ -62,6 +62,13 @@ export const getSlotByNumberAndArea = async (parkingAreaId: string, slotNumber: 
 export const deleteManySlots = async (parkingAreaId: string ) => {
   return await ParkingSlotDTO.deleteMany({
     parkingAreaId: parkingAreaId ,
-    isDeleted: false
+    isDeleted: true
   });
+};
+
+export const updateParkingSlotStatus = async (parkingAreaId: string[], status: boolean) => {
+  return await ParkingSlotDTO.updateMany({
+    parkingAreaId: {$in: parkingAreaId} ,
+    isDeleted: false
+  }, { $set: { isActive: status } });
 };

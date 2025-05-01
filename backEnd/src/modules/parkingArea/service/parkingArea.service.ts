@@ -6,14 +6,18 @@ import {
     getAllParkingAreas as getAllParkingAreasRepo,
     getActiveParkingAreas as getActiveParkingAreasRepo,
     getParkingAreasByOwnerId as getParkingAreasByOwnerIdRepo,
+    updateParkingAreaByOwnerId as updateParkingAreaByOwnerIdRepo,
+    deleteParkingAreaByOwnerId as deleteParkingAreaByOwnerIdRepo,
 } from "../repository/parkingArea.repository";
 import { validateCreateParkingArea, validateUpdateParkingArea } from "../validators/parkingArea.validator";
 import { CreateUpdateParkingAreaRequest } from "../controller/request/ceate.parkingArea.request";
 import { ParkingAreaModel } from "../data/dtos/parkingArea.dto";
-import { createSlot } from "./parkingSlot.service";
+import { createSlot, getSlotsByParkingArea as getSlotsByParkingAreaRepo } from "./parkingSlot.service";
 import { CreateUpdateParkingSlotRequest } from "../controller/request/create.parkingSlot.request";
-
-export const createParkingArea = async (parkingAreaData: Partial<CreateUpdateParkingAreaRequest & { longitude: number, latitude: number ,slot: { type: string, count: number }[]}>) => {
+import { updateParkingSlotStatus } from "./parkingSlot.service";
+import { sendSMS } from "../../base/services/sms.service";
+import UserRepository from "../../user/data/repository/user.repository";
+export const createParkingArea = async (parkingAreaData: Partial<CreateUpdateParkingAreaRequest & { longitude: number, latitude: number, slot: { type: string, count: number }[] }>) => {
     const { error } = validateCreateParkingArea(parkingAreaData);
     if (error) {
         throw new Error(error.message);
@@ -26,6 +30,7 @@ export const createParkingArea = async (parkingAreaData: Partial<CreateUpdatePar
     delete parkingAreaData.latitude;
     const slot = parkingAreaData?.slot;
     delete parkingAreaData?.slot;
+    parkingAreaData.isActive = false;
     const parkingArea = await createParkingAreaRepo(parkingAreaData as unknown as ParkingAreaModel);
     const parkingAreaId = parkingArea._id as string;
     if (slot) {
@@ -40,6 +45,11 @@ export const createParkingArea = async (parkingAreaData: Partial<CreateUpdatePar
         }));
         await createSlot(slotData);
     }
+    const owner = await UserRepository.findById(
+        parkingArea.ownerId as unknown as string
+    );
+    const message = `Your request to create a parking area has been successfully submitted. Please wait for approval. Once approved, you can start using it by logging in with your email and password.`;
+    await sendSMS(owner?.phoneNumber as string, message);
     return parkingArea;
 };
 
@@ -49,6 +59,16 @@ export const updateParkingArea = async (id: string, parkingAreaData: CreateUpdat
         throw new Error(error.message);
     }
     return await updateParkingAreaRepo(id, parkingAreaData as unknown as ParkingAreaModel);
+};
+export const updateParkingAreaByOwnerId = async (ownerId: string, data: Partial<ParkingAreaModel>) => {
+
+    await updateParkingAreaByOwnerIdRepo(ownerId, data);
+    const parkingArea = await getParkingAreasByOwnerIdRepo(ownerId);
+    const parkingAreaIds = parkingArea.map((item) => item._id as string);
+
+
+    await updateParkingSlotStatus(parkingAreaIds as string[], data.isActive as boolean);
+    return parkingArea;
 };
 
 export const deleteParkingArea = async (id: string) => {
@@ -68,7 +88,15 @@ export const getActiveParkingAreas = async () => {
 };
 
 export const getParkingAreasByOwnerId = async (ownerId: string) => {
-    return await getParkingAreasByOwnerIdRepo(ownerId);
+    const parkingAreas = await getParkingAreasByOwnerIdRepo(ownerId);
+    const parkingAreasWithSlots = await Promise.all(parkingAreas.map(async (parkingArea) => {
+        const parkingSlots = await getSlotsByParkingAreaRepo(parkingArea._id as string);
+        return { ...parkingArea, slots: parkingSlots };
+    }));
+    return parkingAreasWithSlots;
+};
+export const deleteParkingAreaByOwnerId = async (ownerId: string) => {
+    return await deleteParkingAreaByOwnerIdRepo(ownerId);
 };
 
 // export const getParkingAreaByLocation = async (longitude: number, latitude: number) => {

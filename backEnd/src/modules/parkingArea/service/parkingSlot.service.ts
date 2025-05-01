@@ -9,6 +9,7 @@ import {
   getSlotsByParkingArea as getSlotsByParkingAreaRepo,
   getSlotByNumberAndArea as getSlotByNumberAndAreaRepo,
   deleteManySlots as deleteManySlotsRepo,
+  updateParkingSlotStatus as updateParkingSlotStatusRepo,
 } from "../repository/parkingSlot.repository";
 import { CreateUpdateParkingSlotRequest } from "../controller/request/create.parkingSlot.request";
 
@@ -68,4 +69,8 @@ export const getSlotsByParkingArea = async (parkingAreaId: string) => {
 
 export const deleteManySlots = async (parkingAreaId: string) => {
   return await deleteManySlotsRepo(parkingAreaId);
+};
+
+export const updateParkingSlotStatus = async (parkingAreaId: string[], status: boolean) => {
+  return await updateParkingSlotStatusRepo(parkingAreaId, status);
 };

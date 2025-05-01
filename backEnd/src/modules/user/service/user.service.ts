@@ -31,6 +31,7 @@ import BaseRepository from '@/modules/base/data/repository/base.repository';
 import { RoleDTO } from '@/modules/user/data/dtos/role.dto';
 import { json } from 'express';
 import HelperUtil from '../../../utils/helper.util';
+import { updateParkingAreaByOwnerId } from '../../parkingArea/service/parkingArea.service';
 const getUsers = async (
   listReq: UserListRequest
 ): Promise<UserListResponse> => {
@@ -252,6 +253,25 @@ const sendOTPForMobilNumberVerification = async (phoneNumber: string): Promise<B
     message: otp.toString(),
   } as BaseResponse;
 };
+
+
+const approveParkingOwner = async (id: string): Promise<BaseResponse> => {
+  const user = await UserRepository.findById(id);
+  if (!user) throw new Error('User not found');
+  user.approvalStatus = true;
+  user.isActive = true;
+  await user.save();
+  await updateParkingAreaByOwnerId(user._id as string, { isActive: true });  
+  return { status: true, message: 'Parking owner approved successfully' } as BaseResponse;
+};  
+
+const rejectParkingOwner = async (id: string): Promise<BaseResponse> => {
+  const user = await UserRepository.softDeleteById(id);
+
+  if (!user) throw new Error('User not found');
+  return { status: true, message: 'Parking owner rejected successfully' } as BaseResponse;
+};
+
 export default {
   getUsers,
   getUser,
@@ -262,4 +282,8 @@ export default {
   updateUser,
   adminUpdateUser,
   sendOTPForMobilNumberVerification,
+  approveParkingOwner,
+  rejectParkingOwner,
 };
+
+

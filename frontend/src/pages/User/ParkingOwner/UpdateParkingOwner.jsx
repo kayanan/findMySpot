@@ -1,7 +1,7 @@
 // src/pages/User/ParkingOwner/UpdateParkingOwner.jsx
 
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams, Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import { EyeIcon, EyeOffIcon } from "@heroicons/react/outline";
 import { FaArrowLeft } from "react-icons/fa";
@@ -13,6 +13,7 @@ import zxcvbn from "zxcvbn"; // For password strength analysis
 const UpdateParkingOwner = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { filters } = useLocation().state;
   
   // Form data state to manage parking owner input
   const [formData, setFormData] = useState({
@@ -248,7 +249,7 @@ const UpdateParkingOwner = () => {
       <h1 className="text-3xl font-bold text-cyan-500 mb-6 text-center">Update Parking Owner</h1>
 
       {/* Back Button */}
-      <Link to="/owner" className="mb-6 inline-flex items-center text-gray-600 hover:text-cyan-600">
+      <Link to="/owner" state={{ filters }} className="mb-6 inline-flex items-center text-gray-600 hover:text-cyan-600">
         <FaArrowLeft className="mr-2" />
         Back to Parking Owner List
       </Link>
