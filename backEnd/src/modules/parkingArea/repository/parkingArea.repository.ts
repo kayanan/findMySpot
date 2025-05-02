@@ -1,3 +1,4 @@
+import { BaseResponse } from "../../base/controller/responses/base.repsonse";
 import { ParkingAreaDTO, ParkingAreaModel } from "../data/dtos/parkingArea.dto";
 import { Types } from "mongoose";
 export const createParkingArea = async (parkingAreaData: Partial<ParkingAreaModel>) => {
@@ -54,7 +55,8 @@ export const updateParkingAreaByOwnerId = async (ownerId: string, data: Partial<
 };
 
 export const deleteParkingAreaByOwnerId = async (ownerId: string) => {
-  return await ParkingAreaDTO.updateMany({ ownerId: new Types.ObjectId(ownerId) }, { $set: { isDeleted: true } });
+  await ParkingAreaDTO.deleteMany({ ownerId: new Types.ObjectId(ownerId) });
+  return { status: true, message: 'Parking area deleted successfully' } as BaseResponse;
 };
 
 // export const updateAvailableSlots = async (id: string, change: number) => {

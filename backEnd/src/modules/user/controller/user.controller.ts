@@ -153,9 +153,11 @@ export const approveParkingOwner = async (req: Request, res: Response) => {
 
 export const rejectParkingOwner = async (req: Request, res: Response) => {
   try {
-    const response: BaseResponse = await UserService.rejectParkingOwner(req.params.id);
+    const reason = req.body.reason as string;
+    const response: BaseResponse = await UserService.rejectParkingOwner(req.params.id, reason);
     res.status(200).json(response);
   } catch (error: any) {
+    console.log(error)
     res.status(400).json(errorResponse(error.message));
   }
 };

@@ -12,11 +12,13 @@ import {
 import { validateCreateParkingArea, validateUpdateParkingArea } from "../validators/parkingArea.validator";
 import { CreateUpdateParkingAreaRequest } from "../controller/request/ceate.parkingArea.request";
 import { ParkingAreaModel } from "../data/dtos/parkingArea.dto";
-import { createSlot, getSlotsByParkingArea as getSlotsByParkingAreaRepo } from "./parkingSlot.service";
+import { createSlot, getSlotsByParkingArea as getSlotsByParkingAreaRepo} from "./parkingSlot.service";
 import { CreateUpdateParkingSlotRequest } from "../controller/request/create.parkingSlot.request";
 import { updateParkingSlotStatus } from "./parkingSlot.service";
 import { sendSMS } from "../../base/services/sms.service";
 import UserRepository from "../../user/data/repository/user.repository";
+import { BaseResponse } from "../../base/controller/responses/base.repsonse";
+import { ParkingSlotDTO } from "../data/dtos/parkingSlot.dto";
 export const createParkingArea = async (parkingAreaData: Partial<CreateUpdateParkingAreaRequest & { longitude: number, latitude: number, slot: { type: string, count: number }[] }>) => {
     const { error } = validateCreateParkingArea(parkingAreaData);
     if (error) {
@@ -96,7 +98,15 @@ export const getParkingAreasByOwnerId = async (ownerId: string) => {
     return parkingAreasWithSlots;
 };
 export const deleteParkingAreaByOwnerId = async (ownerId: string) => {
-    return await deleteParkingAreaByOwnerIdRepo(ownerId);
+    const parkingAreas = await getParkingAreasByOwnerIdRepo(ownerId);
+    if (parkingAreas.length === 0) {
+        throw new Error("Parking area not found");
+    }
+    const parkingAreaIds = parkingAreas.map((parkingArea) => parkingArea._id as string);
+    await ParkingSlotDTO.deleteMany({ parkingAreaId: { $in: parkingAreaIds } });
+    await deleteParkingAreaByOwnerIdRepo(ownerId);
+   
+    return { status: true, message: 'Parking area deleted successfully' } as BaseResponse;
 };
 
 // export const getParkingAreaByLocation = async (longitude: number, latitude: number) => {

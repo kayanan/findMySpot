@@ -101,9 +101,7 @@ async function saveUser(
 }
 
 async function findById(id: string): Promise<UserModel | null> {
-  const user: UserModel | null = await UserDTO.findById(id, {
-    isDeleted: false,
-  })
+  const user: UserModel | null = await UserDTO.findById(new mongoose.Types.ObjectId(id))
     .populate('role', '_id type')
     .select('-password -__v');
   return user as UserModel;
@@ -113,7 +111,7 @@ async function findByEmail(email: string): Promise<UserModel | null> {
   //make sure to delete the password attribute before return to the api calls.
   return UserDTO.findOne({
     email,
-    isDeleted: false,
+    isDeleted: {$ne: true},
   });
 }
 
@@ -174,7 +172,7 @@ async function changePassword(
       _id: new mongoose.Types.ObjectId(id),
       email: email,
       isActive: true,
-      isDeleted: false,
+      isDeleted: {$ne: true},
     });
     if (user) {
       user.password = password;
@@ -220,7 +218,7 @@ async function adminUpdateUser(
 async function findByRole(role: string): Promise<UserModel | null> {
   const user = await UserDTO.findOne({
     role,
-    isDeleted: false,
+    isDeleted: {$ne: true},
   });
   return user;
 }
@@ -233,6 +231,14 @@ async function softDeleteById(id: string): Promise<UserModel | null> {
   user.isDeleted = true;
   await user.save();
 
+  return user;
+}
+async function hardDeleteById(id: string): Promise<UserModel | null> {
+  const user: UserModel | null = await UserDTO.findById(id);
+  if (!user) {
+    return null;
+  }
+  await user.deleteOne();
   return user;
 }
 
@@ -249,4 +255,5 @@ export default {
   adminUpdateUser,
   findByRole,
   softDeleteById,
+  hardDeleteById,
 };

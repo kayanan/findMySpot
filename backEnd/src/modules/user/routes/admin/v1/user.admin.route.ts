@@ -20,7 +20,7 @@ userAdminRouter.patch(
   '/approve/:id',
   approveParkingOwner
 );
-userAdminRouter.patch(
+userAdminRouter.post(
   '/reject/:id',
   rejectParkingOwner
 );

@@ -31,7 +31,8 @@ import BaseRepository from '@/modules/base/data/repository/base.repository';
 import { RoleDTO } from '@/modules/user/data/dtos/role.dto';
 import { json } from 'express';
 import HelperUtil from '../../../utils/helper.util';
-import { updateParkingAreaByOwnerId } from '../../parkingArea/service/parkingArea.service';
+import { deleteParkingAreaByOwnerId, updateParkingAreaByOwnerId } from '../../parkingArea/service/parkingArea.service';
+
 const getUsers = async (
   listReq: UserListRequest
 ): Promise<UserListResponse> => {
@@ -265,11 +266,25 @@ const approveParkingOwner = async (id: string): Promise<BaseResponse> => {
   return { status: true, message: 'Parking owner approved successfully' } as BaseResponse;
 };  
 
-const rejectParkingOwner = async (id: string): Promise<BaseResponse> => {
-  const user = await UserRepository.softDeleteById(id);
-
+const rejectParkingOwner = async (id: string, reason: string): Promise<BaseResponse> => {
+  const user = await UserRepository.findById(id);
   if (!user) throw new Error('User not found');
-  return { status: true, message: 'Parking owner rejected successfully' } as BaseResponse;
+  
+  const message = `Your parking owner request has been rejected. Reason: ${reason}. - FindMySpot`;
+  const mobileNumber = user.phoneNumber?.replace(/^0/, '94');
+  if (!mobileNumber) throw new Error('Mobile number not found');
+  await UserRepository.hardDeleteById(id);
+  await deleteParkingAreaByOwnerId(user._id as string);
+  let responseMessage="Parking owner rejected successfully"
+  try{
+     await sendSMS(mobileNumber, message);
+   
+  }
+  catch(error){
+    responseMessage="Parking owner rejected successfully but SMS not sent"
+  }
+ 
+  return { status: true, message: responseMessage } as BaseResponse;
 };
 
 export default {

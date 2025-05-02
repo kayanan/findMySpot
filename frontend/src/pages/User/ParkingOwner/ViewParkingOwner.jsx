@@ -98,12 +98,22 @@ const ViewParkingOwner = () => {
 
   const handleReject = async () => {
     try {
-      await axios.patch(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/reject/${id}`, {}, { withCredentials: true });
-      toast.success("Parking owner rejected successfully");
-      fetchParkingOwner();
+      const confirm= window.confirm("Do you want to reject this application?.")
+      if(!confirm){
+        return
+      }
+      const reason=window.prompt("plese provide a reason for this rejection")
+
+      const response=await axios.post(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/reject/${id}`, {reason}, { withCredentials: true });
+     
+        toast.success(response.data.message || "Parking owner rejected successfully",{
+          onClose:()=>{
+            fetchParkingOwner();
+          },
+          autoClose:1000,
+        });
     } catch (err) {
-      console.error("Error rejecting parking owner:", err.message);
-      toast.error("Error rejecting parking owner: " + err.message);
+      toast.error(err.response.data.message || "Error rejecting parking owner");
     }
   };
 
