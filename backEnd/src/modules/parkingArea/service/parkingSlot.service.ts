@@ -63,8 +63,12 @@ export const getActiveSlots = async () => {
   return await getActiveSlotsRepo();
 };
 
-export const getSlotsByParkingArea = async (parkingAreaId: string) => {
-  return await getSlotsByParkingAreaRepo(parkingAreaId);
+export const getSlotsByParkingArea = async (id: string) => {
+  const slots = await getSlotsByParkingAreaRepo(id);
+  return {
+    success: true,
+    data: slots,
+  }
 };
 
 export const deleteManySlots = async (parkingAreaId: string) => {

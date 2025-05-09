@@ -1,4 +1,4 @@
-import { ParkingAreaModel, ParkingAreaDTO, addressSchema } from '../dtos/parkingArea.dto';
+import { ParkingAreaModel, ParkingAreaDTO } from '../dtos/parkingArea.dto';
 import mongoose, { Schema } from 'mongoose';
 
 export interface CreateUpdateParkingAreaRequest {

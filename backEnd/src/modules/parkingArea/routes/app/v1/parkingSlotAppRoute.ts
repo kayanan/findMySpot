@@ -3,7 +3,8 @@ import { getSlotsByParkingAreaHandler } from "../../../controller/parkingSlot.co
 
 const router = Router();
 
-router.get("/", getSlotsByParkingAreaHandler as RequestHandler);
+
+router.get("/parking-area/:id", getSlotsByParkingAreaHandler as RequestHandler);
 
 export default router;
 

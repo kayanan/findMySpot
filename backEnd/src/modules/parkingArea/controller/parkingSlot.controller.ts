@@ -8,7 +8,7 @@ import {
   getAllSlots,
   getActiveSlots,
   getSlotsByParkingArea,
-  deleteManySlots
+  deleteManySlots,
 } from "../service/parkingSlot.service";
 import { CreateUpdateParkingSlotRequest } from "./request/create.parkingSlot.request";
 import { ParkingSlotValidator } from "../validators/parkingSlot.validator";
@@ -105,8 +105,8 @@ export const getActiveSlotsHandler = async (req: Request, res: Response) => {
 
 export const getSlotsByParkingAreaHandler = async (req: Request, res: Response) => {
   try {
-    const { parkingAreaId } = req.params;
-    const slots = await getSlotsByParkingArea(parkingAreaId);
+    const { id } = req.params;
+    const slots = await getSlotsByParkingArea(id);
     res.status(200).json(slots);
   } catch (error: unknown) {
     if (error instanceof Error) {

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import axios from "axios";
-import { FaArrowLeft, FaMapMarkerAlt, FaPhone, FaUser, FaParking, FaCar, FaCheck, FaTimes, FaClock } from "react-icons/fa";
-import { toast } from "react-toastify";
+import { FaArrowLeft, FaMapMarkerAlt, FaPhone, FaUser, FaParking, FaCar, FaCheck, FaClock, FaUsers, FaBuilding, FaInfoCircle } from "react-icons/fa";
+import { toast, ToastContainer } from "react-toastify";
+import ListParkingSlots from "../ParkingSlots/ListParkingSlots";
 
 const ViewParkingArea = () => {
     const { id } = useParams();
+    const [slots, setSlots] = useState(useLocation().state?.slot || []);
     const [parkingArea, setParkingArea] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -13,9 +15,7 @@ const ViewParkingArea = () => {
     const fetchParkingArea = async () => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-area/${id}`, { withCredentials: true });
-            
             setParkingArea(response.data.data);
-            console.log(response.data.data);
         } catch (err) {
             console.error("Error fetching parking area:", err);
             setError("Failed to load parking area details");
@@ -24,9 +24,11 @@ const ViewParkingArea = () => {
             setLoading(false);
         }
     };
+
     const fetchParkingSlots = async () => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-area/${id}/slots`, { withCredentials: true });
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/parking-area/${id}`, { withCredentials: true });
+            setSlots(response.data.data || []);
         } catch (err) {
             console.error("Error fetching parking slots:", err);
         }
@@ -34,7 +36,9 @@ const ViewParkingArea = () => {
 
     useEffect(() => {
         fetchParkingArea();
-        fetchParkingSlots();
+        if (slots.length === 0) {
+            fetchParkingSlots();
+        }
     }, [id]);
 
     if (loading) {
@@ -67,8 +71,8 @@ const ViewParkingArea = () => {
         );
     }
 
-    const totalSlots = parkingArea?.slots?.length || 0;
-    const reservedSlots = parkingArea?.slots?.filter(slot => slot.isReserved)?.length || 0;
+    const totalSlots = slots?.length || 0;
+    const reservedSlots = slots?.filter(slot => slot.isReserved)?.length || 0;
     const availableSlots = totalSlots - reservedSlots;
 
     return (
@@ -81,14 +85,16 @@ const ViewParkingArea = () => {
 
             {/* Header Section */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-                <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 p-6 text-white">
+                <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 p-8 text-white">
                     <div className="flex justify-between items-center">
-                        <h1 className="text-3xl font-bold">{parkingArea?.name}</h1>
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                            parkingArea?.isActive 
-                                ? "bg-green-100 text-green-800" 
+                        <div>
+                            <h1 className="text-3xl font-bold mb-2">{parkingArea?.name}</h1>
+                            <p className="text-cyan-100 text-sm">{parkingArea?.description}</p>
+                        </div>
+                        <span className={`px-4 py-2 rounded-full text-sm font-semibold ${parkingArea?.isActive
+                                ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
-                        }`}>
+                            }`}>
                             {parkingArea?.isActive ? "Active" : "Inactive"}
                         </span>
                     </div>
@@ -99,39 +105,56 @@ const ViewParkingArea = () => {
             <div className="grid md:grid-cols-3 gap-6">
                 {/* Left Column - Basic Information */}
                 <div className="md:col-span-2 space-y-6">
-                    {/* Description Card */}
-                    <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-semibold mb-4">Description</h2>
-                        <p className="text-gray-600">{parkingArea?.description}</p>
-                    </div>
-
                     {/* Location Card */}
                     <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-semibold mb-4">Location</h2>
-                        <div className="space-y-3">
-                            <div className="flex items-center text-gray-600">
+                        <div className="flex items-center mb-4">
+                            <FaBuilding className="text-cyan-500 mr-3 text-xl" />
+                            <h2 className="text-xl font-semibold">Location Details</h2>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center text-gray-600 bg-gray-50 p-3 rounded-lg">
                                 <FaMapMarkerAlt className="mr-3 text-cyan-500" />
-                                <span>{parkingArea?.addressLine1}, {parkingArea?.addressLine2}</span>
+                                <div>
+                                    <p className="font-medium">{parkingArea?.addressLine1}</p>
+                                    <p className="text-sm text-gray-500">{parkingArea?.addressLine2}</p>
+                                </div>
                             </div>
-                            <div className="flex items-center text-gray-600">
+                            <div className="flex items-center text-gray-600 bg-gray-50 p-3 rounded-lg">
                                 <FaMapMarkerAlt className="mr-3 text-cyan-500" />
-                                <span>{parkingArea?.city?.name}, {parkingArea?.district?.name}</span>
+                                <div>
+                                    <p className="font-medium">{parkingArea?.city?.name}</p>
+                                    <p className="text-sm text-gray-500">{parkingArea?.district?.name}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Contact Information Card */}
                     <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
-                        <div className="space-y-3">
-                            <div className="flex items-center text-gray-600">
-                                <FaPhone className="mr-3 text-cyan-500" />
-                                <span>{parkingArea?.contactNumber}</span>
-                            </div>
-                            <div className="flex items-center text-gray-600">
-                                <FaUser className="mr-3 text-cyan-500" />
-                                <span>Manager: {parkingArea?.manager?.firstName} {parkingArea?.manager?.lastName}</span>
-                            </div>
+                        <div className="flex items-center mb-4">
+                            <FaUsers className="text-cyan-500 mr-3 text-xl" />
+                            <h2 className="text-xl font-semibold">Management Team</h2>
+                        </div>
+                        <div className="space-y-4">
+                            {parkingArea?.managers?.map((manager, index) => (
+                                <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center">
+                                            <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
+                                                <FaUser className="text-cyan-500" />
+                                            </div>
+                                            <div className="ml-3">
+                                                <p className="font-medium text-gray-800">{manager.firstName} {manager.lastName}</p>
+                                                <p className="text-sm text-gray-500">{manager.role || "Manager"}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center text-gray-600">
+                                            <FaPhone className="mr-2 text-cyan-500" />
+                                            <span>{manager.contactNumber}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -140,43 +163,49 @@ const ViewParkingArea = () => {
                 <div className="space-y-6">
                     {/* Statistics Card */}
                     <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-semibold mb-4">Parking Statistics</h2>
+                        <div className="flex items-center mb-4">
+                            <FaInfoCircle className="text-cyan-500 mr-3 text-xl" />
+                            <h2 className="text-xl font-semibold">Parking Statistics</h2>
+                        </div>
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                                 <div className="flex items-center">
-                                    <FaParking className="mr-3 text-cyan-500" />
+                                    <FaParking className="mr-3 text-cyan-500 text-xl" />
                                     <span className="text-gray-600">Total Slots</span>
                                 </div>
-                                <span className="font-semibold text-cyan-600">{totalSlots}</span>
+                                <span className="font-semibold text-cyan-600 text-xl">{totalSlots}</span>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                                 <div className="flex items-center">
-                                    <FaCheck className="mr-3 text-green-500" />
+                                    <FaCheck className="mr-3 text-green-500 text-xl" />
                                     <span className="text-gray-600">Available Slots</span>
                                 </div>
-                                <span className="font-semibold text-green-600">{availableSlots}</span>
+                                <span className="font-semibold text-green-600 text-xl">{availableSlots}</span>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                                 <div className="flex items-center">
-                                    <FaClock className="mr-3 text-orange-500" />
+                                    <FaClock className="mr-3 text-orange-500 text-xl" />
                                     <span className="text-gray-600">Reserved Slots</span>
                                 </div>
-                                <span className="font-semibold text-orange-600">{reservedSlots}</span>
+                                <span className="font-semibold text-orange-600 text-xl">{reservedSlots}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Operating Hours Card */}
                     <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-semibold mb-4">Operating Hours</h2>
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center">
+                        <div className="flex items-center mb-4">
+                            <FaClock className="text-cyan-500 mr-3 text-xl" />
+                            <h2 className="text-xl font-semibold">Operating Hours</h2>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
                                 <span className="text-gray-600">Opening Time</span>
-                                <span className="font-semibold">{parkingArea?.openingTime || "N/A"}</span>
+                                <span className="font-semibold text-cyan-600">{parkingArea?.openingTime || "N/A"}</span>
                             </div>
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
                                 <span className="text-gray-600">Closing Time</span>
-                                <span className="font-semibold">{parkingArea?.closingTime || "N/A"}</span>
+                                <span className="font-semibold text-cyan-600">{parkingArea?.closingTime || "N/A"}</span>
                             </div>
                         </div>
                     </div>
@@ -185,41 +214,13 @@ const ViewParkingArea = () => {
 
             {/* Parking Slots Section */}
             <div className="mt-8">
-                <h2 className="text-2xl font-bold mb-6">Parking Slots</h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {parkingArea?.slots?.map((slot) => (
-                        <div key={slot._id} className="bg-white rounded-xl shadow-md p-4">
-                            <div className="flex justify-between items-center mb-3">
-                                <div className="flex items-center">
-                                    <FaCar className="mr-2 text-cyan-500" />
-                                    <span className="font-semibold">Slot {slot.slotNumber}</span>
-                                </div>
-                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                    slot.isReserved 
-                                        ? "bg-orange-100 text-orange-800" 
-                                        : "bg-green-100 text-green-800"
-                                }`}>
-                                    {slot.isReserved ? "Reserved" : "Available"}
-                                </span>
-                            </div>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Vehicle Type:</span>
-                                    <span className="font-medium">{slot.vehicleType?.vehicleType}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Size:</span>
-                                    <span className="font-medium">{slot.slotSize} sq ft</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Price:</span>
-                                    <span className="font-medium">Rs. {slot.slotPrice}/hr</span>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                <div className="flex items-center mb-6">
+                    <FaCar className="text-cyan-500 mr-3 text-xl" />
+                    <h2 className="text-2xl font-bold">Parking Slots</h2>
                 </div>
+                <ListParkingSlots slots={slots} />
             </div>
+            <ToastContainer />
         </div>
     );
 };

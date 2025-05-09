@@ -44,11 +44,12 @@ export const getActiveSlots = async () => {
   return await ParkingSlotDTO.find({ isActive: true, isDeleted: false });
 };
 
-export const getSlotsByParkingArea = async (parkingAreaId: string) => {
-  return await ParkingSlotDTO.find({
-    parkingAreaId,
-    isDeleted: false
+export const getSlotsByParkingArea = async (id: string) => {
+  const slots = await ParkingSlotDTO.find({
+    parkingAreaId: id,
+    isDeleted: {$ne: true}
   }).populate('vehicleType');
+  return slots;
 };
 
 export const getSlotByNumberAndArea = async (parkingAreaId: string, slotNumber: number) => {

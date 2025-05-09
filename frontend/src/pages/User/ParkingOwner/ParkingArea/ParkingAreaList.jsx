@@ -36,7 +36,7 @@ const ParkingAreaList = ({parkingAreas, fetchParkingOwner}) => {
     return (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {parkingAreas.map((area) => {
-            const slotTypeCount = getSlotTypeCount(area?.slots || []);
+            const slotTypeCount = getSlotTypeCount(area?.slots?.data || []);
             return (
               <div key={area?._doc._id} className="bg-white shadow-md rounded-xl overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 {/* Header Section */}
@@ -93,6 +93,7 @@ const ParkingAreaList = ({parkingAreas, fetchParkingOwner}) => {
                   <div className="flex gap-2 pt-1">
                     <Link
                       to={`/parking-area/view/${area?._doc._id}`}
+                      state={{ slots: area?.slots }}
                       className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white text-center py-2 rounded-lg transition duration-300 font-medium"
                     >
                       View Details

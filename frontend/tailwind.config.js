@@ -6,8 +6,9 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   safelist: [
-    "bg-yellow-400",
-    "bg-red-600",
+    {
+      pattern: /bg-(rose|emerald|slate)-(100|200|300|400|500|600)/,
+    }
   ],
   theme: {
     extend: {},

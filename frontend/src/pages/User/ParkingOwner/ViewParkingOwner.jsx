@@ -35,13 +35,13 @@ const SkeletonLoader = () => (
 );
 
 const ViewParkingOwner = () => {
+ 
   const { id } = useParams();
   const [owner, setOwner] = useState(null);
   const { filters } = useLocation().state;
   const [parkingAreas, setParkingAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const fetchParkingOwner = async () => {
     setLoading(true);
     setError(null);
