@@ -161,3 +161,13 @@ export const rejectParkingOwner = async (req: Request, res: Response) => {
     res.status(400).json(errorResponse(error.message));
   }
 };
+
+export const getPendingOwnersCount = async (req: Request, res: Response) => {
+  try {
+    const response: BaseResponse = await UserService.getPendingOwnersCount();
+    res.status(200).json(response);
+  } catch (error: any) {
+    res.status(400).json(errorResponse(error.message));
+  }
+};
+    

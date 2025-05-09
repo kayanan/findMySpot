@@ -10,6 +10,7 @@ import { approvalStatusOptions, isActiveOptions } from "../../../utils/DropdownO
 const ParkingOwnerList = () => {
   const [parkingOwners, setParkingOwners] = useState([]);
   const [filteredOwners, setFilteredOwners] = useState([]);
+  const [pendingOwnersCount, setPendingOwnersCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const [filters, setFilters] = useState( {
@@ -33,6 +34,7 @@ const ParkingOwnerList = () => {
             }
            }
         );
+
         setParkingOwners(res.data.users);
         setFilteredOwners(res.data.users);
       } catch (error) {
@@ -58,7 +60,20 @@ const ParkingOwnerList = () => {
     });
     setFilteredOwners(filtered);
   }, [searchTerm, parkingOwners]);
-
+ useEffect(() => {
+  const fetchPendingOwnersCount = async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/pending-owners-count`,
+        { withCredentials: true }
+      );
+      setPendingOwnersCount(res.data.count);
+    } catch (error) {
+      console.error("Error fetching pending owners count:", error.message);
+    }
+  };
+  fetchPendingOwnersCount();
+ }, []);
   // Handle dropdown changes
   const handleFilterChange = (filterName, value) => {
     setFilters((prev) => ({ ...prev, [filterName]: value }));
@@ -104,9 +119,15 @@ const ParkingOwnerList = () => {
           options={isActiveOptions}
           onChange={handleFilterChange}
         />
-        <Link to="/owner/pending-request" className="ml-10 bg-cyan-500 hover:bg-cyan-600 w-1/2 text-white px-3 py-2 pl-10 rounded-full ">
-        Pending Request
-      </Link>
+        <Link 
+          to="/owner/pending-request" 
+          className="ml-10 inline-flex items-center justify-center bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-full transition duration-200 shadow-md hover:shadow-lg"
+        >
+          <span>Pending Requests</span>
+          <span className="ml-2 bg-white text-cyan-600 text-sm font-bold rounded-full h-6 w-6 flex items-center justify-center">
+            {pendingOwnersCount}
+          </span>
+        </Link>
       </div>
       
 

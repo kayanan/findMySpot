@@ -297,6 +297,11 @@ const rejectParkingOwner = async (id: string, reason: string): Promise<BaseRespo
   return { status: true, message: responseMessage } as BaseResponse;
 };
 
+const getPendingOwnersCount = async (): Promise<BaseResponse> => {
+  const count = await UserRepository.findPendingOwnersCount();
+  return { status: true, count: count } as BaseResponse;
+};
+
 export default {
   getUsers,
   getUser,
@@ -309,6 +314,7 @@ export default {
   sendOTPForMobilNumberVerification,
   approveParkingOwner,
   rejectParkingOwner,
+  getPendingOwnersCount,
 };
 
 

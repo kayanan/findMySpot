@@ -241,6 +241,9 @@ async function hardDeleteById(id: string): Promise<UserModel | null> {
   await user.deleteOne();
   return user;
 }
+async function findPendingOwnersCount(): Promise<number> {
+  return UserDTO.countDocuments({ approvalStatus: {$ne: true} });
+}
 
 export default {
   findUsers,
@@ -256,4 +259,5 @@ export default {
   findByRole,
   softDeleteById,
   hardDeleteById,
+  findPendingOwnersCount,
 };

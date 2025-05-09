@@ -12,7 +12,7 @@ const getSlotTypeCount = (slots) => {
   return countByType;
 };
 
-const ParkingAreaList = ({parkingAreas, fetchParkingOwner}) => {
+const ParkingAreaList = ({parkingAreas, fetchParkingOwner, parkingOwner}) => {
   
     const handleStatusChange = async (id, status) => {
       const approve = window.confirm(`Are you sure you want to ${status ? "activate" : "deactivate"} this parking area?`);
@@ -75,7 +75,7 @@ const ParkingAreaList = ({parkingAreas, fetchParkingOwner}) => {
                     <div >
                       <div className="w-full flex justify-between items-center bg-white p-2 rounded-md">
                         <span className="text-gray-600">Total Slots</span>
-                        <span className="font-semibold text-cyan-600">{area.slots?.length || 0}</span>
+                        <span className="font-semibold text-cyan-600">{area.slots?.data?.length || 0}</span>
                       </div>
                       {Object.entries(slotTypeCount).map(([type, count]) => (
                         <div key={type} className="w-full flex justify-between items-center bg-white p-2 rounded-md">
@@ -93,14 +93,15 @@ const ParkingAreaList = ({parkingAreas, fetchParkingOwner}) => {
                   <div className="flex gap-2 pt-1">
                     <Link
                       to={`/parking-area/view/${area?._doc._id}`}
-                      state={{ slots: area?.slots }}
+                      state={{ slots: area?.slots , parkingOwnerId: parkingOwner?._id}}
                       className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white text-center py-2 rounded-lg transition duration-300 font-medium"
                     >
                       View Details
                     </Link>
-                    <button
-                      type="button"
-                      onClick={() => handleStatusChange(area?._doc._id, !area?._doc.isActive)}
+                    {parkingOwner?.isActive && (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange(area?._doc._id, !area?._doc.isActive)}
                       className={`flex-1 py-2 rounded-lg transition duration-300 font-medium ${
                         area?._doc.isActive
                           ? "bg-red-500 hover:bg-red-600 text-white"
@@ -109,6 +110,7 @@ const ParkingAreaList = ({parkingAreas, fetchParkingOwner}) => {
                     >
                       {area?._doc.isActive ? "Deactivate" : "Activate"}
                     </button>
+                    )}
                   </div>
                 </div>
               </div>

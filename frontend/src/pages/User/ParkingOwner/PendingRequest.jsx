@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
-import { EyeIcon, PencilAltIcon } from "@heroicons/react/outline";
+import { EyeIcon, PencilAltIcon, ArrowLeftIcon } from "@heroicons/react/outline";
 import Dropdown from "../../../utils/Dropdown";
 import { isActiveOptions } from "../../../utils/DropdownOptions";
 
@@ -12,7 +12,7 @@ const PendingRequest = () => {
   const [filteredOwners, setFilteredOwners] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [filters, setFilters] = useState( {
+  const [filters, setFilters] = useState({
     approvalStatus: "false",
     isActive: "false"
   });
@@ -27,12 +27,13 @@ const PendingRequest = () => {
         const res = await axios.get(
           `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/list`,
 
-          { withCredentials: true,
+          {
+            withCredentials: true,
             params: {
               role: "PARKING_OWNER",
               ...filters
             }
-           }
+          }
         );
         setParkingOwners(res.data.users);
         setFilteredOwners(res.data.users);
@@ -58,7 +59,16 @@ const PendingRequest = () => {
   return (
     <div className="p-4 max-w-7xl mx-auto">
       {/* Header & Search */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+          <Link to="/owner" className="flex items-center gap-2  text-gray-500 hover:text-cyan-600">
+            <ArrowLeftIcon className="h-5 w-5 " />
+            <span >Back to Parking Owner Management</span>
+          </Link>
+
+        </div>
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-2 mb-6 space-y-4 sm:space-y-0">
+        
+
         <h1 className="text-2xl sm:text-3xl font-bold text-cyan-500">
           Parking Owner Management
         </h1>
@@ -73,16 +83,16 @@ const PendingRequest = () => {
           />
         </div>
       </div>
-      
+
       {/* Filters */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
-        
+
         <h1 className="text-1xl sm:text-2xl font-bold text-gray-500">
           Pending Request
         </h1>
 
 
-     
+
       </div>
 
       {/* Loading Spinner or Table */}
@@ -129,22 +139,20 @@ const PendingRequest = () => {
                     <td className="py-3 px-4">{owner.nic || "N/A"}</td>
                     <td className="py-3 px-4">{owner.phoneNumber || "N/A"}</td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        owner.approvalStatus ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-xs ${owner.approvalStatus ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
                         {owner.approvalStatus ? 'Approved' : 'Pending'}
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        owner.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-xs ${owner.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
                         {owner.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
                     <td className="py-3 px-4 flex justify-center space-x-2">
                       <Link
-                        to={`/owner/view/${owner._id}` }
+                        to={`/owner/view/${owner._id}`}
                         state={{ filters }}
                         className="bg-gray-400 hover:bg-gray-600 text-white px-3 py-2 rounded-full mt-4"
                       >
@@ -176,14 +184,12 @@ const PendingRequest = () => {
                     <div>
                       <h3 className="font-semibold text-lg">{`${owner.firstName} ${owner.lastName}`}</h3>
                       <div className="flex space-x-2 mt-1">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          owner.approvalStatus ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                        }`}>
+                        <span className={`px-2 py-1 rounded-full text-xs ${owner.approvalStatus ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                          }`}>
                           {owner.approvalStatus ? 'Approved' : 'Pending Approval'}
                         </span>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          owner.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
+                        <span className={`px-2 py-1 rounded-full text-xs ${owner.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
                           {owner.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </div>

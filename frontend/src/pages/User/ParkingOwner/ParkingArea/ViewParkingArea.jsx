@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
 import axios from "axios";
-import { FaArrowLeft, FaMapMarkerAlt, FaPhone, FaUser, FaParking, FaCar, FaCheck, FaClock, FaUsers, FaBuilding, FaInfoCircle } from "react-icons/fa";
+import { FaArrowLeft, FaMapMarkerAlt, FaPhone, FaUser, FaParking, FaCar, FaCheck, FaClock, FaUsers, FaBuilding, FaInfoCircle, FaTimes } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import ListParkingSlots from "../ParkingSlots/ListParkingSlots";
 
 const ViewParkingArea = () => {
     const { id } = useParams();
+    const parkingOwnerId = useLocation().state.parkingOwnerId;
+    console.log(parkingOwnerId);
     const [slots, setSlots] = useState(useLocation().state?.slot || []);
     const [parkingArea, setParkingArea] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -73,12 +75,13 @@ const ViewParkingArea = () => {
 
     const totalSlots = slots?.length || 0;
     const reservedSlots = slots?.filter(slot => slot.isReserved)?.length || 0;
-    const availableSlots = totalSlots - reservedSlots;
+    const inactiveSlots = slots?.filter(slot => !slot.isActive)?.length || 0;
+    const availableSlots = totalSlots - reservedSlots - inactiveSlots;
 
     return (
         <div className="container mx-auto p-6">
             {/* Back Button */}
-            <Link to="/owner" className="inline-flex items-center text-gray-600 hover:text-cyan-600 mb-6">
+            <Link to={`/owner/view/${parkingOwnerId}`} className="inline-flex items-center text-gray-600 hover:text-cyan-600 mb-6">
                 <FaArrowLeft className="mr-2" />
                 Back to Parking Areas
             </Link>
@@ -88,7 +91,7 @@ const ViewParkingArea = () => {
                 <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 p-8 text-white">
                     <div className="flex justify-between items-center">
                         <div>
-                            <h1 className="text-3xl font-bold mb-2">{parkingArea?.name}</h1>
+                            <h1 className="text-3xl font-bold mb-2">{parkingArea?.name?.toUpperCase()}</h1>
                             <p className="text-cyan-100 text-sm">{parkingArea?.description}</p>
                         </div>
                         <span className={`px-4 py-2 rounded-full text-sm font-semibold ${parkingArea?.isActive
@@ -116,16 +119,10 @@ const ViewParkingArea = () => {
                                 <FaMapMarkerAlt className="mr-3 text-cyan-500" />
                                 <div>
                                     <p className="font-medium">{parkingArea?.addressLine1}</p>
-                                    <p className="text-sm text-gray-500">{parkingArea?.addressLine2}</p>
+                                    <p className="text-sm text-gray-500">{parkingArea?.addressLine2},{parkingArea?.city?.name}, {parkingArea?.district?.name}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center text-gray-600 bg-gray-50 p-3 rounded-lg">
-                                <FaMapMarkerAlt className="mr-3 text-cyan-500" />
-                                <div>
-                                    <p className="font-medium">{parkingArea?.city?.name}</p>
-                                    <p className="text-sm text-gray-500">{parkingArea?.district?.name}</p>
-                                </div>
-                            </div>
+                            
                         </div>
                     </div>
 
@@ -162,32 +159,40 @@ const ViewParkingArea = () => {
                 {/* Right Column - Statistics */}
                 <div className="space-y-6">
                     {/* Statistics Card */}
-                    <div className="bg-white rounded-xl shadow-md p-6">
-                        <div className="flex items-center mb-4">
-                            <FaInfoCircle className="text-cyan-500 mr-3 text-xl" />
+                    <div className="bg-white rounded-xl shadow-md p-4">
+                        <div className="flex items-center mb-2">
+                            <FaInfoCircle className="text-cyan-500 mr-2 text-xl" />
                             <h2 className="text-xl font-semibold">Parking Statistics</h2>
                         </div>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                 <div className="flex items-center">
-                                    <FaParking className="mr-3 text-cyan-500 text-xl" />
+                                    <FaParking className="mr-2 text-cyan-500 text-xl" />
                                     <span className="text-gray-600">Total Slots</span>
                                 </div>
                                 <span className="font-semibold text-cyan-600 text-xl">{totalSlots}</span>
                             </div>
-                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                 <div className="flex items-center">
-                                    <FaCheck className="mr-3 text-green-500 text-xl" />
-                                    <span className="text-gray-600">Available Slots</span>
+                                    <FaTimes className="mr-2 text-red-500 text-xl" />
+                                    <span className="text-gray-600">Inactive Slots</span>
                                 </div>
-                                <span className="font-semibold text-green-600 text-xl">{availableSlots}</span>
+                                <span className="font-semibold text-red-600 text-xl">{inactiveSlots}</span>
                             </div>
-                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            
+                            <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                 <div className="flex items-center">
-                                    <FaClock className="mr-3 text-orange-500 text-xl" />
+                                    <FaClock className="mr-2 text-orange-500 text-xl" />
                                     <span className="text-gray-600">Reserved Slots</span>
                                 </div>
                                 <span className="font-semibold text-orange-600 text-xl">{reservedSlots}</span>
+                            </div>
+                            <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                                <div className="flex items-center">
+                                    <FaCheck className="mr-2 text-green-500 text-xl" />
+                                    <span className="text-gray-600">Available Slots</span>
+                                </div>
+                                <span className="font-semibold text-green-600 text-xl">{availableSlots}</span>
                             </div>
                         </div>
                     </div>
@@ -218,7 +223,7 @@ const ViewParkingArea = () => {
                     <FaCar className="text-cyan-500 mr-3 text-xl" />
                     <h2 className="text-2xl font-bold">Parking Slots</h2>
                 </div>
-                <ListParkingSlots slots={slots} />
+                <ListParkingSlots slots={slots} fetchParkingSlots={fetchParkingSlots} />
             </div>
             <ToastContainer />
         </div>

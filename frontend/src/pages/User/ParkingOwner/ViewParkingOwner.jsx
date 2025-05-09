@@ -38,7 +38,7 @@ const ViewParkingOwner = () => {
  
   const { id } = useParams();
   const [owner, setOwner] = useState(null);
-  const { filters } = useLocation().state;
+  const filters = useLocation().state?.filters || {};
   const [parkingAreas, setParkingAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -250,42 +250,55 @@ const ViewParkingOwner = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <h3 className="text-xl font-bold mb-4">Actions</h3>
+        <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-cyan-50 rounded-lg">
+              <FaCar className="text-cyan-500 text-xl" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800">Manage Parking Owner</h3>
+          </div>
+
           <div className="space-y-4">
             {!owner.approvalStatus ? (
-              <>
+              <div className="space-y-3">
+                <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+                  <p className="text-yellow-800 text-sm">This parking owner is pending approval. Please review their details and take appropriate action.</p>
+                </div>
                 <button
                   onClick={handleApprove}
-                  className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md transition duration-300"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-6 rounded-lg transition duration-300 hover:shadow-lg hover:from-green-600 hover:to-green-700"
                 >
                   <FaCheck className="text-lg" />
-                  Approve Parking Owner
+                  <span className="font-semibold">Approve Parking Owner</span>
                 </button>
                 <button
                   onClick={handleReject}
-                  className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition duration-300"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 px-6 rounded-lg transition duration-300 hover:shadow-lg hover:from-red-600 hover:to-red-700"
                 >
                   <FaTimes className="text-lg" />
-                  Reject Parking Owner
+                  <span className="font-semibold">Reject Parking Owner</span>
                 </button>
-              </>
+              </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                  <p className="text-blue-800 text-sm">Manage the active status of this approved parking owner.</p>
+                </div>
                 {!owner.isActive ? (
                   <button
                     onClick={() => handleStatusChange(true)}
-                    className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md transition duration-300 bg-green-500 hover:bg-green-600 text-white`}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-3 px-6 rounded-lg transition duration-300 hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700"
                   >
                     <FaCheck className="text-lg" />
-                    Activate User
-                  </button>) : (
+                    <span className="font-semibold">Activate User Account</span>
+                  </button>
+                ) : (
                   <button
                     onClick={() => handleStatusChange(false)}
-                    className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md transition duration-300 bg-red-500 hover:bg-red-600 text-white`}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-rose-600 text-white py-3 px-6 rounded-lg transition duration-300 hover:shadow-lg hover:from-rose-600 hover:to-rose-700"
                   >
                     <FaTimes className="text-lg" />
-                    Deactivate User
+                    <span className="font-semibold">Deactivate User Account</span>
                   </button>
                 )}
               </div>
@@ -297,7 +310,7 @@ const ViewParkingOwner = () => {
       {/* Parking Areas Section */}
       <div className="mt-8">
         <h2 className="text-2xl font-bold mb-6">Parking Areas</h2>
-        <ParkingAreaList parkingAreas={parkingAreas}  fetchParkingOwner={fetchParkingOwner} />
+        <ParkingAreaList parkingAreas={parkingAreas}  fetchParkingOwner={fetchParkingOwner} parkingOwner={owner} />
       </div>
 
       <ToastContainer />

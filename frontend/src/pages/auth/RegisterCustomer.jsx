@@ -108,8 +108,9 @@ export default function CustomerRegistration() {
     const onSubmit = async (data) => {
         delete data.confirmPassword;
         data.role = [roles.find(role => role?.type === signupAs)._id];
-        data.approvalStatus = false;
+        data.approvalStatus = true;
         if (signupAs === "PARKING_OWNER") {
+            data.approvalStatus = false;
             data.isActive = false;
             setFormData(data);
             navigate("/parking-owner/spot-details", { state: { userData: data } });
