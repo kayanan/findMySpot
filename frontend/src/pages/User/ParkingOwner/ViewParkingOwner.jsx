@@ -6,7 +6,7 @@ import axios from "axios";
 import { FaArrowLeft, FaEnvelope, FaPhone, FaBuilding, FaParking, FaCar, FaCheck, FaTimes } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import ParkingAreaList from "./ParkingArea/ParkingAreaList";
 const SkeletonLoader = () => (
   <div className="grid md:grid-cols-2 gap-6 animate-pulse">
     {/* Profile Skeleton */}
@@ -72,15 +72,6 @@ const ViewParkingOwner = () => {
     fetchParkingOwner();
   }, [id]);
 
-  const getSlotTypeCount = (slots) => {
-    const countByType = {};
-    slots.forEach(slot => {
-      const type = slot?.vehicleType?.vehicleType || 'Unknown';
-      countByType[type] = (countByType[type] || 0) + 1;
-    });
-    return countByType;
-  };
-
   const handleApprove = async () => {
     try {
       await axios.patch(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/approve/${id}`, {}, { withCredentials: true });
@@ -98,20 +89,20 @@ const ViewParkingOwner = () => {
 
   const handleReject = async () => {
     try {
-      const confirm= window.confirm("Do you want to reject this application?.")
-      if(!confirm){
+      const confirm = window.confirm("Do you want to reject this application?.")
+      if (!confirm) {
         return
       }
-      const reason=window.prompt("plese provide a reason for this rejection")
+      const reason = window.prompt("plese provide a reason for this rejection")
 
-      const response=await axios.post(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/reject/${id}`, {reason}, { withCredentials: true });
-     
-        toast.success(response.data.message || "Parking owner rejected successfully",{
-          onClose:()=>{
-            fetchParkingOwner();
-          },
-          autoClose:1000,
-        });
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/reject/${id}`, { reason }, { withCredentials: true });
+
+      toast.success(response.data.message || "Parking owner rejected successfully", {
+        onClose: () => {
+          fetchParkingOwner();
+        },
+        autoClose: 1000,
+      });
     } catch (err) {
       toast.error(err.response.data.message || "Error rejecting parking owner");
     }
@@ -119,8 +110,12 @@ const ViewParkingOwner = () => {
 
   const handleStatusChange = async (isActive) => {
     try {
+      const confirm = window.confirm(`Do you want to ${isActive ? 'activate' : 'deactivate'} this user?`)
+      if (!confirm) {
+        return
+      }
       await axios.patch(
-        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/status/${id}`,
+        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/update/${id}`,
         { isActive },
         { withCredentials: true }
       );
@@ -198,17 +193,15 @@ const ViewParkingOwner = () => {
             <h3 className="text-xl font-bold">Owner Details</h3>
             <div className="flex gap-2">
               <span
-                className={`text-base font-semibold px-2 py-1 rounded ${
-                  owner.approvalStatus ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                }`}
+                className={`text-base font-semibold px-2 py-1 rounded ${owner.approvalStatus ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                  }`}
               >
                 {owner.approvalStatus ? "Approved" : "Pending"}
               </span>
               {owner.approvalStatus && (
                 <span
-                  className={`text-base font-semibold px-2 py-1 rounded ${
-                    owner.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                  }`}
+                  className={`text-base font-semibold px-2 py-1 rounded ${owner.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                    }`}
                 >
                   {owner.isActive ? "Active" : "Inactive"}
                 </span>
@@ -279,28 +272,22 @@ const ViewParkingOwner = () => {
               </>
             ) : (
               <div className="space-y-2">
-                <button
-                  onClick={() => handleStatusChange(true)}
-                  className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md transition duration-300 ${
-                    owner.isActive
-                      ? "bg-green-500 hover:bg-green-600 text-white"
-                      : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-                  }`}
-                >
-                  <FaCheck className="text-lg" />
-                  Activate Account
-                </button>
-                <button
-                  onClick={() => handleStatusChange(false)}
-                  className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md transition duration-300 ${
-                    !owner.isActive
-                      ? "bg-red-500 hover:bg-red-600 text-white"
-                      : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-                  }`}
-                >
-                  <FaTimes className="text-lg" />
-                  Deactivate Account
-                </button>
+                {!owner.isActive ? (
+                  <button
+                    onClick={() => handleStatusChange(true)}
+                    className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md transition duration-300 bg-green-500 hover:bg-green-600 text-white`}
+                  >
+                    <FaCheck className="text-lg" />
+                    Activate User
+                  </button>) : (
+                  <button
+                    onClick={() => handleStatusChange(false)}
+                    className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md transition duration-300 bg-red-500 hover:bg-red-600 text-white`}
+                  >
+                    <FaTimes className="text-lg" />
+                    Deactivate User
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -310,56 +297,7 @@ const ViewParkingOwner = () => {
       {/* Parking Areas Section */}
       <div className="mt-8">
         <h2 className="text-2xl font-bold mb-6">Parking Areas</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {parkingAreas.map((area) => {
-            const slotTypeCount = getSlotTypeCount(area?.slots || []);
-            return (
-              <div key={area._id} className="bg-white shadow-md rounded-lg p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-bold">{area?.name}</h3>
-                  <span className={`px-2 py-1 rounded ${
-                    area?._doc.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                  }`}>
-                    {area?._doc.isActive ? "Active" : "Inactive"}
-                  </span>
-                </div>
-                
-                <div className="mb-4">
-                  <p className="text-gray-600 mb-2">{area?.description}</p>
-                  <div className="flex items-center text-gray-600 mb-2">
-                    <FaBuilding className="mr-2" />
-                    <span>{area?._doc.addressLine1},{area?._doc.addressLine2} ,{area?._doc.city?.name}</span>
-                  </div>
-                </div>
-
-                <div className="border-t pt-4">
-                  <h4 className="font-semibold mb-2">Parking Slots</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Total Slots:</span>
-                      <span className="font-semibold">{area.slots?.length || 0}</span>
-                    </div>
-                    {Object.entries(slotTypeCount).map(([type, count]) => (
-                      <div key={type} className="flex justify-between">
-                        <span className="text-gray-600">{type}:</span>
-                        <span className="font-semibold">{count}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t">
-                  <Link
-                    to={`/parking-area/view/${area._id}`}
-                    className="block w-full bg-cyan-500 hover:bg-cyan-600 text-white text-center py-2 rounded-md transition duration-300"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <ParkingAreaList parkingAreas={parkingAreas}  fetchParkingOwner={fetchParkingOwner} />
       </div>
 
       <ToastContainer />

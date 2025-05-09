@@ -80,9 +80,9 @@ const resetPasswordValidator = (data: any) => {
 
 const saveUserValidator = (data: any) => {
   const schema = z.object({
-    role: z.any({
+    role: z.array(z.string({
       required_error: 'Role is required',
-    }),
+    })),
     firstName: z
       .string({
         required_error: 'FirstName is required',
@@ -299,8 +299,10 @@ const updateUserValidator = (data: any) => {
 };
 
 const adminUpdateUserValidator = (data: any) => {
-  console.log(data)
   const schema = z.object({
+    role: z.array(z.string({
+      required_error: 'Role is required',
+    })).optional().nullable(),
     firstName: z
       .string({
         required_error: 'FirstName is required',
@@ -308,7 +310,7 @@ const adminUpdateUserValidator = (data: any) => {
       })
       .max(30, {
         message: `FirstName should have a maximum length of {#limit}`,
-      }),
+      }).optional().nullable(),
     lastName: z
       .string({
         required_error: 'LastName is required',
@@ -316,7 +318,7 @@ const adminUpdateUserValidator = (data: any) => {
       })
       .max(30, {
         message: `LastName should have a maximum length of {#limit}`,
-      }),
+      }).optional().nullable(),
     phoneNumber: z
       .string({
         required_error: 'Phonenumber is required',
@@ -324,7 +326,7 @@ const adminUpdateUserValidator = (data: any) => {
       })
       .regex(phoneNumberPattern, {
         message: `Phone number should have a maximum length of 10 digits`,
-      }),
+      }).optional().nullable(),
   
     address: z.object({
       line1: z.string(
@@ -375,6 +377,46 @@ const adminUpdateUserValidator = (data: any) => {
       {
         invalid_type_error: `ProfileImage should be a type of 'string'`,
       }
+    ).optional().nullable(),
+    bankDetails: z.array(
+      z.object({
+        name: z
+          .string({
+            required_error: 'Name is required',
+            invalid_type_error: `Name should be a type of 'string'`,
+          })
+          .nonempty({
+            message: 'Name cannot be an empty field ',
+          }),
+        branch: z
+          .string({
+            required_error: 'Branch is required',
+            invalid_type_error: `Branch should be a type of 'string'`,
+          })
+          .nonempty({
+            message: 'Branch cannot be an empty field ',
+          }),
+        accountNo: z
+          .string({
+            required_error: 'AccountNo is required',
+            invalid_type_error: `AccountNo should be a type of 'string'`,
+          })
+          .nonempty({
+            message: 'AccountNo cannot be an empty field ',
+          }),
+        accountHolderName: z
+          .string({
+            required_error: 'AccountHolderName is required',
+            invalid_type_error: `AccountHolderName should be a type of 'string'`,
+          })
+          .nonempty({
+            message: 'AccountHolderName cannot be an empty field ',
+          }),
+        isDefault: z.boolean({
+          required_error: 'IsDefault is required',
+          invalid_type_error: `IsDefault should be a type of 'boolean'`,
+        }),
+      })
     ).optional().nullable(),
     cardDetails: z.array(
       z.object({
@@ -436,6 +478,9 @@ const adminUpdateUserValidator = (data: any) => {
     ).optional().nullable(),
     isActive: z.boolean().optional().nullable(),
     approvalStatus: z.boolean().optional().nullable(),
+    isDeleted: z.boolean().optional().nullable(),
+    otp: z.string().optional().nullable(),
+    otpExpiresAt: z.date().optional().nullable(),
   });
   return schema.safeParse(data);
 };

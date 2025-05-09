@@ -12,7 +12,7 @@ import {
 import { validateCreateParkingArea, validateUpdateParkingArea } from "../validators/parkingArea.validator";
 import { CreateUpdateParkingAreaRequest } from "../controller/request/ceate.parkingArea.request";
 import { ParkingAreaModel } from "../data/dtos/parkingArea.dto";
-import { createSlot, getSlotsByParkingArea as getSlotsByParkingAreaRepo} from "./parkingSlot.service";
+import { createSlot, getSlotsByParkingArea as getSlotsByParkingAreaRepo } from "./parkingSlot.service";
 import { CreateUpdateParkingSlotRequest } from "../controller/request/create.parkingSlot.request";
 import { updateParkingSlotStatus } from "./parkingSlot.service";
 import { sendSMS } from "../../base/services/sms.service";
@@ -33,8 +33,11 @@ export const createParkingArea = async (parkingAreaData: Partial<CreateUpdatePar
     const slot = parkingAreaData?.slot;
     delete parkingAreaData?.slot;
     parkingAreaData.isActive = false;
-    const parkingArea = await createParkingAreaRepo(parkingAreaData as unknown as ParkingAreaModel);
-    const parkingAreaId = parkingArea._id as string;
+    const [parkingArea, owner] = await Promise.all([
+        createParkingAreaRepo(parkingAreaData as unknown as ParkingAreaModel),
+        UserRepository.findById(parkingAreaData.ownerId as string)
+    ])
+    const parkingAreaId = parkingArea?._id as string;
     if (slot) {
         const slotData = slot.filter((item) => Number(item.count) > 0).map((item) => ({
             slotDetails: {
@@ -47,11 +50,13 @@ export const createParkingArea = async (parkingAreaData: Partial<CreateUpdatePar
         }));
         await createSlot(slotData);
     }
-    const owner = await UserRepository.findById(
-        parkingArea.ownerId as unknown as string
-    );
-    const message = `Your request to create a parking area has been successfully submitted. Please wait for approval. Once approved, you can start using it by logging in with your email and password.`;
-    await sendSMS(owner?.phoneNumber as string, message);
+    const mobileNumber = owner?.phoneNumber?.replace(/^0/, '94');
+    if (!mobileNumber) throw new Error('Mobile number not found');
+    const message = `Your parking area creation request has been successfully submitted.
+     You will be able to start using it once it's approved by logging in with your email and password.
+      - FindMySpot`;
+
+    await sendSMS(mobileNumber, message);
     return parkingArea;
 };
 
@@ -59,6 +64,9 @@ export const updateParkingArea = async (id: string, parkingAreaData: CreateUpdat
     const { error } = validateUpdateParkingArea(parkingAreaData);
     if (error) {
         throw new Error(error.message);
+    }
+    if (Object.keys(parkingAreaData).includes('isActive')) {
+        await updateParkingSlotStatus([id], parkingAreaData.isActive as boolean);
     }
     return await updateParkingAreaRepo(id, parkingAreaData as unknown as ParkingAreaModel);
 };
@@ -105,7 +113,7 @@ export const deleteParkingAreaByOwnerId = async (ownerId: string) => {
     const parkingAreaIds = parkingAreas.map((parkingArea) => parkingArea._id as string);
     await ParkingSlotDTO.deleteMany({ parkingAreaId: { $in: parkingAreaIds } });
     await deleteParkingAreaByOwnerIdRepo(ownerId);
-   
+
     return { status: true, message: 'Parking area deleted successfully' } as BaseResponse;
 };
 

@@ -239,6 +239,10 @@ const adminUpdateUser = async (
     id
   );
   if (updatedId != null) {
+      if((adminUpdateUserRequest.isActive?.toString() ?? "true")==="false"){
+        await updateParkingAreaByOwnerId(id, { isActive: false });
+      }
+
     return { status: true, id: updatedId } as CreatedUpdatedResponse;
   }
   throw new Error('User not Updated');
@@ -263,6 +267,11 @@ const approveParkingOwner = async (id: string): Promise<BaseResponse> => {
   user.isActive = true;
   await user.save();
   await updateParkingAreaByOwnerId(user._id as string, { isActive: true });  
+  
+  const message = `Your parking owner request has been approved. Please login to your account to manage your parking areas. using your email and password. - FindMySpot`;
+  const mobileNumber = user.phoneNumber?.replace(/^0/, '94');
+  if (!mobileNumber) throw new Error('Mobile number not found');
+  await sendSMS(mobileNumber, message);
   return { status: true, message: 'Parking owner approved successfully' } as BaseResponse;
 };  
 
@@ -276,6 +285,7 @@ const rejectParkingOwner = async (id: string, reason: string): Promise<BaseRespo
   await UserRepository.hardDeleteById(id);
   await deleteParkingAreaByOwnerId(user._id as string);
   let responseMessage="Parking owner rejected successfully"
+  
   try{
      await sendSMS(mobileNumber, message);
    

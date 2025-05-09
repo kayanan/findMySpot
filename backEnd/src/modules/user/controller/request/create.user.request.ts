@@ -11,7 +11,7 @@ export interface CreateUserRequest extends UserRequest {
   password?: string;
   nic?:string;
   phoneNumber?:string;
-  role?: ObjectId;
+  role?: Array<ObjectId | string>;
 }
 
 export interface UpdateUserRequest extends UserRequest {
@@ -38,7 +38,7 @@ export interface AdminUpdateUserRequest extends UserRequest {
   email?: string;
   nic?:string;
   phoneNumber?:string;
-  role?: ObjectId;
+  role?: Array<ObjectId | string>;
   isActive?: boolean;
   vehicle?:Array<{number:string,isDefault:boolean}>;
   approvalStatus?: boolean;

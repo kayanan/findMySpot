@@ -31,7 +31,7 @@ export const deleteParkingArea = async (id: string) => {
 };
 
 export const getParkingAreaById = async (id: string) => {
-  return await ParkingAreaDTO.findOne({ _id: id, isDeleted: false });
+  return await ParkingAreaDTO.findOne({ _id: id, isDeleted: false }).populate('province city district', 'name').populate('managerIds ownerId', 'firstName lastName email phoneNumber');
 };
 
 export const getAllParkingAreas = async () => {

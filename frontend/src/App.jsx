@@ -49,6 +49,11 @@ import ParkingSpotDetails from "./pages/auth/ParkingSpotDetails";
 import PendingRequest from "./pages/User/ParkingOwner/PendingRequest";
 // parking owner import end
 
+// parking area import start
+import ParkingAreaList from "./pages/User/ParkingOwner/ParkingArea/ParkingAreaList";
+import ViewParkingArea from "./pages/User/ParkingOwner/ParkingArea/ViewParkingArea";
+// parking area import end
+
 const AppRoutes = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
@@ -116,6 +121,11 @@ const AppRoutes = () => {
             <Route path="/parking-owner/spot-details" element={<ParkingSpotDetails />} />
             <Route path="/owner/pending-request" element={<PendingRequest />} />
             {/* parking owner route end */}
+
+            {/* parking area route start */}
+            <Route path="/parking-area" element={<ParkingAreaList />} />
+            <Route path="/parking-area/view/:id" element={<ViewParkingArea />} />
+            {/* parking area route end */}
 
             {/* parking subscription fee route start */}
             <Route path="/parking-subscription-fee" element={<ListSubscriptionFees key={location.state?.key}/>} />
