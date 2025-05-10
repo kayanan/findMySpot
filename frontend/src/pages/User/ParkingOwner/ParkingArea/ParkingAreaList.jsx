@@ -104,7 +104,7 @@ const ParkingAreaList = ({ parkingOwner}) => {
                       {Object.entries(slotTypeCount).map(([type, count]) => (
                         <div key={type} className="w-full flex justify-between items-center bg-white p-2 rounded-md">
                           <div className="flex items-center">
-                            <FaCar className="text-gray-400 mr-2" />
+                            <FaCar className="text-gray-400 mr-5 " />
                             <span className="text-gray-600">{type}</span>
                           </div>
                           <span className="font-semibold text-cyan-600">{count}</span>

@@ -170,4 +170,18 @@ export const getPendingOwnersCount = async (req: Request, res: Response) => {
     res.status(400).json(errorResponse(error.message));
   }
 };
-    
+ 
+export const checkDuplicateEntry = async (req: Request, res: Response) => {
+  try {
+    const response: BaseResponse = await UserService.checkDuplicateEntry(req.body);
+    if(response.status){  
+      res.status(200).json(response);
+    }
+    else{
+      res.status(400).json(response);
+    }
+  } catch (error: any) {
+    console.log(error)
+    res.status(400).json(errorResponse(error.message));
+  }
+};

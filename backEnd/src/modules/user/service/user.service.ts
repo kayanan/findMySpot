@@ -1,7 +1,7 @@
 import UserRepository from '../data/repository/user.repository';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { UserModel } from '../data/dtos/user.dto';
+import { UserDTO, UserModel } from '../data/dtos/user.dto';
 import { sendSMS } from '../../base/services/sms.service';
 //import * as EmailService from '../../base/services/email.service';
 //import { EmailTemplateType } from '@/modules/base/enums/email.template.type';
@@ -63,7 +63,7 @@ const saveUser = async (
 ): Promise<CreatedUpdatedResponse> => {
   const valResult =
     UserValidator.saveUserValidator(createUserRequest);
-  
+
   if (valResult.error) throw new Error(valResult.error.message);
   const checkUser = await UserRepository.findByEmail(
     createUserRequest.email!
@@ -239,9 +239,9 @@ const adminUpdateUser = async (
     id
   );
   if (updatedId != null) {
-      if((adminUpdateUserRequest.isActive?.toString() ?? "true")==="false"){
-        await updateParkingAreaByOwnerId(id, { isActive: false });
-      }
+    if ((adminUpdateUserRequest.isActive?.toString() ?? "true") === "false") {
+      await updateParkingAreaByOwnerId(id, { isActive: false });
+    }
 
     return { status: true, id: updatedId } as CreatedUpdatedResponse;
   }
@@ -266,40 +266,77 @@ const approveParkingOwner = async (id: string): Promise<BaseResponse> => {
   user.approvalStatus = true;
   user.isActive = true;
   await user.save();
-  await updateParkingAreaByOwnerId(user._id as string, { isActive: true });  
-  
+  await updateParkingAreaByOwnerId(user._id as string, { isActive: true });
+
   const message = `Your parking owner request has been approved. Please login to your account to manage your parking areas. using your email and password. - FindMySpot`;
   const mobileNumber = user.phoneNumber?.replace(/^0/, '94');
   if (!mobileNumber) throw new Error('Mobile number not found');
   await sendSMS(mobileNumber, message);
   return { status: true, message: 'Parking owner approved successfully' } as BaseResponse;
-};  
+};
 
 const rejectParkingOwner = async (id: string, reason: string): Promise<BaseResponse> => {
   const user = await UserRepository.findById(id);
   if (!user) throw new Error('User not found');
-  
+
   const message = `Your parking owner request has been rejected. Reason: ${reason}. - FindMySpot`;
   const mobileNumber = user.phoneNumber?.replace(/^0/, '94');
   if (!mobileNumber) throw new Error('Mobile number not found');
   await UserRepository.hardDeleteById(id);
   await deleteParkingAreaByOwnerId(user._id as string);
-  let responseMessage="Parking owner rejected successfully"
-  
-  try{
-     await sendSMS(mobileNumber, message);
-   
+  let responseMessage = "Parking owner rejected successfully"
+
+  try {
+    await sendSMS(mobileNumber, message);
+
   }
-  catch(error){
-    responseMessage="Parking owner rejected successfully but SMS not sent"
+  catch (error) {
+    responseMessage = "Parking owner rejected successfully but SMS not sent"
   }
- 
+
   return { status: true, message: responseMessage } as BaseResponse;
 };
 
 const getPendingOwnersCount = async (): Promise<BaseResponse> => {
   const count = await UserRepository.findPendingOwnersCount();
   return { status: true, count: count } as BaseResponse;
+};
+
+const checkDuplicateEntry = async (data: Partial<UserModel>): Promise<BaseResponse> => {
+  const query: any = {};
+  const queryArray: any[] = [];
+  if (data.email) {
+    queryArray.push({ email: data.email });
+  }
+  if (data.phoneNumber) {
+    queryArray.push({ phoneNumber: data.phoneNumber });
+  }
+  if (data.nic) {
+    queryArray.push({ nic: data.nic });
+  }
+
+  if (queryArray.length > 0) {
+    query.$or = queryArray;
+  }
+  const result = await UserDTO.find(query);
+  if (result.length > 0) {
+    const errorResponse: any = {};
+
+    for (const item of result) {
+      if (item.email === data.email) {
+        errorResponse.email = "Email already exists";
+      }
+      if (item.phoneNumber === data.phoneNumber) {
+        errorResponse.phoneNumber = "Phone number already exists";
+      }
+      if (item.nic === data.nic) {
+        errorResponse.nic = "NIC already exists";
+      }
+    }
+
+    return { status: false, message: 'User already exists' ,errorResponse} as BaseResponse;
+  }
+  return { status: true, message: 'User not found' } as BaseResponse;
 };
 
 export default {
@@ -315,6 +352,7 @@ export default {
   approveParkingOwner,
   rejectParkingOwner,
   getPendingOwnersCount,
+  checkDuplicateEntry
 };
 
 

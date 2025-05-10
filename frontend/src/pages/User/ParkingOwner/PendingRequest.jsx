@@ -60,7 +60,7 @@ const PendingRequest = () => {
     <div className="p-4 max-w-7xl mx-auto">
       {/* Header & Search */}
       <div className="flex flex-wrap items-center gap-2 mb-6">
-          <Link to="/owner" className="flex items-center gap-2  text-gray-500 hover:text-cyan-600">
+          <Link to="/owner" className="flex items-center gap-2 pt-2 text-gray-500 hover:text-cyan-600">
             <ArrowLeftIcon className="h-5 w-5 " />
             <span >Back to Parking Owner Management</span>
           </Link>
