@@ -121,12 +121,14 @@ const ParkingOwnerList = () => {
         />
         <Link 
           to="/owner/pending-request" 
-          className="ml-10 inline-flex items-center justify-center bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-full transition duration-200 shadow-md hover:shadow-lg"
+          className="ml-10 inline-flex items-center justify-center w-1/2 bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-full transition duration-200 shadow-md hover:shadow-lg relative"
         >
-          <span>Pending Requests</span>
-          <span className="ml-2 bg-white text-cyan-600 text-sm font-bold rounded-full h-6 w-6 flex items-center justify-center">
-            {pendingOwnersCount}
-          </span>
+          <span> Pending Requests</span>
+          {pendingOwnersCount > 0 && (
+            <span className="absolute -top-5 -right-4 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-full h-8 w-8 flex items-center justify-center">
+              {pendingOwnersCount}
+            </span>
+          )}
         </Link>
       </div>
       

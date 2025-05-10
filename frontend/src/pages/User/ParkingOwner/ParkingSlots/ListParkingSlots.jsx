@@ -74,7 +74,7 @@ const ListParkingSlots = ({slots, fetchParkingSlots}) => {
         <>
             <div className="space-y-4">
                 {Object.entries(groupedSlots || {}).map(([vehicleType, typeSlots]) => (
-                    <div key={vehicleType} className="bg-white rounded-lg shadow-sm p-4">
+                    <div key={vehicleType} className="bg-white rounded-lg shadow-sm p-4 shadow-gray-400 border-2 border-gray-200">
                         <h3 className="text-lg font-bold mb-3 text-cyan-700">{vehicleType.toUpperCase()} Slots</h3>
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
                             {typeSlots.map((slot) => (

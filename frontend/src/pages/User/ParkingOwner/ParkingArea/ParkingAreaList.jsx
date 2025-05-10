@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { FaBuilding, FaParking, FaCar, FaMapMarkerAlt } from "react-icons/fa";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 
@@ -12,7 +13,29 @@ const getSlotTypeCount = (slots) => {
   return countByType;
 };
 
-const ParkingAreaList = ({parkingAreas, fetchParkingOwner, parkingOwner}) => {
+const ParkingAreaList = ({ parkingOwner}) => {
+  const [parkingAreas, setParkingAreas] = useState([]);
+
+  const fetchParkingAreas = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/parking-area/owner/${parkingOwner?._id}`, { withCredentials: true });
+      setParkingAreas(response.data.data);
+    } catch (err) {
+      console.error("Error fetching parking areas:", err.message);
+      setError("Failed to load parking areas. Please try again.");
+      toast.error("Failed to load parking areas. Please try again.", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } 
+  };
+  useEffect(() => {
+    fetchParkingAreas();
+  }, []);
   
     const handleStatusChange = async (id, status) => {
       const approve = window.confirm(`Are you sure you want to ${status ? "activate" : "deactivate"} this parking area?`);
@@ -22,7 +45,7 @@ const ParkingAreaList = ({parkingAreas, fetchParkingOwner, parkingOwner}) => {
             if(response.status === 200){
                 toast.success("Parking area status updated successfully", {
                     onClose: () => {
-                        fetchParkingOwner();
+                        fetchParkingAreas();
                     },
                     autoClose: 1000
                 });
@@ -33,12 +56,13 @@ const ParkingAreaList = ({parkingAreas, fetchParkingOwner, parkingOwner}) => {
         }
     }
 
+
     return (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {parkingAreas.map((area) => {
             const slotTypeCount = getSlotTypeCount(area?.slots?.data || []);
             return (
-              <div key={area?._doc._id} className="bg-white shadow-md rounded-xl overflow-hidden hover:shadow-lg transition-shadow duration-300">
+              <div key={area?._doc._id} className="bg-white shadow-md rounded-xl overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">
                 {/* Header Section */}
                 <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 p-4 text-white">
                   <div className="flex justify-between items-center">
@@ -54,7 +78,7 @@ const ParkingAreaList = ({parkingAreas, fetchParkingOwner, parkingOwner}) => {
                 </div>
 
                 {/* Content Section */}
-                <div className="p-4 ">
+                <div className="p-4 flex-1 flex flex-col">
                   {/* Description */}
                   <div className="">
                     <p className="text-gray-600 line-clamp-2">{area?.description}</p>
@@ -67,7 +91,7 @@ const ParkingAreaList = ({parkingAreas, fetchParkingOwner, parkingOwner}) => {
                   </div>
 
                   {/* Parking Slots Section */}
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-gray-50 rounded-lg p-3 mt-4 flex-1">
                     <div className="flex items-center mb-2">
                       <FaParking className="text-cyan-500 mr-2" />
                       <h4 className="font-semibold text-gray-800">Parking Slots</h4>
@@ -90,7 +114,7 @@ const ParkingAreaList = ({parkingAreas, fetchParkingOwner, parkingOwner}) => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2 pt-1">
+                  <div className="flex gap-2 pt-4 mt-auto">
                     <Link
                       to={`/parking-area/view/${area?._doc._id}`}
                       state={{ slots: area?.slots , parkingOwnerId: parkingOwner?._id}}
@@ -104,8 +128,8 @@ const ParkingAreaList = ({parkingAreas, fetchParkingOwner, parkingOwner}) => {
                         onClick={() => handleStatusChange(area?._doc._id, !area?._doc.isActive)}
                       className={`flex-1 py-2 rounded-lg transition duration-300 font-medium ${
                         area?._doc.isActive
-                          ? "bg-red-500 hover:bg-red-600 text-white"
-                          : "bg-green-500 hover:bg-green-600 text-white"
+                          ? "bg-rose-500 hover:bg-rose-600 text-white"
+                          : "bg-emerald-500 hover:bg-emerald-600 text-white"
                       }`}
                     >
                       {area?._doc.isActive ? "Deactivate" : "Activate"}

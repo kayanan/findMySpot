@@ -95,8 +95,8 @@ const ViewParkingArea = () => {
                             <p className="text-cyan-100 text-sm">{parkingArea?.description}</p>
                         </div>
                         <span className={`px-4 py-2 rounded-full text-sm font-semibold ${parkingArea?.isActive
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
                             }`}>
                             {parkingArea?.isActive ? "Active" : "Inactive"}
                         </span>
@@ -109,21 +109,41 @@ const ViewParkingArea = () => {
                 {/* Left Column - Basic Information */}
                 <div className="md:col-span-2 space-y-6">
                     {/* Location Card */}
-                    <div className="bg-white rounded-xl shadow-md p-6">
-                        <div className="flex items-center mb-4">
-                            <FaBuilding className="text-cyan-500 mr-3 text-xl" />
-                            <h2 className="text-xl font-semibold">Location Details</h2>
+                    <div className="flex flex-row gap-6 bg-white rounded-xl shadow-md p-6">
+                        <div className="w-1/2 border-r border-gray-200  pr-6">
+                            <div className="flex items-center mb-4">
+                                <FaBuilding className="text-cyan-500 mr-3 text-xl" />
+                                <h2 className="text-xl font-semibold">Location Details</h2>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="flex items-center text-gray-600 bg-gray-50 p-3 rounded-lg">
+                                    <FaMapMarkerAlt className="mr-3 text-cyan-500" />
+                                    <div>
+                                        <p className="font-medium">{parkingArea?.addressLine1}</p>
+                                        <p className="text-sm text-gray-500">{parkingArea?.addressLine2},{parkingArea?.city?.name}, {parkingArea?.district?.name}</p>
+                                    </div>
+                                </div>
+
+                            </div>
                         </div>
-                        <div className="space-y-4">
-                            <div className="flex items-center text-gray-600 bg-gray-50 p-3 rounded-lg">
-                                <FaMapMarkerAlt className="mr-3 text-cyan-500" />
-                                <div>
-                                    <p className="font-medium">{parkingArea?.addressLine1}</p>
-                                    <p className="text-sm text-gray-500">{parkingArea?.addressLine2},{parkingArea?.city?.name}, {parkingArea?.district?.name}</p>
+                        <div >
+                            <div className="flex items-center mb-4">
+                                <FaClock className="text-cyan-500 mr-3 text-xl" />
+                                <h2 className="text-xl font-semibold">Operating Hours</h2>
+                            </div>
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                    <span className="text-gray-600">Opening Time</span>
+                                    <span className="font-semibold text-cyan-600">{parkingArea?.openingTime || "N/A"}</span>
+                                </div>
+                                <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                    <span className="text-gray-600">Closing Time</span>
+                                    <span className="font-semibold text-cyan-600">{parkingArea?.closingTime || "N/A"}</span>
                                 </div>
                             </div>
-                            
                         </div>
+
+
                     </div>
 
                     {/* Contact Information Card */}
@@ -179,7 +199,7 @@ const ViewParkingArea = () => {
                                 </div>
                                 <span className="font-semibold text-red-600 text-xl">{inactiveSlots}</span>
                             </div>
-                            
+
                             <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                 <div className="flex items-center">
                                     <FaClock className="mr-2 text-orange-500 text-xl" />
@@ -198,22 +218,7 @@ const ViewParkingArea = () => {
                     </div>
 
                     {/* Operating Hours Card */}
-                    <div className="bg-white rounded-xl shadow-md p-6">
-                        <div className="flex items-center mb-4">
-                            <FaClock className="text-cyan-500 mr-3 text-xl" />
-                            <h2 className="text-xl font-semibold">Operating Hours</h2>
-                        </div>
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                                <span className="text-gray-600">Opening Time</span>
-                                <span className="font-semibold text-cyan-600">{parkingArea?.openingTime || "N/A"}</span>
-                            </div>
-                            <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                                <span className="text-gray-600">Closing Time</span>
-                                <span className="font-semibold text-cyan-600">{parkingArea?.closingTime || "N/A"}</span>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
             </div>
 

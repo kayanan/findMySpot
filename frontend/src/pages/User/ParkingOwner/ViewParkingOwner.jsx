@@ -1,9 +1,9 @@
 // src/pages/User/ParkingOwner/ViewParkingOwner.jsx
 
 import { useEffect, useState } from "react";
-import { useParams, Link, useLocation } from "react-router-dom";
+import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaArrowLeft, FaEnvelope, FaPhone, FaBuilding, FaParking, FaCar, FaCheck, FaTimes } from "react-icons/fa";
+import { FaArrowLeft, FaEnvelope, FaPhone, FaBuilding, FaParking, FaCar, FaCheck, FaTimes, FaPlus } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ParkingAreaList from "./ParkingArea/ParkingAreaList";
@@ -35,25 +35,20 @@ const SkeletonLoader = () => (
 );
 
 const ViewParkingOwner = () => {
- 
+
   const { id } = useParams();
+  const navigate = useNavigate();
   const [owner, setOwner] = useState(null);
   const filters = useLocation().state?.filters || {};
-  const [parkingAreas, setParkingAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const fetchParkingOwner = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [ownerResponse, parkingAreasResponse] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/profile/${id}`, { withCredentials: true }),
-        axios.get(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/parking-area/owner/${id}`, { withCredentials: true })
-      ]);
+      const ownerResponse = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/profile/${id}`, { withCredentials: true });
       setOwner(ownerResponse.data.user);
-      setParkingAreas(parkingAreasResponse.data.data);
     } catch (err) {
-      console.error("Error fetching data:", err.message);
       setError("Failed to load data. Please try again.");
       toast.error("Failed to load data. Please try again.", {
         position: "top-center",
@@ -68,9 +63,12 @@ const ViewParkingOwner = () => {
     }
   };
 
+
+
   useEffect(() => {
     fetchParkingOwner();
-  }, [id]);
+
+  }, []);
 
   const handleApprove = async () => {
     try {
@@ -126,6 +124,8 @@ const ViewParkingOwner = () => {
       toast.error("Error updating status: " + err.message);
     }
   };
+
+
 
   if (loading) {
     return (
@@ -309,8 +309,14 @@ const ViewParkingOwner = () => {
 
       {/* Parking Areas Section */}
       <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-6">Parking Areas</h2>
-        <ParkingAreaList parkingAreas={parkingAreas}  fetchParkingOwner={fetchParkingOwner} parkingOwner={owner} />
+        <div className="flex gap-4 items-center mb-6">
+          <h2 className="text-2xl font-bold">Parking Areas</h2>
+          <button type="button" className="flex items-center gap-1 bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-md" onClick={() => navigate(`/parking-owner/spot-details`, { state: { ownerId: id } })}>
+            <FaPlus className="mr-2" />
+            Add Parking Area
+          </button>
+        </div>
+        <ParkingAreaList parkingOwner={owner} />
       </div>
 
       <ToastContainer />

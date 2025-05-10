@@ -15,7 +15,8 @@ const ParkingSpotDetails = () => {
   const [cities, setCities] = useState([]);
   const [images, setImages] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
-  const [userData, setUserData] = useState(location.state?.userData);
+  const [userData, setUserData] = useState(location.state?.userData || {});
+  const [ownerId, setOwnerId] = useState(location.state?.ownerId || "");
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [position, setPosition] = useState(null);
   const [error, setError] = useState(false);
@@ -31,6 +32,7 @@ const ParkingSpotDetails = () => {
     {
       defaultValues: {
         contactNumber: location.state?.userData?.phoneNumber || "",
+        ownerId: location.state?.ownerId || ""
       }
     }
   );
@@ -39,12 +41,13 @@ const ParkingSpotDetails = () => {
   const district = watch("district", "");
 
   useEffect(() => {
-    if (!location.state?.userData) {
+    if (!location.state?.userData && !location.state?.ownerId) {
       toast.error("No user data found. Please complete the registration first.");
       navigate("/register");
       return;
     }
-    setUserData(location.state.userData);
+    setUserData(location.state.userData || {});
+    setOwnerId(location.state.ownerId || "");
   }, [location, navigate]);
 
   // Fetch provinces on component mount
@@ -199,12 +202,15 @@ const ParkingSpotDetails = () => {
 
       toast.success("Registration completed successfully", {
         onClose: () => {
-          navigate("/");
+          if (ownerId) {
+            navigate(`/parking-owner/view/${ownerId}`);
+          } else {
+            navigate("/");
+          }
         },
         autoClose: 1000,
       } );
 
-      navigate("/");
     } catch (error) {
       console.log(error);
       toast.error(error.response?.data?.message || "Failed to complete registration");
@@ -484,13 +490,13 @@ const ParkingSpotDetails = () => {
             </button>
             <div className="flex justify-between">
               {/* Back Button */}
-              <button
+              { !ownerId && <button
                 type="button"
                 onClick={() => navigate("/customer/register", { state: { userData: userData, signupAs: "PARKING_OWNER" } })}
                 className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200 mx-2"
               >
                 Back
-              </button>
+              </button>}
               {/* Add Another Parking Spot Button */}
               <button
                 type="button"
@@ -499,6 +505,13 @@ const ParkingSpotDetails = () => {
               >
                 Add Another Parking Spot
               </button>
+              {ownerId && <button
+                type="button"
+                onClick={() => navigate(`/owner/view/${ownerId}`)}
+                className="w-full p-3 bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition-all duration-200 mx-2"
+              >
+                Cancel
+              </button>}
 
             </div>
 
