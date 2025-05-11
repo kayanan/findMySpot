@@ -10,8 +10,10 @@ import {
     getAllParkingAreas,
     getActiveParkingAreas,
     getParkingAreasByOwnerId,
+    checkDuplicateEntry
 } from "../service/parkingArea.service";
 import { CreateUpdateParkingAreaRequest } from "./request/ceate.parkingArea.request";
+
 
 
 // MULTER Setup
@@ -168,3 +170,21 @@ export const getParkingAreasByOwnerIdController = async (req: Request, res: Resp
         });
     }
 }; 
+
+export const checkDuplicateEntryController = async (req: Request, res: Response) => {
+    try {
+        const response = await checkDuplicateEntry(req.body);
+        if(response.status){
+            res.status(200).json(response);
+        }
+        else{
+            res.status(400).json(response);
+        }
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+}

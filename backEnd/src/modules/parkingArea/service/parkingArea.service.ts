@@ -11,7 +11,7 @@ import {
 } from "../repository/parkingArea.repository";
 import { validateCreateParkingArea, validateUpdateParkingArea } from "../validators/parkingArea.validator";
 import { CreateUpdateParkingAreaRequest } from "../controller/request/ceate.parkingArea.request";
-import { ParkingAreaModel } from "../data/dtos/parkingArea.dto";
+import { ParkingAreaDTO, ParkingAreaModel } from "../data/dtos/parkingArea.dto";
 import { createSlot, getSlotsByParkingArea as getSlotsByParkingAreaRepo } from "./parkingSlot.service";
 import { CreateUpdateParkingSlotRequest } from "../controller/request/create.parkingSlot.request";
 import { updateParkingSlotStatus } from "./parkingSlot.service";
@@ -50,6 +50,7 @@ export const createParkingArea = async (parkingAreaData: Partial<CreateUpdatePar
         }));
         await createSlot(slotData);
     }
+    
     const mobileNumber = owner?.phoneNumber?.replace(/^0/, '94');
     if (!mobileNumber) throw new Error('Mobile number not found');
     const message = `Your parking area creation request has been successfully submitted.
@@ -120,3 +121,32 @@ export const deleteParkingAreaByOwnerId = async (ownerId: string) => {
 // export const getParkingAreaByLocation = async (longitude: number, latitude: number) => {
 //   return await getParkingAreaByLocationRepo(longitude, latitude);
 // };
+
+export const checkDuplicateEntry = async (data: Partial<ParkingAreaModel>) => {
+    const query: any = {}
+   const arrayOfQuery = []
+   if(data.contactNumber){
+    arrayOfQuery.push({contactNumber: data.contactNumber})
+   }
+   if(data.email){
+    arrayOfQuery.push({email: data.email})
+   }
+   if (arrayOfQuery.length > 0) {
+    query.$or = arrayOfQuery
+   }
+    const parkingArea = await ParkingAreaDTO.find(query);
+    if (parkingArea.length > 0) {
+        const errorMessage: any = {}
+        for (const item of parkingArea) {
+            if (data.contactNumber && item.contactNumber === data.contactNumber) {
+                errorMessage.contactNumber = 'Duplicate entry found'
+            }
+            if (data.email && item.email?.toLowerCase() === data.email?.toLowerCase()) {
+                errorMessage.email = 'Duplicate entry found'
+            }
+        }
+
+        return { status: false, message: 'Duplicate entry found' ,errorMessage} as BaseResponse;
+    }
+    return { status: true, message: 'No duplicate entry found' } as BaseResponse;
+}

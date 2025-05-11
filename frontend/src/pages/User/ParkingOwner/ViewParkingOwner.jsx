@@ -75,7 +75,7 @@ const ViewParkingOwner = () => {
       await axios.patch(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/approve/${id}`, {}, { withCredentials: true });
       toast.success("Parking owner approved successfully", {
         onClose: () => {
-          fetchParkingOwner();
+          navigate(`/owner/pending-request`);
         },
         autoClose: 1000,
       });
@@ -97,7 +97,7 @@ const ViewParkingOwner = () => {
 
       toast.success(response.data.message || "Parking owner rejected successfully", {
         onClose: () => {
-          fetchParkingOwner();
+          navigate(`/owner/pending-request`);
         },
         autoClose: 1000,
       });

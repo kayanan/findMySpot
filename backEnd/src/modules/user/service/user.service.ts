@@ -323,13 +323,13 @@ const checkDuplicateEntry = async (data: Partial<UserModel>): Promise<BaseRespon
     const errorResponse: any = {};
 
     for (const item of result) {
-      if (item.email === data.email) {
+      if (item.email.toLowerCase() === data.email?.toLowerCase()) {
         errorResponse.email = "Email already exists";
       }
       if (item.phoneNumber === data.phoneNumber) {
         errorResponse.phoneNumber = "Phone number already exists";
       }
-      if (item.nic === data.nic) {
+      if (item.nic.toLowerCase() === data.nic?.toLowerCase()) {
         errorResponse.nic = "NIC already exists";
       }
     }

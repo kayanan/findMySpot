@@ -204,13 +204,13 @@ export default function CustomerRegistration() {
                             {`${signupAs?.split("_").join(" ").charAt(0).toUpperCase() + signupAs?.split("_").join(" ").slice(1).toLowerCase()} Registration`}
                         </h2>
                         <p className="text-center text-gray-500">
-                            Register to find your perfect parking spot
+                           { `${signupAs === "CUSTOMER" ? "Register to find your perfect parking spot" : "List your spot. Start earning."}`}
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
-                        {!isEmailVerified ? (<div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1 ml-2">Email</label>
+                        {!isEmailVerified ? (<div className="mt-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2 ml-2">Email</label>
                             <input
                                 type="email"
                                 {...register("email", {
@@ -226,7 +226,7 @@ export default function CustomerRegistration() {
 
                             />
                             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
-                            <button type="button" className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200 my-4 disabled:opacity-50 disabled:cursor-not-allowed" onClick={() => handelCheckDuplicateEntry({ email: getValues("email") })} disabled={!getValues("email") || !!errors.email}>Next</button>
+                            <button type="button" className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200 my-10 disabled:opacity-50 disabled:cursor-not-allowed " onClick={() => handelCheckDuplicateEntry({ email: getValues("email") })} disabled={!getValues("email") || !!errors.email}>Next</button>
                         </div>)
                             : (<>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -377,11 +377,11 @@ export default function CustomerRegistration() {
                                 >
                                     Next
                                 </button>}
-
+                                </>)}
                                 <Link to="/" className="block text-center text-gray-600 rounded-lg p-2 hover:text-gray-800">
                                     Already have an account? <span className="text-cyan-500">Sign in here</span>
                                 </Link>
-                            </>)}
+                           
                     </form>
                 </div>)}
 

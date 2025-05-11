@@ -19,7 +19,7 @@ const ParkingSpotDetails = () => {
   const [ownerId, setOwnerId] = useState(location.state?.ownerId || "");
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [position, setPosition] = useState(null);
-  const [error, setError] = useState(false);
+  const [error, setErrors] = useState(false);
 
   const {
     register,
@@ -27,6 +27,7 @@ const ParkingSpotDetails = () => {
     formState: { errors, isSubmitting },
     setValue,
     getValues,
+    setError,
     watch
   } = useForm(
     {
@@ -36,7 +37,6 @@ const ParkingSpotDetails = () => {
       }
     }
   );
-
   const province = watch("province", "");
   const district = watch("district", "");
 
@@ -134,22 +134,49 @@ const ParkingSpotDetails = () => {
     setImages(newImages);
     setPreviewImages(newPreviewUrls);
   };
+  const checkDuplicateEntry =async(data)=>{
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-area/check-duplicate-entry`,
+        data,
+        { withCredentials: true }
+      );
+      if(!response.data.status){
+        for(const key in response.data.errorMessage){
+          setError(key, { message: response.data.errorMessage[key] });
+        }
+        return true;
+      }
+      
+    } catch (error) {
+      const errorMessage = error.response?.data?.errorMessage;
+      for (const key in errorMessage) {
+        setError(key, { message: errorMessage[key] });
+      }
+      return true;
+    }
+  }
 
   const onSubmit = async (data) => {
+    const isDuplicateEntry = await checkDuplicateEntry(data);
+    if(isDuplicateEntry){
+      return;
+    }
     setLoading(true);
     data.slot = data.slot.filter((item) => Number(item.count) > 0);
     if (data.slot.length === 0) {
-      setError({
+      setErrors({
         slot: "Please add at least one vehicle type"
       });
       setLoading(false);
       return;
     }
     else {
-      setError({
+      setErrors({
         slot: null
       });
     }
+   
 
     try {
       if (!data.ownerId) {
@@ -203,7 +230,7 @@ const ParkingSpotDetails = () => {
       toast.success("Registration completed successfully", {
         onClose: () => {
           if (ownerId) {
-            navigate(`/parking-owner/view/${ownerId}`);
+            navigate(`/owner/view/${ownerId}`);
           } else {
             navigate("/");
           }
