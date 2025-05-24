@@ -2,12 +2,12 @@
 import React from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
-const PaymentButton = ({ paymentDetails }) => {
-  console.log(paymentDetails,"--------------------------------paymentDetails--------------------------------");
+const PaymentButton = ({ paymentDetails ,onComplete}) => {
+  
   const navigate = useNavigate();
   const handlePayment = async () => {
-    console.log("Payment started");
     // paymentDetails = {
     //   order_id: "ItemNo12345",
     //   amount: "1005.00",
@@ -54,6 +54,8 @@ const PaymentButton = ({ paymentDetails }) => {
           address: paymentDetails.address,
           city: paymentDetails.city,
           country: paymentDetails.country,
+          custom_1: paymentDetails.custom_1,
+          custom_2: paymentDetails.custom_2,
           hash: hash,
         };
         const modifiedPayment = {
@@ -84,20 +86,21 @@ const PaymentButton = ({ paymentDetails }) => {
         // redirectToPayHere(payment);
         payhere.startPayment(modifiedPayment);
         // Payment completed. It can be a successful failure.
-        // payhere.onCompleted = function onCompleted(orderId) {
-        //   navigate(paymentDetails.return_url);
-        //   // Note: validate the payment and show success or failure page to the customer
-        // };
+        payhere.onCompleted = function onCompleted(orderId) {
+        
+        onComplete();
+          // Note: validate the payment and show success or failure page to the customer
+        };
 
        // Payment window closed
         // payhere.onDismissed = function onDismissed() {
         //  // navigate(paymentDetails.cancel_url);
         // };
 
-        // // Error occurred
-        // payhere.onError = function onError(error) {
-
-        // };
+        // Error occurred
+        payhere.onError = function onError(error) {
+          toast.error("Payment failed");
+        };
       } else {
         alert("Failed to generate hash for payment.");
         console.error("Failed to generate hash for payment.");
@@ -110,8 +113,8 @@ const PaymentButton = ({ paymentDetails }) => {
 
   return (
     <div>
-      <button id="payhere-payment" onClick={handlePayment} className="bg-blue-500 text-white px-8 py-2 rounded-lg">
-        Make Payment
+      <button id="payhere-payment" onClick={handlePayment} className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">
+        Card Payment
       </button>
     </div>
   );

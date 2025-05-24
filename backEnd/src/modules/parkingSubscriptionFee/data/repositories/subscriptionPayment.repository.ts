@@ -1,13 +1,24 @@
+import { ObjectId } from "mongoose";
 import { SubscriptionPaymentDTO, SubscriptionPaymentModel } from "../dtos/subscriptionPayment.dto";
 
-export const createSubscriptionPayment = async (subscriptionPayment: SubscriptionPaymentModel) => {
+export const createSubscriptionPayment = async (subscriptionPayment: Partial<SubscriptionPaymentModel>) => {
     const newSubscriptionPayment = await SubscriptionPaymentDTO.create(subscriptionPayment);
-    return newSubscriptionPayment;
+    return newSubscriptionPayment as unknown as SubscriptionPaymentModel & {_id:string | ObjectId};
 };
 
 
-export const getSubscriptionPayments = async () => {
-    const subscriptionPayments = await SubscriptionPaymentDTO.find();
+export const getSubscriptionPayments = async (data: Partial<SubscriptionPaymentModel>) => {
+    const query:any = {isDeleted:{$ne:true}} ;
+    if(data.parkingOwnerId){
+        query.parkingOwnerId = data.parkingOwnerId;
+    }
+    if(data.parkingAreaId){
+        query.parkingAreaId = data.parkingAreaId;
+    }
+    if(data.paymentStatus){
+        query.paymentStatus = data.paymentStatus;
+    }
+    const subscriptionPayments = await SubscriptionPaymentDTO.find(query).sort({createdAt:-1});
     return subscriptionPayments;
 };
 

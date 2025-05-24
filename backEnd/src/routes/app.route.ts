@@ -5,6 +5,7 @@ import parkingSubscriptionFeeAppRoute from "@/src/modules/parkingSubscriptionFee
 import vehicleAppRoute from "@/modules/parkingSubscriptionFee/routes/app/v1/vehicleAppRoute";
 import parkingSlotAppRoute from "@/modules/parkingArea/routes/app/v1/parkingSlotAppRoute";
 import parkingAreaAppRoute from "@/modules/parkingArea/routes/app/v1/parkingAreaAppRoute";
+import subscriptionPaymentAppRoute from "../modules/parkingSubscriptionFee/routes/app/v1/subscriptionPaymentAppRoute";
 const appRouter: Router = Router();
  appRouter.use('/v1/user', userRouter);
  appRouter.use('/v1/auth', authRouter);
@@ -15,6 +16,6 @@ appRouter.use("/v1/parking-subscription-fee",parkingSubscriptionFeeAppRoute);
 appRouter.use("/v1/vehicle",vehicleAppRoute);
 appRouter.use("/v1/parking-area",parkingAreaAppRoute);
 appRouter.use("/v1/parking-slot",parkingSlotAppRoute);
-
+appRouter.use("/v1/subscription-payment",subscriptionPaymentAppRoute);
 
 export default appRouter;

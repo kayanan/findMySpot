@@ -52,6 +52,7 @@ import PendingRequest from "./pages/User/ParkingOwner/PendingRequest";
 // parking area import start
 import ParkingAreaList from "./pages/User/ParkingOwner/ParkingArea/ParkingAreaList";
 import ViewParkingArea from "./pages/User/ParkingOwner/ParkingArea/ViewParkingArea";
+import SubscriptionDetails from "./pages/User/ParkingOwner/ParkingArea/SubscriptionDetails";
 // parking area import end
 
 const AppRoutes = () => {
@@ -125,6 +126,7 @@ const AppRoutes = () => {
             {/* parking area route start */}
             <Route path="/parking-area" element={<ParkingAreaList />} />
             <Route path="/parking-area/view/:id" element={<ViewParkingArea />} />
+            <Route path="/parking-area/subscription-details/:id" element={<SubscriptionDetails />} />
             {/* parking area route end */}
 
             {/* parking subscription fee route start */}

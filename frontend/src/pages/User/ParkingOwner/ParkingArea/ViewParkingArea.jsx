@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useLocation } from "react-router-dom";
+import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaArrowLeft, FaMapMarkerAlt, FaPhone, FaUser, FaParking, FaCar, FaCheck, FaClock, FaUsers, FaBuilding, FaInfoCircle, FaTimes } from "react-icons/fa";
+import { FaArrowLeft, FaMapMarkerAlt, FaPhone, FaUser, FaParking, FaCar, FaCheck, FaClock, FaUsers, FaBuilding, FaInfoCircle, FaTimes ,FaCreditCard} from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import ListParkingSlots from "../ParkingSlots/ListParkingSlots";
 
@@ -13,7 +13,7 @@ const ViewParkingArea = () => {
     const [parkingArea, setParkingArea] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
+    const navigate = useNavigate();
     const fetchParkingArea = async () => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-area/${id}`, { withCredentials: true });
@@ -42,7 +42,6 @@ const ViewParkingArea = () => {
             fetchParkingSlots();
         }
     }, [id]);
-
     if (loading) {
         return (
             <div className="container mx-auto p-6">
@@ -110,7 +109,7 @@ const ViewParkingArea = () => {
                 <div className="md:col-span-2 space-y-6">
                     {/* Location Card */}
                     <div className="flex flex-row gap-6 bg-white rounded-xl shadow-md p-6">
-                        <div className="w-1/2 border-r border-gray-200  pr-6">
+                        <div className="w-1/3 border-r border-gray-200  pr-6">
                             <div className="flex items-center mb-4">
                                 <FaBuilding className="text-cyan-500 mr-3 text-xl" />
                                 <h2 className="text-xl font-semibold">Location Details</h2>
@@ -126,7 +125,7 @@ const ViewParkingArea = () => {
 
                             </div>
                         </div>
-                        <div >
+                        <div className="w-1/3 border-r border-gray-200  pr-6">
                             <div className="flex items-center mb-4">
                                 <FaClock className="text-cyan-500 mr-3 text-xl" />
                                 <h2 className="text-xl font-semibold">Operating Hours</h2>
@@ -140,6 +139,32 @@ const ViewParkingArea = () => {
                                     <span className="text-gray-600">Closing Time</span>
                                     <span className="font-semibold text-cyan-600">{parkingArea?.closingTime || "N/A"}</span>
                                 </div>
+                            </div>
+                        </div>
+                        
+                        <div className="w-1/3  border-gray-200">
+                            <div className="flex items-center mb-4">
+                            <FaCreditCard className="text-cyan-500 mr-3 text-xl" />
+                                <h2 className="text-xl font-semibold">Subscription Details</h2>
+                            </div>
+                            <div className="">
+                                <div className="flex justify-between items-center bg-gray-50 px-3 py-1 rounded-lg">
+                                    <span className="text-gray-600">From</span>
+                                   <span className="font-semibold text-cyan-600">{parkingArea?.parkingSubscriptionPaymentId?.subscriptionStartDate.split("T")[0] || "N/A"}</span>
+                                </div>
+                                <div className="flex justify-between items-center bg-gray-50 px-3 py-1 rounded-lg">
+                                    <span className="text-gray-600">To</span>
+                                    <span className="font-semibold text-cyan-600">{parkingArea?.parkingSubscriptionPaymentId?.subscriptionEndDate.split("T")[0] || "N/A"}</span>
+                                </div>
+                                <div className="flex justify-between items-center bg-gray-50 px-3 py-1 rounded-lg">
+                                    <span className="text-gray-600">Amount</span>
+                                    <span className="font-semibold text-black-600">{parkingArea?.parkingSubscriptionPaymentId?.amount.toLocaleString('en-US', { style: 'currency', currency: 'LKR' }) || "N/A"}</span>
+                                </div>
+                                <button className="bg-cyan-500 text-white px-4 py-1 rounded-md w-full mt-2 hover:bg-cyan-600" onClick={() => {
+                                    navigate(`/parking-area/subscription-details/${parkingArea?._id}`);
+                                }}>
+                                    More Details
+                                </button>
                             </div>
                         </div>
 
