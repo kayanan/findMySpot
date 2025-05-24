@@ -48,6 +48,7 @@ export const getParkingAreasByOwnerId = async (ownerId: string) => {
         .populate('city')
         .populate('district')
         .populate('province')
+        .populate('parkingSubscriptionPaymentId', 'amount paymentDate paymentMethod paymentStatus paymentReference paymentGateway subscriptionEndDate')
         return parkingAreas;
 };
 export const updateParkingAreaByOwnerId = async (ownerId: string, data: Partial<ParkingAreaModel>) => {

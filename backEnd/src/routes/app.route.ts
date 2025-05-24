@@ -1,7 +1,7 @@
 import { Router } from "express";
 import locationAppRoute from "@/modules/location/routes/app/v1/index";
 import { authRouter, userRouter } from "@/modules/user/routes/app/v1";
-import parkingSubscriptionFeeAppRoute from "@/modules/parkingSubscriptionFee/routes/app/v1/appRoute";
+import parkingSubscriptionFeeAppRoute from "@/src/modules/parkingSubscriptionFee/routes/app/v1/subscriptionFeeAppRoute";
 import vehicleAppRoute from "@/modules/parkingSubscriptionFee/routes/app/v1/vehicleAppRoute";
 import parkingSlotAppRoute from "@/modules/parkingArea/routes/app/v1/parkingSlotAppRoute";
 import parkingAreaAppRoute from "@/modules/parkingArea/routes/app/v1/parkingAreaAppRoute";

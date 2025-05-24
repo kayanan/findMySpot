@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { FaBuilding, FaParking, FaCar, FaMapMarkerAlt } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import PaymentButton from "../../../../utils/PaymentButton";
 import axios from "axios";
 
 const getSlotTypeCount = (slots) => {
@@ -10,11 +11,25 @@ const getSlotTypeCount = (slots) => {
     const type = slot?.vehicleType?.vehicleType || 'Unknown';
     countByType[type] = (countByType[type] || 0) + 1;
   });
+  
   return countByType;
 };
 
+const calculateAmount = (parkingArea,subscriptionFee) => {
+
+  const slotTypeCount = getSlotTypeCount(parkingArea?.slots?.data || []);
+  const amount = Object.entries(slotTypeCount).reduce((acc, [type, count]) => {
+    const fee = subscriptionFee.find(fee => fee?.vehicleType?.vehicleType === type);
+    return acc + (count<100 ? fee?.below100 : count<300 ? fee?.between100and300 : count<500 ? fee?.between300and500 : fee?.above500) * count;
+  }, 0);
+  
+  return amount;
+}
+
 const ParkingAreaList = ({ parkingOwner}) => {
+
   const [parkingAreas, setParkingAreas] = useState([]);
+  const [activeSubscriptionFee, setActiveSubscriptionFee] = useState(0);
 
   const fetchParkingAreas = async () => {
     try {
@@ -33,8 +48,17 @@ const ParkingAreaList = ({ parkingOwner}) => {
       });
     } 
   };
+  const fetchActiveSubscriptionFee = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-subscription-fee/active`);
+      setActiveSubscriptionFee(response?.data ||[]);
+    } catch (err) {
+      console.error("Error fetching active subscription fee:", err.message);
+    }
+  };
   useEffect(() => {
     fetchParkingAreas();
+    fetchActiveSubscriptionFee();
   }, []);
   
     const handleStatusChange = async (id, status) => {
@@ -122,7 +146,7 @@ const ParkingAreaList = ({ parkingOwner}) => {
                     >
                       View Details
                     </Link>
-                    {parkingOwner?.isActive && (
+                    {(parkingOwner?.isActive && area?._doc?.parkingSubscriptionPaymentId && area?._doc?.parkingSubscriptionPaymentId?.subscriptionEndDate > new Date()) ? (
                       <button
                         type="button"
                         onClick={() => handleStatusChange(area?._doc._id, !area?._doc.isActive)}
@@ -134,6 +158,25 @@ const ParkingAreaList = ({ parkingOwner}) => {
                     >
                       {area?._doc.isActive ? "Deactivate" : "Activate"}
                     </button>
+                    ):(
+                      <PaymentButton paymentDetails={
+                        {
+                          order_id: "ItemNo12345",
+                          amount: calculateAmount(area,activeSubscriptionFee).toFixed(2).toString(),
+                          currency: "LKR",
+                          items: "Parking Subscription",
+                          first_name: parkingOwner?.firstName,
+                          last_name: parkingOwner?.lastName,
+                          email: parkingOwner?.email,
+                          phone: parkingOwner?.phoneNumber,
+                          address: area?._doc?.addressLine1,
+                          city: area?._doc?.city?.name,
+                          country: "Sri Lanka",
+                          return_url: `${import.meta.env.VITE_FRONTEND_URL}/owner/view/${parkingOwner?._id}`,
+                          cancel_url: `${import.meta.env.VITE_FRONTEND_URL}/owner/view/${parkingOwner?._id}`,
+                          notify_url: `${import.meta.env.VITE_BACKEND_ADMIN_URL_PUBLIC}/api/admin/v1/subscription-payment/notify-payment`,
+                        }
+                      } />
                     )}
                   </div>
                 </div>

@@ -16,6 +16,7 @@ export interface ParkingAreaModel extends BaseDTO {
   };
   ownerId: mongoose.Schema.Types.ObjectId;
   managerIds: Array<mongoose.Schema.Types.ObjectId>;
+  parkingSubscriptionPaymentId: mongoose.Schema.Types.ObjectId;
   contactNumber: string;
   email: string;
   images: string[];
@@ -46,6 +47,7 @@ const ParkingAreaSchema = new Schema<ParkingAreaModel>(
         }
       },
       ownerId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
+      parkingSubscriptionPaymentId: { type: mongoose.Schema.Types.ObjectId, required: false, ref: "SubscriptionPayment" },
       managerIds: { type: [mongoose.Schema.Types.ObjectId], required: false, ref: "User" },
       addressLine1: { type: String, required: true },
       addressLine2: { type: String},

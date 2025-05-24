@@ -31,7 +31,7 @@ export const findActiveFees = async () => {
     startDate: { $lte: currentDate },
     endDate: { $gte: currentDate },
     isDeleted: false
-  });
+  }).populate("vehicleType");
 }; 
 
 export const findVehicleTypes = async () => {

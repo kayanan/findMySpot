@@ -3,6 +3,7 @@ import { FaArrowLeft, FaUser } from "react-icons/fa";
 import { GlobeAltIcon } from "@heroicons/react/outline";
 
 
+
 const ViewRole = () => {
   const location = useLocation();
   const { Role, status } = location.state || {};

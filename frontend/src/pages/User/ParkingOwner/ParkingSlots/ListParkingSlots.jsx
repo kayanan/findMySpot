@@ -32,8 +32,12 @@ const ListParkingSlots = ({slots, fetchParkingSlots}) => {
     // };
 
     const handleSlotClick = (slot) => {
+        if(slot.isActive){
         setSelectedSlot(slot);
         setIsPopupOpen(true);
+        }else{
+            toast.error("Slot is inactive");
+        }
     };
 
     const handleStatusUpdate = async (updates) => {
