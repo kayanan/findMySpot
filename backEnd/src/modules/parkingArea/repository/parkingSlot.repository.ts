@@ -20,6 +20,11 @@ export const updateSlot = async (id: string, slotData: CreateUpdateParkingSlotRe
   return slot;
 };
 
+export const updateSlotByParkingAreaId = async (parkingAreaId: string, slotData: CreateUpdateParkingSlotRequest & { vehicleId: string }) => {
+  const slot = await ParkingSlotDTO.updateMany({ parkingAreaId, vehicleType: slotData?.vehicleId }, { $set: slotData });
+  return slot;
+};
+
 export const deleteSlot = async (id: string) => {
   const slot = await ParkingSlotDTO.findByIdAndUpdate(
     id,

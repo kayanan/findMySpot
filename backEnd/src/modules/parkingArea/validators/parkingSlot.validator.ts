@@ -5,6 +5,7 @@ const createSlotValidator = (data: any) => {
   const schema = z.array(z.object({
     slotDescription: z.string().optional(),
     slotImage: z.string().optional(),
+    slotPrice: z.number().optional(),
     slotSize: z.number().optional(),
     vehicleType: z.string(),
 }));
@@ -19,6 +20,7 @@ const updateSlotValidator = (data: any) => {
     slotNumber: z.number().optional(),
     slotType: z.string().optional(),
     slotDescription: z.string().optional(),
+    slotPrice: z.number().optional(),
     slotImage: z.string().optional(),
     slotSize: z.number().optional(),
     vehicleType: z.string().optional(),

@@ -10,6 +10,7 @@ import {
   getSlotByNumberAndArea as getSlotByNumberAndAreaRepo,
   deleteManySlots as deleteManySlotsRepo,
   updateParkingSlotStatus as updateParkingSlotStatusRepo,
+  updateSlotByParkingAreaId as updateSlotByParkingAreaIdRepo,
 } from "../repository/parkingSlot.repository";
 import { CreateUpdateParkingSlotRequest } from "../controller/request/create.parkingSlot.request";
 
@@ -38,12 +39,21 @@ export const createSlot = async (slotData: { slotDetails: Partial<CreateUpdatePa
   return result;
 };
 
-export const updateSlot = async (id: string, slotData: CreateUpdateParkingSlotRequest) => {
+export const updateSlot = async (id: string, slotData: CreateUpdateParkingSlotRequest ) => {
+  
   const { error } = ParkingSlotValidator.updateSlotValidator(slotData);
   if (error) {
     throw new Error(error.message);
   }
   return await updateSlotRepo(id, slotData);
+};
+
+export const updateSlotByParkingAreaId = async (parkingAreaId: string, slotData: CreateUpdateParkingSlotRequest & { vehicleId: string }) => {
+  const { error } = ParkingSlotValidator.updateSlotValidator(slotData);
+  if (error) {
+    throw new Error(error.message);
+  }
+  return await updateSlotByParkingAreaIdRepo(parkingAreaId, slotData);
 };
 
 export const deleteSlot = async (id: string) => {

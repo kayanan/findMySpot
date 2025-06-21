@@ -224,6 +224,11 @@ const updateUser = async (
   throw new Error('User not Updated');
 };
 
+const getUserByMobileNumber = async (mobileNumber: string): Promise<UserModel | null> => {
+  const user: UserModel | null = await UserRepository.findByMobileNumber(mobileNumber);
+  return user;
+};  
+
 const adminUpdateUser = async (
   adminUpdateUserRequest: AdminUpdateUserRequest,
   id: string
@@ -352,7 +357,8 @@ export default {
   approveParkingOwner,
   rejectParkingOwner,
   getPendingOwnersCount,
-  checkDuplicateEntry
+  checkDuplicateEntry,
+  getUserByMobileNumber
 };
 
 

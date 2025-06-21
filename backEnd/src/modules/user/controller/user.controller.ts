@@ -19,6 +19,7 @@ import {
   UpdateUserRequest,
 } from './request/create.user.request';
 import { UserListRequest } from './request/user.list.request';
+import { UserModel } from '../data/dtos/user.dto';
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
@@ -37,6 +38,21 @@ export const getUser = async (req: Request, res: Response) => {
     const response: UserProfileResponse =
       await UserService.getUser(req.params.id);
     res.status(200).json(response);
+  } catch (error: any) {
+    res.status(400).json(errorResponse(error.message));
+  }
+};
+
+export const getUserByMobileNumber = async (req: Request, res: Response) => {
+  try {
+    const response: UserModel | null = await UserService.getUserByMobileNumber(req.params.mobileNumber);
+    if(response){
+      res.status(200).json(response);
+    }
+    else{
+      console.log("User not found");
+      res.status(400).json(errorResponse("User not found"));
+    }
   } catch (error: any) {
     res.status(400).json(errorResponse(error.message));
   }

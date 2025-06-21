@@ -31,6 +31,7 @@ const ParkingAreaList = ({ parkingOwner }) => {
   const [isBankTransferOpen, setIsBankTransferOpen] = useState(false);
   const [parkingAreas, setParkingAreas] = useState([]);
   const [activeSubscriptionFee, setActiveSubscriptionFee] = useState(0);
+  const [amount, setAmount] = useState(0);
 
   const handleBankTransferSubmit = async (formData) => {
     
@@ -219,7 +220,9 @@ const ParkingAreaList = ({ parkingOwner }) => {
                         notify_url: `${import.meta.env.VITE_BACKEND_ADMIN_URL_PUBLIC}/api/admin/v1/subscription-payment/notify-payment`,
                       }
                     } onComplete={fetchParkingAreas} />
-                    <button className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-lg" onClick={() => setIsBankTransferOpen(true)}>
+                    <button className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-lg" onClick={() => {setIsBankTransferOpen(true)
+                      setAmount(calculateAmount(area, activeSubscriptionFee).toFixed(2).toString())
+                    }}>
                       Bank Transfer
                     </button>
                     <BankTransferPopup
@@ -228,7 +231,7 @@ const ParkingAreaList = ({ parkingOwner }) => {
                   onSubmit={handleBankTransferSubmit}
                   parkingAreaId={area?._doc._id}
                   parkingOwnerId={parkingOwner?._id}
-                  amount={calculateAmount(area, activeSubscriptionFee).toFixed(2).toString()}
+                  amount={amount}
                 /></>
                 )}
                 

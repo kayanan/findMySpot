@@ -107,6 +107,14 @@ async function findById(id: string): Promise<UserModel | null> {
   return user as UserModel;
 }
 
+async function findByMobileNumber(mobileNumber: string): Promise<UserModel | null> {
+  const user: UserModel | null = await UserDTO.findOne({
+    phoneNumber:mobileNumber,
+    isDeleted: {$ne: true},
+  });
+  return user as UserModel;
+}
+
 async function findByEmail(email: string): Promise<UserModel | null> {
   //make sure to delete the password attribute before return to the api calls.
   return UserDTO.findOne({
@@ -260,4 +268,5 @@ export default {
   softDeleteById,
   hardDeleteById,
   findPendingOwnersCount,
+  findByMobileNumber
 };

@@ -253,7 +253,7 @@ const ViewParkingArea = () => {
                     <FaCar className="text-cyan-500 mr-3 text-xl" />
                     <h2 className="text-2xl font-bold">Parking Slots</h2>
                 </div>
-                <ListParkingSlots slots={slots} fetchParkingSlots={fetchParkingSlots} />
+                <ListParkingSlots slots={slots} fetchParkingSlots={fetchParkingSlots} parkingAreaId={id}/>
             </div>
             <ToastContainer />
         </div>

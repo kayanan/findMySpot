@@ -9,6 +9,7 @@ import {
   getActiveSlots,
   getSlotsByParkingArea,
   deleteManySlots,
+  updateSlotByParkingAreaId,
 } from "../service/parkingSlot.service";
 import { CreateUpdateParkingSlotRequest } from "./request/create.parkingSlot.request";
 import { ParkingSlotValidator } from "../validators/parkingSlot.validator";
@@ -34,13 +35,30 @@ export const createSlotHandler = async (req: Request, res: Response) => {
 export const updateSlotHandler = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const slotData = req.body as CreateUpdateParkingSlotRequest;
+    const slotData = req.body as CreateUpdateParkingSlotRequest & { vehicleId: string };
     const slot = await updateSlot(id, slotData);
     res.status(200).json(slot);
   } catch (error: unknown) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });
     } else {
+      res.status(500).json({ message: "An unknown error occurred" });
+    }
+  }
+};
+
+export const updateSlotByParkingAreaIdHandler = async (req: Request, res: Response) => {
+  try {
+    const { id: parkingAreaId } = req.params;
+    const slotData = req.body as CreateUpdateParkingSlotRequest & { vehicleId: string };
+    const slot = await updateSlotByParkingAreaId(parkingAreaId, slotData);
+    res.status(200).json(slot);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.log(error);
+      res.status(500).json({ message: error.message });
+    } else {
+      console.log(error); 
       res.status(500).json({ message: "An unknown error occurred" });
     }
   }
