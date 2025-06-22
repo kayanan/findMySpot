@@ -112,9 +112,11 @@ const PopUpMenu = ({
                                 </div>
 
                                 <div className="mt-3">
-                                    <p className="text-sm text-gray-600 whitespace-pre-line">
-                                        {message}
-                                    </p>
+                                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line font-bold">
+                                            {message}
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <div className="mt-6 flex flex-wrap gap-3 justify-end">

@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { UserCircleIcon, MapIcon, UserIcon ,UsersIcon,IdentificationIcon} from "@heroicons/react/outline";
+import { UserCircleIcon, MapIcon, UserIcon ,UsersIcon,IdentificationIcon,ChartBarIcon,ChartPieIcon} from "@heroicons/react/outline";
 import { useState } from "react";
 
 const Sidebar = ({ isOpen }) => {
@@ -17,6 +17,11 @@ const Sidebar = ({ isOpen }) => {
       ],
     },
     { name: "Parking Subscription Fee", path: "/parking-subscription-fee", icon: MapIcon },
+    { name: "Reports",  icon: ChartBarIcon,subLink: [
+      { name: "Parking Payments", path: "/reports/parking-payments", icon: ChartBarIcon },
+      { name: "Parking Reservations", path: "/reports/parking-reservations", icon: ChartBarIcon },
+      { name: "Parking Slots", path: "/reports/parking-slots", icon: ChartBarIcon },
+    ], },
   ];
 
   return (

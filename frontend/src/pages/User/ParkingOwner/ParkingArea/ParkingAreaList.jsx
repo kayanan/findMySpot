@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import PayhereButton from "../../../../utils/PayhereButton";
 import axios from "axios";
 import BankTransferPopup from "../../../../utils/BankTransferPopup";
+import dayjs from "dayjs";
 
 const getSlotTypeCount = (slots) => {
   const countByType = {};
@@ -34,25 +35,24 @@ const ParkingAreaList = ({ parkingOwner }) => {
   const [amount, setAmount] = useState(0);
 
   const handleBankTransferSubmit = async (formData) => {
-    
+
     const formDataToSend = new FormData();
-    for(const key in formData){
-      if(key === "images"){
-        for(const image of formData[key]){
+    for (const key in formData) {
+      if (key === "images") {
+        for (const image of formData[key]) {
           formDataToSend.append("images", image);
         }
-      }else{
+      } else {
         formDataToSend.append(key, formData[key]);
       }
     }
-    console.log(formDataToSend,"--------------------------------formDataToSend--------------------------------");
     const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/subscription-payment`, formDataToSend, { withCredentials: true });
-    if(response.status === 201){
+    if (response.status === 201) {
       toast.success("Bank transfer successful");
-    }else{
+    } else {
       toast.error("Bank transfer failed");
     }
-  
+
     // Handle the form submission
     // formData will contain:
     // {
@@ -123,7 +123,7 @@ const ParkingAreaList = ({ parkingOwner }) => {
             <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 p-4 text-white">
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-bold truncate">{area?._doc.name}</h3>
-                {(new Date(area?._doc?.parkingSubscriptionPaymentId?.subscriptionEndDate.split("T")[0]) > new Date()) ? (
+                {(area?._doc?.parkingSubscriptionPaymentId?.subscriptionEndDate && dayjs(area?._doc?.parkingSubscriptionPaymentId?.subscriptionEndDate).isAfter(dayjs())) ? (
                   <span className={`px-4 py-0.5 rounded-full text-sm font-semibold bg-cyan-100 text-cyan-800 `} >
                     Subscribed
                   </span>
@@ -187,7 +187,7 @@ const ParkingAreaList = ({ parkingOwner }) => {
                 >
                   View Details
                 </Link>
-                {(parkingOwner?.isActive && area?._doc?.parkingSubscriptionPaymentId && (new Date(area?._doc?.parkingSubscriptionPaymentId?.subscriptionEndDate.split("T")[0]) > new Date())) ? (
+                {(parkingOwner?.isActive && area?._doc?.parkingSubscriptionPaymentId && dayjs(area?._doc?.parkingSubscriptionPaymentId?.subscriptionEndDate).isAfter(dayjs())) ? (
                   <button
                     type="button"
                     onClick={() => handleStatusChange(area?._doc._id, !area?._doc.isActive)}
@@ -220,21 +220,23 @@ const ParkingAreaList = ({ parkingOwner }) => {
                         notify_url: `${import.meta.env.VITE_BACKEND_ADMIN_URL_PUBLIC}/api/admin/v1/subscription-payment/notify-payment`,
                       }
                     } onComplete={fetchParkingAreas} />
-                    <button className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-lg" onClick={() => {setIsBankTransferOpen(true)
+                    <button className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-lg" onClick={() => {
+                      setIsBankTransferOpen(true)
                       setAmount(calculateAmount(area, activeSubscriptionFee).toFixed(2).toString())
                     }}>
                       Bank Transfer
                     </button>
                     <BankTransferPopup
-                  isOpen={isBankTransferOpen}
-                  onClose={() => setIsBankTransferOpen(false)}
-                  onSubmit={handleBankTransferSubmit}
-                  parkingAreaId={area?._doc._id}
-                  parkingOwnerId={parkingOwner?._id}
-                  amount={amount}
-                /></>
+                      isOpen={isBankTransferOpen}
+                      onClose={() => setIsBankTransferOpen(false)}
+                      onSubmit={handleBankTransferSubmit}
+                      parkingAreaId={area?._doc._id}
+                      parkingOwnerId={parkingOwner?._id}
+                      amount={amount}
+                    />
+                  </>
                 )}
-                
+
 
               </div>
             </div>

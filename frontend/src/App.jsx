@@ -55,6 +55,10 @@ import ViewParkingArea from "./pages/User/ParkingOwner/ParkingArea/ViewParkingAr
 import SubscriptionDetails from "./pages/User/ParkingOwner/ParkingArea/SubscriptionDetails";
 // parking area import end
 
+// reports import start
+import ListParkingPayments from "./pages/Report/ParkingPayment/ListParkingPayments";
+// reports import end
+
 const AppRoutes = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
@@ -134,6 +138,11 @@ const AppRoutes = () => {
             <Route path="/parking-subscription-fee/add" element={<AddSubscriptionFee />} />
             <Route path="/parking-subscription-fee/update/:id" element={<UpdateSubscriptionFee />} />
             {/* parking subscription fee route end */}
+            {/* reports route start */}
+            <Route path="/reports/parking-payments" element={<ListParkingPayments />} />
+            {/* <Route path="/reports/parking-reservations" element={<ListParkingReservations />} />
+            <Route path="/reports/parking-slots" element={<ListParkingSlots />} /> */}
+            {/* reports route end */}
 
             <Route path="*" element={<NotFound />} />
           </Routes>

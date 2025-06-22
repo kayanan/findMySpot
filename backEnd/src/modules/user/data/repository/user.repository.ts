@@ -93,8 +93,9 @@ async function findUsers(
 }
 
 async function saveUser(
-  userPayload: CreateUserRequest
+  userPayload: Partial<CreateUserRequest >
 ): Promise<string | null> {
+  console.log(userPayload,"userPayload---------------------------------------------------");
   const newUser = new UserDTO(userPayload);
   const { _id} = await newUser.save();
   return _id as string;
@@ -249,8 +250,8 @@ async function hardDeleteById(id: string): Promise<UserModel | null> {
   await user.deleteOne();
   return user;
 }
-async function findPendingOwnersCount(): Promise<number> {
-  return UserDTO.countDocuments({ approvalStatus: {$ne: true} });
+async function findPendingOwnersCount(role: string[]): Promise<number> {
+  return UserDTO.countDocuments({ approvalStatus: {$ne: true},role:{$in:role} });
 }
 
 export default {

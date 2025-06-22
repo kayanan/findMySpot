@@ -1,0 +1,69 @@
+import { ReservationDTO, ReservationStatus } from "../dtos/reservation.dto";
+import { Document } from "mongoose";
+
+export const createReservation = async (data: Partial<Document>) => {
+  return await ReservationDTO.create(data);
+};
+
+export const updateReservation = async (id: string, data: Partial<Document>) => {
+  return await ReservationDTO.findByIdAndUpdate(id, data, { new: true });
+};
+
+export const deleteReservation = async (id: string) => {
+  return await ReservationDTO.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
+};
+
+export const findReservationById = async (id: string) => {
+  return await ReservationDTO.findOne({ _id: id, isDeleted: false }).populate("parkingSlot parkingArea user createdBy");
+};
+
+export const findAllReservations = async () => {
+  return await ReservationDTO.find({ isDeleted: false }).populate("parkingSlot parkingArea user createdBy");
+};
+
+export const findReservationsByUser = async (userId: string) => {
+  return await ReservationDTO.find({ user: userId, isDeleted: false }).populate("parkingSlot parkingArea");
+};
+
+export const findReservationsByParkingArea = async (parkingAreaId: string) => {
+  return await ReservationDTO.find({ parkingArea: parkingAreaId, isDeleted: false }).populate("parkingSlot user");
+};
+
+export const findReservationsByParkingSlot = async (parkingSlotId: string) => {
+  return await ReservationDTO.find({ parkingSlot: parkingSlotId, isDeleted: false }).populate("user parkingArea");
+};
+
+export const findActiveReservations = async () => {
+  return await ReservationDTO.find({ status: 'active', isDeleted: false }).populate("parkingSlot parkingArea user");
+};
+
+export const findReservationsByStatus = async (status: string) => {
+  return await ReservationDTO.find({ status, isDeleted: false }).populate("parkingSlot parkingArea user");
+};
+
+export const findReservationsByPaymentStatus = async (paymentStatus: string) => {
+  return await ReservationDTO.find({ paymentStatus, isDeleted: false }).populate("parkingSlot parkingArea user");
+};
+
+export const findReservationByVehicleNumber = async (vehicleNumber: string) => {
+  const reservation = await ReservationDTO.findOne({ 
+    vehicleNumber: vehicleNumber.toLowerCase().trim(), 
+    status: {$in: [ReservationStatus.PENDING, ReservationStatus.CONFIRMED]}, 
+    isDeleted: {$ne: true}
+  })
+  return reservation;
+};
+
+export const findReservationsByDateRange = async (startDate: Date, endDate: Date) => {
+  return await ReservationDTO.find({
+    startTime: { $gte: startDate, $lte: endDate },
+    isDeleted: false
+  }).populate("parkingSlot parkingArea user");
+};
+
+export const findReservationsByMobileNumber = async (mobileNumber: string) => {
+  return await ReservationDTO.find({ 
+    customerMobile: mobileNumber, 
+    isDeleted: false 
+  }).populate("parkingSlot parkingArea user");
+};

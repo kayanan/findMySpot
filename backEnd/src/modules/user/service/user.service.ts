@@ -32,6 +32,7 @@ import { RoleDTO } from '@/modules/user/data/dtos/role.dto';
 import { json } from 'express';
 import HelperUtil from '../../../utils/helper.util';
 import { deleteParkingAreaByOwnerId, updateParkingAreaByOwnerId } from '../../parkingArea/service/parkingArea.service';
+import RoleService from './role.service';
 
 const getUsers = async (
   listReq: UserListRequest
@@ -59,18 +60,29 @@ const getUser = async (id: string): Promise<UserProfileResponse> => {
 };
 
 const saveUser = async (
-  createUserRequest: CreateUserRequest
+  createUserRequest: Partial<CreateUserRequest>
 ): Promise<CreatedUpdatedResponse> => {
+  const addedBy = createUserRequest?.addedBy;
+  delete createUserRequest.addedBy;
   const valResult =
     UserValidator.saveUserValidator(createUserRequest);
 
   if (valResult.error) throw new Error(valResult.error.message);
-  const checkUser = await UserRepository.findByEmail(
-    createUserRequest.email!
-  );
-  if (checkUser !== null) throw new Error('User already exists');
+  let data=valResult.data as CreateUserRequest
+  if(addedBy!=="MANAGER"){
+    const checkUser = await UserRepository.findByEmail(
+      createUserRequest.email!
+    );
+    if (checkUser !== null) throw new Error('User already exists');
+  }
+  const role = await RoleService.getRoles({search:"CUSTOMER"});
+  const roleIds = role.roles.map(item => item._id as string);
+  if(data.role?.includes(roleIds[0] as unknown as string)){
+    data.isActive=true
+  }
+  console.log(data,"data---------------------------------------------------");
   const id: string | null =
-    await UserRepository.saveUser(valResult.data);
+    await UserRepository.saveUser(data as unknown as Partial<CreateUserRequest>);
   if (id != null) {
     return { status: true, id } as CreatedUpdatedResponse;
   }
@@ -303,7 +315,10 @@ const rejectParkingOwner = async (id: string, reason: string): Promise<BaseRespo
 };
 
 const getPendingOwnersCount = async (): Promise<BaseResponse> => {
-  const count = await UserRepository.findPendingOwnersCount();
+  const role = await RoleService.getRoles({search:"PARKING_OWNER"});
+  const roleIds = role.roles.map(item => item._id as string);
+  const count = await UserRepository.findPendingOwnersCount(roleIds);
+
   return { status: true, count: count } as BaseResponse;
 };
 
@@ -328,10 +343,10 @@ const checkDuplicateEntry = async (data: Partial<UserModel>): Promise<BaseRespon
     const errorResponse: any = {};
 
     for (const item of result) {
-      if (item.email.toLowerCase() === data.email?.toLowerCase()) {
+      if (item.email && data.email && item.email?.toLowerCase() === data.email?.toLowerCase()) {
         errorResponse.email = "Email already exists";
       }
-      if (item.phoneNumber === data.phoneNumber) {
+      if (item.phoneNumber && item.phoneNumber === data.phoneNumber) {
         errorResponse.phoneNumber = "Phone number already exists";
       }
       if (item.nic.toLowerCase() === data.nic?.toLowerCase()) {

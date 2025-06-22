@@ -1,0 +1,112 @@
+import { ReservationModel, ReservationStatus } from "../data/dtos/reservation.dto";
+import {
+  createReservation,
+  updateReservation,
+  deleteReservation,
+  findReservationById,
+  findAllReservations,
+  findReservationsByUser,
+  findReservationsByParkingArea,
+  findReservationsByParkingSlot,
+  findActiveReservations,
+  findReservationsByStatus,
+  findReservationsByPaymentStatus,
+  findReservationByVehicleNumber,
+  findReservationsByDateRange,
+  findReservationsByMobileNumber
+} from "../data/repositories/reservation.repository";
+import { ReservationValidator } from "../validators/reservation.validator";
+import { Document } from "mongoose";
+import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
+
+
+export const createReservationService = async (reservationData: Omit<ReservationModel, "isDeleted">) => {
+  reservationData.startDateAndTime = new Date();
+  const valResult = ReservationValidator.createReservationValidator(reservationData);
+  if (valResult.error) {
+    throw new Error(valResult.error.message);
+  }
+  return await createReservation(valResult.data as Partial<Document>);
+};
+
+export const updateReservationService = async (id: string, reservationData: Partial<ReservationModel>) => {
+  const valResult = ReservationValidator.updateReservationValidator(reservationData);
+  if (valResult.error) {
+    throw new Error(valResult.error.message);
+  }
+  return await updateReservation(id, reservationData);
+};
+
+export const deleteReservationService = async (id: string) => {
+  return await deleteReservation(id);
+};
+
+export const getReservationByIdService = async (id: string) => {
+  return await findReservationById(id);
+};
+
+export const getAllReservationsService = async () => {
+  return await findAllReservations();
+};
+
+export const getReservationsByUserService = async (userId: string) => {
+  return await findReservationsByUser(userId);
+};
+
+export const getReservationsByParkingAreaService = async (parkingAreaId: string) => {
+  return await findReservationsByParkingArea(parkingAreaId);
+};
+
+export const getReservationsByParkingSlotService = async (parkingSlotId: string) => {
+  return await findReservationsByParkingSlot(parkingSlotId);
+};
+
+export const getActiveReservationsService = async () => {
+  return await findActiveReservations();
+};
+
+export const getReservationsByStatusService = async (status: string) => {
+  return await findReservationsByStatus(status);
+};
+
+export const getReservationsByPaymentStatusService = async (paymentStatus: string) => {
+  return await findReservationsByPaymentStatus(paymentStatus);
+};
+
+export const getReservationByVehicleNumberService = async (vehicleNumber: string) => {
+  return await findReservationByVehicleNumber(vehicleNumber);
+};
+
+export const getReservationsByDateRangeService = async (startDate: Date, endDate: Date) => {
+  return await findReservationsByDateRange(startDate, endDate);
+};
+
+export const getReservationsByMobileNumberService = async (mobileNumber: string) => {
+  return await findReservationsByMobileNumber(mobileNumber);
+};
+
+export const completeReservationService = async (id: string) => {
+  const reservation = await findReservationById(id);
+  if (!reservation) {
+    throw new Error("Reservation not found");
+  }
+  dayjs.extend(duration);
+  const endTime : Date = new Date();
+  const startTime : Date = new Date(reservation.startDateAndTime);
+  const diff = dayjs.duration(endTime.getTime() - startTime.getTime());
+  const hoursDiff = Math.ceil(diff.asMinutes()/60);
+  return await updateReservation(id, {
+    endDateAndTime: endTime,
+    totalAmount: Math.ceil(hoursDiff) * (reservation.perHourRate || 0)
+  } as Partial<ReservationModel>);
+};
+
+export const cancelReservationService = async (id: string) => {
+  return await updateReservation(id, { status: 'cancelled' } as Partial<ReservationModel>);
+};
+
+export const updatePaymentStatusService = async (id: string, paymentStatus: string) => {
+  return await updateReservation(id, { paymentStatus } as Partial<ReservationModel>);
+}; 
+

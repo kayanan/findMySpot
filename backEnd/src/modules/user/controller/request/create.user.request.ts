@@ -12,6 +12,8 @@ export interface CreateUserRequest extends UserRequest {
   nic?:string;
   phoneNumber?:string;
   role?: Array<ObjectId | string>;
+  addedBy?:string;
+  isActive?:boolean;
 }
 
 export interface UpdateUserRequest extends UserRequest {

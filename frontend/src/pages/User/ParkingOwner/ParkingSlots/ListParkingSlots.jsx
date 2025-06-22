@@ -1,19 +1,27 @@
 import { useState } from 'react';
-import { FaCar, FaTruck, FaBus, FaMotorcycle, FaCheck, FaTimes, FaClock, FaPlus, FaEdit } from "react-icons/fa";
+import { FaCar, FaTruck, FaBus, FaMotorcycle, FaCheck, FaTimes, FaClock, FaPlus, FaEdit, FaCashRegister, FaUniversity } from "react-icons/fa";
 import { toast } from "react-toastify";
 import axios from "axios";
 import PopUpMenu from "../../../../utils/PopUpMenu";
 import ParkingDetailsPopup from "../../../../utils/ParkingDetailsPopup";
 import UserDetailsPopup from "../../../../utils/UserDetailsPopup";
+import BankTransferPopup from '../../../../utils/BankTransferPopup';
+import PaymentOptionPopup from '../../../../utils/PaymentOptionPopup';
+import dayjs from 'dayjs';
 
-const ListParkingSlots = ({ slots, fetchParkingSlots, parkingAreaId }) => {
+const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
     const [selectedSlot, setSelectedSlot] = useState(null);
+    const [paymentOption, setPaymentOption] = useState(null);
+    const [isPaymentOptionPopupOpen, setIsPaymentOptionPopupOpen] = useState(false);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
+    const [isBankTransferPopupOpen, setIsBankTransferPopupOpen] = useState(false);
     const [isParkingDetailsOpen, setIsParkingDetailsOpen] = useState(false);
     const [isUserDetailsOpen, setIsUserDetailsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [userDetails, setUserDetails] = useState(null);
+    const [finalAmount, setFinalAmount] = useState(0);
     console.log(selectedSlot);
+    console.log(parkingArea,"parkingArea--------------------------------");
     // Group slots by vehicle type
     const groupedSlots = slots?.reduce((acc, slot) => {
         const vehicleType = slot.vehicleType?.vehicleType || "Unknown";
@@ -37,10 +45,10 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingAreaId }) => {
     //         console.error("Error fetching slot data:", error);
     //     }
     // };
-    const handlePriceChange = async (price, vehicleId) => {
+    const handlePriceChange = async (data) => {
         try {
-            console.log(vehicleId);
-            await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/parking-area/${parkingAreaId}`, { slotPrice: +price, vehicleId: vehicleId });
+            console.log(data);
+            await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/parking-area/${parkingArea._id}`, data);
             toast.success("Price updated successfully");
             fetchParkingSlots();
         } catch (error) {
@@ -54,7 +62,33 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingAreaId }) => {
         setUserDetails(details);
         try {
             try {
+                const vehicle = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/vehicle/${details.vehicleNumber}`);
+                if(vehicle.data.success){
+                    toast.error("Vehicle already reserved",{position:"top-center",autoClose:false});
+                    setLoading(false);
+                    return;
+                }
                 const user = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/mobile-number/${details.customerMobile}`);
+                
+                
+                const reservation = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation`, {
+                    parkingSlot: selectedSlot._id,
+                    parkingArea: parkingArea._id,
+                    user: user.data._id,
+                    vehicleNumber: details.vehicleNumber,
+                    customerMobile: details.customerMobile,
+                    perHourRate: selectedSlot.slotPrice,
+                    vehicleType: selectedSlot.vehicleType._id,
+                    paymentStatus: "pending",
+                    status: "confirmed",
+                    createdBy: user.data._id,
+                    type: "on_spot",
+                    startDateAndTime: new Date(),
+                    
+                });
+               
+                
+                await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/${selectedSlot._id}`, {isReserved: true, reservedVehicleNumber: details.vehicleNumber, reservationId: reservation.data.data._id});
 
 
 
@@ -63,6 +97,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingAreaId }) => {
             }
             catch (error) {
                 if (error.response.data.status === false) {
+                    setLoading(false);
                     setIsUserDetailsOpen(true);
 
                 }
@@ -72,7 +107,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingAreaId }) => {
             }
 
         } catch (error) {
-            console.log(error, "error------------------------------------------");
+           
             toast.error("Failed to create parking reservation");
             console.error("Error creating reservation:", error);
         } finally {
@@ -80,9 +115,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingAreaId }) => {
         }
     };
 
-    const handleUserDetailsSubmit = async (details) => {
-        console.log(details, "details------------------------------------------");
-    };
+   
     console.log(groupedSlots);
 
     const handleSlotClick = (slot) => {
@@ -117,12 +150,47 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingAreaId }) => {
             Slot Details:
             - Vehicle Type: ${slot.vehicleType?.vehicleType || 'N/A'}
             - Slot Number: ${slot.slotNumber}
-            - Size: ${slot.slotSize ? `${slot.slotSize} sq ft` : 'N/A'}
             - Price: ${slot.slotPrice ? `Rs.${slot.slotPrice}/hr` : 'N/A'}
             - Status: ${!slot.isActive ? 'Inactive' : slot.isReserved ? 'Reserved' : 'Available'}
+            - Reserved Vehicle Number: ${slot.reservedVehicleNumber}
         `;
     };
-    console.log(Object.entries(groupedSlots));
+
+    const processParkingCheckout = async (slot) => {
+        try {
+            const reservation = await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/${slot.reservationId}/complete`);
+            const totalAmount = reservation.data.data.totalAmount;
+            setFinalAmount(totalAmount);
+            setIsPaymentOptionPopupOpen(true);
+
+
+
+
+
+        } catch (error) {
+            toast.error("Failed to process parking checkout");
+        }
+    }
+
+    const handleBankTransferSubmit = async (data) => {
+        toast.success("Bank transfer submitted successfully");
+        setIsBankTransferPopupOpen(false);
+        fetchParkingSlots();
+    }
+
+    const handlePaymentOptionSubmit = async (data) => {
+        if(data.paymentMethod === "cash"){
+            toast.success("Payment received successfully");
+        }
+        else if(data.paymentMethod === "bank_transfer"){
+            toast.success("Payment received successfully");
+            setIsBankTransferPopupOpen(true);
+        }
+        else if(data.paymentMethod === "card"){
+            toast.error("card payment not supported yet",{position:"top-center",autoClose:false});
+        }
+        fetchParkingSlots();
+    }
 
     return (
         <>
@@ -143,7 +211,8 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingAreaId }) => {
                                     if (isConfirmed) {
                                         const newPrice = prompt(`Current price: Rs.${currentPrice}/hr\nEnter new price:`);
                                         if (newPrice) {
-                                            handlePriceChange(newPrice, slots[0].vehicleType._id);
+                                            handlePriceChange({slotPrice:+newPrice, vehicleId:slots[0].vehicleType._id});
+                                            
                                         }
                                     }
                                 }}
@@ -179,8 +248,8 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingAreaId }) => {
                                     </div>
                                     <div className="space-y-1 text-[10px]">
                                         <div className="flex justify-between items-center bg-white px-1.5 py-0.5 rounded">
-                                            <span className="text-gray-600">Size:</span>
-                                            <span className="w-1/2 font-medium text-cyan-600">{slot.slotSize ? `${slot.slotSize} sq ft` : "N/A"}</span>
+                                            <span className="text-gray-600">Vehicle Number:</span>
+                                            <span className="w-1/2 font-bold text-2xltext-cyan-600">{slot.reservedVehicleNumber ? `${slot.reservedVehicleNumber}` : "N/A"}</span>
                                         </div>
                                         <div className="flex justify-between items-center bg-white px-1.5 py-0.5 rounded">
                                             <span className="text-gray-600">Price:</span>
@@ -200,7 +269,8 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingAreaId }) => {
                 title="Update Slot Status"
                 message={selectedSlot ? getSlotDetails(selectedSlot) : ''}
                 type="info"
-                buttons={[
+                buttons={
+                     parkingArea?.parkingSubscriptionPaymentId?.subscriptionEndDate && dayjs(parkingArea.parkingSubscriptionPaymentId.subscriptionEndDate).isAfter(dayjs())  ? ([
                     selectedSlot?.isActive ? !selectedSlot?.isReserved && {
                         text: "Set Inactive",
                         variant: "danger",
@@ -213,17 +283,18 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingAreaId }) => {
                         onClick: () => handleStatusUpdate({ isActive: true, isReserved: false })
                     },
                     selectedSlot?.isReserved ? {
-                        text: "Set Available",
+                        text: "Checkout",
                         variant: "success",
                         icon: <FaCheck />,
-                        onClick: () => handleStatusUpdate({ isActive: true, isReserved: false })
+                        // onClick: () => handleStatusUpdate({ isActive: true, isReserved: false })
+                        onClick: () => processParkingCheckout(selectedSlot)
                     } : selectedSlot?.isActive ? {
                         text: "Set Reserved",
                         variant: "warning",
                         icon: <FaClock />,
                         onClick: () => handleStatusUpdate({ isActive: true, isReserved: true })
                     } : false,
-                ]}
+                ]):[]}
             />
 
             <ParkingDetailsPopup
@@ -237,10 +308,25 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingAreaId }) => {
                 isOpen={isUserDetailsOpen}
                 key={userDetails?.customerMobile}
                 onClose={() => setIsUserDetailsOpen(false)}
-                onSubmit={handleUserDetailsSubmit}
+                onSubmit={handleParkingDetailsSubmit}
                 title="User Details"
                 loading={loading}
                 initialData={userDetails}
+            />
+            <BankTransferPopup
+                isOpen={isBankTransferPopupOpen}
+                onClose={() => setIsBankTransferPopupOpen(false)}
+                onSubmit={handleBankTransferSubmit}
+                amount={finalAmount}
+                parkingAreaId={null}
+                parkingOwnerId={null}
+            />
+            <PaymentOptionPopup 
+                isOpen={isPaymentOptionPopupOpen}
+                onClose={() => setIsPaymentOptionPopupOpen(false)}
+                onSubmit={handlePaymentOptionSubmit}
+                amount={finalAmount}
+                
             />
         </>
     );

@@ -137,6 +137,7 @@ export default function CustomerRegistration() {
             delete data.confirmPassword;
             data.role = [roles.find(role => role?.type === signupAs)._id];
             data.approvalStatus = true;
+            data.addedBy = "SELF";
             if (signupAs === "PARKING_OWNER") {
                 data.approvalStatus = false;
                 data.isActive = false;

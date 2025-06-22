@@ -62,7 +62,7 @@ export const saveUser = async (req: Request, res: Response) => {
   try {
     const response: CreatedUpdatedResponse =
       await UserService.saveUser(
-        req.body as unknown as CreateUserRequest
+        req.body as unknown as Partial<CreateUserRequest>
       );
     res.status(201).json(response);
   } catch (error: any) {

@@ -109,7 +109,7 @@ const saveUserValidator = (data: any) => {
       })
       .email({
         message: 'Email should be a valid email',
-      }),
+      }).optional().nullable(),
     password: z
       .string({
         required_error: 'Password is required',
@@ -124,7 +124,7 @@ const saveUserValidator = (data: any) => {
       )
       .nonempty({
         message: 'Password cannot be an empty field ',
-      }),
+      }).optional().nullable(),
     phoneNumber: z
       .string({
         required_error: 'PhoneNumber is required',

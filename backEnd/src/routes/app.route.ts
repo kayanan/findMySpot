@@ -6,8 +6,11 @@ import vehicleAppRoute from "@/modules/parkingSubscriptionFee/routes/app/v1/vehi
 import parkingSlotAppRoute from "@/modules/parkingArea/routes/app/v1/parkingSlotAppRoute";
 import parkingAreaAppRoute from "@/modules/parkingArea/routes/app/v1/parkingAreaAppRoute";
 import subscriptionPaymentAppRoute from "../modules/parkingSubscriptionFee/routes/app/v1/subscriptionPaymentAppRoute";
+import reservationAppRouter from "../modules/reservation/routes/app/v1/reservation.app.router";
+import roleRouter from "@/modules/user/routes/app/v1/role.route";
 const appRouter: Router = Router();
  appRouter.use('/v1/user', userRouter);
+ appRouter.use('/v1/role', roleRouter);
  appRouter.use('/v1/auth', authRouter);
 appRouter.use("/v1/province",locationAppRoute.provinceAppRouter);
 appRouter.use("/v1/district",locationAppRoute.districtAppRouter);
@@ -17,5 +20,6 @@ appRouter.use("/v1/vehicle",vehicleAppRoute);
 appRouter.use("/v1/parking-area",parkingAreaAppRoute);
 appRouter.use("/v1/parking-slot",parkingSlotAppRoute);
 appRouter.use("/v1/subscription-payment",subscriptionPaymentAppRoute);
+appRouter.use("/v1/reservation",reservationAppRouter);
 
 export default appRouter;
