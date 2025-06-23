@@ -158,7 +158,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
 
     const processParkingCheckout = async (slot) => {
         try {
-            const reservation = await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/${slot.reservationId}/complete`);
+            const reservation = await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/${slot.reservationId._id}/complete`);
             const totalAmount = reservation.data.data.totalAmount;
             setFinalAmount(totalAmount);
             setIsPaymentOptionPopupOpen(true);
@@ -173,14 +173,41 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
     }
 
     const handleBankTransferSubmit = async (data) => {
+
+        await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation-payment`, {
+            referenceNumber:data.referenceNumber,
+            bankName:data.bankName,
+            branch:data.branch,
+            customer: selectedSlot.reservationId.user,
+            parkingArea: parkingArea._id,
+            parkingSlot: selectedSlot._id,
+            reservation: selectedSlot.reservationId._id,
+            paymentMethod: "bank_transfer",
+            paymentAmount: finalAmount,
+            paymentStatus: "paid",
+            paidBy: "667367367367367367367367",
+           })
+           await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/${selectedSlot._id}`, {isReserved: false, reservedVehicleNumber: null, reservationId: null});
         toast.success("Bank transfer submitted successfully");
         setIsBankTransferPopupOpen(false);
         fetchParkingSlots();
     }
 
     const handlePaymentOptionSubmit = async (data) => {
+        
         if(data.paymentMethod === "cash"){
-            toast.success("Payment received successfully");
+        await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation-payment`, {
+            customer: selectedSlot.reservationId.user,
+            parkingArea: parkingArea._id,
+            parkingSlot: selectedSlot._id,
+            reservation: selectedSlot.reservationId._id,
+            paymentMethod: data.paymentMethod,
+            paymentAmount: finalAmount,
+            paymentStatus: "paid",
+            paidBy: "667367367367367367367367",
+           })
+           await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/${selectedSlot._id}`, {isReserved: false, reservedVehicleNumber: null, reservationId: null});
+           toast.success("Payment received successfully");
         }
         else if(data.paymentMethod === "bank_transfer"){
             toast.success("Payment received successfully");

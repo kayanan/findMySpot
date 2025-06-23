@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { errorResponse } from '../../../utils/common.util';
 import UserService from '../service/user.service';
 import { LoginResponse } from './response/auth.response';
@@ -20,6 +20,7 @@ import {
 } from './request/create.user.request';
 import { UserListRequest } from './request/user.list.request';
 import { UserModel } from '../data/dtos/user.dto';
+import jwt from 'jsonwebtoken';
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
@@ -74,11 +75,17 @@ export const saveUser = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const response: LoginResponse = await UserService.login(req);
+    res.cookie('token', response.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 6 * 60 * 60 * 1000, // 6 hours
+    });
     res.status(200).json(response);
   } catch (error: any) {
     res.status(400).json(errorResponse(error.message));
   }
 };
+
 
 export const sendOTP = async (req: Request, res: Response) => {
   try {

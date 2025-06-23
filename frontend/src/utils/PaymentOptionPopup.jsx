@@ -43,6 +43,7 @@ const PaymentOptionPopup = ({
       });
       onClose();
     } catch (error) {
+        console.log(error,"error--------------------------------");
       toast.error('Failed to process payment option');
     }
   };

@@ -95,7 +95,6 @@ async function findUsers(
 async function saveUser(
   userPayload: Partial<CreateUserRequest >
 ): Promise<string | null> {
-  console.log(userPayload,"userPayload---------------------------------------------------");
   const newUser = new UserDTO(userPayload);
   const { _id} = await newUser.save();
   return _id as string;

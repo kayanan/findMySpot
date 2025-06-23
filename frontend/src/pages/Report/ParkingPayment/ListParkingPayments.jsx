@@ -15,6 +15,7 @@ const ListParkingPayments = () => {
         paymentStatus: '',
         paymentType: ''
     });
+    console.log("payments--------------------------------",payments)
     const [showFilters, setShowFilters] = useState(false);
     const [stats, setStats] = useState({
         total: 0,
@@ -55,20 +56,15 @@ const ListParkingPayments = () => {
     const fetchPayments = async () => {
         setLoading(true);
         try {
-            let url = `${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservations`;
-            const params = new URLSearchParams();
-
-            if (filters.startDate) params.append('startDate', filters.startDate);
-            if (filters.endDate) params.append('endDate', filters.endDate);
-            if (filters.parkingArea) params.append('parkingArea', filters.parkingArea);
-            if (filters.paymentStatus) params.append('paymentStatus', filters.paymentStatus);
-            if (filters.paymentType) params.append('paymentType', filters.paymentType);
-
-            if (params.toString()) {
-                url += `?${params.toString()}`;
-            }
-
-            const response = await axios.get(url);
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation-payment`, {
+                params: {
+                    startDate: filters.startDate,
+                    endDate: filters.endDate,
+                    parkingArea: filters.parkingArea,
+                    paymentStatus: filters.paymentStatus,
+                    paymentType: filters.paymentType
+                }
+            });
             const paymentData = response.data.data || [];
             setPayments(paymentData);
             calculateStats(paymentData);
@@ -88,7 +84,7 @@ const ListParkingPayments = () => {
             completed: data.filter(p => p.paymentStatus === 'paid').length,
             failed: data.filter(p => p.paymentStatus === 'failed').length,
             pending: data.filter(p => p.paymentStatus === 'pending').length,
-            totalAmount: data.reduce((sum, p) => sum + (p.totalAmount || 0), 0)
+            totalAmount: data.reduce((sum, p) => sum + (p.paymentAmount || 0), 0)
         };
         setStats(stats);
     };
@@ -407,16 +403,16 @@ const ListParkingPayments = () => {
                                                     #{payment._id.slice(-8)}
                                                 </div>
                                                 <div className="text-sm text-gray-500">
-                                                    {payment.vehicleNumber}
+                                                    {payment.reservation?.vehicleNumber?.toUpperCase()}
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm text-gray-900">
-                                                {payment.user?.firstName} {payment.user?.lastName}
+                                                {payment.customer?.firstName} {payment.customer?.lastName}
                                             </div>
                                             <div className="text-sm text-gray-500">
-                                                {payment.customerMobile}
+                                                {payment.customer?.phoneNumber}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -429,14 +425,14 @@ const ListParkingPayments = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-medium text-gray-900">
-                                                LKR {payment.totalAmount?.toLocaleString()}
+                                                LKR {payment.paymentAmount?.toLocaleString()}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-2">
-                                                {getPaymentTypeIcon(payment.paymentType)}
+                                                {getPaymentTypeIcon(payment.paymentMethod)}
                                                 <span className="text-sm text-gray-900">
-                                                    {paymentTypes.find(t => t.id === payment.paymentType)?.name || 'Unknown'}
+                                                    {paymentTypes.find(t => t.id === payment.paymentMethod)?.name || 'Unknown'}
                                                 </span>
                                             </div>
                                         </td>
@@ -449,7 +445,7 @@ const ListParkingPayments = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {new Date(payment.startDateAndTime).toLocaleDateString()}
+                                            {new Date(payment.paymentDate).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <button className="text-cyan-600 hover:text-cyan-900">

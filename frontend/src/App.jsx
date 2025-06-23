@@ -5,6 +5,7 @@ import {
   Navigate,
   useLocation
 } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { useState } from "react";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
@@ -54,29 +55,54 @@ import ParkingAreaList from "./pages/User/ParkingOwner/ParkingArea/ParkingAreaLi
 import ViewParkingArea from "./pages/User/ParkingOwner/ParkingArea/ViewParkingArea";
 import SubscriptionDetails from "./pages/User/ParkingOwner/ParkingArea/SubscriptionDetails";
 // parking area import end
+// parking area home page import start
+import ParkingAreaHomePage from "./pages/ParkingArea/ParkingAreaHomePage";
+// parking area home page import end
 
 // reports import start
 import ListParkingPayments from "./pages/Report/ParkingPayment/ListParkingPayments";
 // reports import end
+const ProtectedRoute = ({ children }) => {
+  const { authState } = useAuth();
+  if (!authState.isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
 
 const AppRoutes = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
+  const { authState } = useAuth();
 
+
+  
+
+
+  //const isLoginPage = window.location.pathname === "/login";
+  //for testing purpose
+  const isLoginPage = false;
+  authState.isAuthenticated = true;
+//--------------------------------
   return (
     <div className="flex">
-      <Sidebar isOpen={isSidebarOpen} />
+      {!isLoginPage && authState.isAuthenticated && (
+        <Sidebar isOpen={isSidebarOpen} />
+      )}
       <div
-        className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-64" : ""
-          }`}
+        className={`flex-1 transition-all duration-300 ${
+          !isLoginPage ? (isSidebarOpen ? "ml-0 xl:ml-64" : "ml-20") : ""
+        }`}
       >
-        <Navbar
-          isSidebarOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen}
-        />
-        <div className="pt-0">
+        {!isLoginPage && authState.isAuthenticated && (
+          <Navbar
+            isSidebarOpen={isSidebarOpen}
+            setIsSidebarOpen={setIsSidebarOpen}
+          />
+        )}
+ <div className={`${isLoginPage ? "pt-0" : "pt-20"}`}>
           <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/customer/register" element={<Register />} />
             {/* ------------Location Route Start-------- */}
             {/* province route start */}
@@ -143,7 +169,11 @@ const AppRoutes = () => {
             {/* <Route path="/reports/parking-reservations" element={<ListParkingReservations />} />
             <Route path="/reports/parking-slots" element={<ListParkingSlots />} /> */}
             {/* reports route end */}
+            {/* parking area home page route start */}
+            <Route path="/parking-area-home" element={<ParkingAreaHomePage />} />
+            {/* parking area home page route end */}
 
+            <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
@@ -157,7 +187,9 @@ const App = () => {
 
   return (
     <Router>
-      <AppRoutes />
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </Router>
   );
 };

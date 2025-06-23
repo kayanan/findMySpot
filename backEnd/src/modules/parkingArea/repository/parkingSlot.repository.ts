@@ -53,7 +53,7 @@ export const getSlotsByParkingArea = async (id: string) => {
   const slots = await ParkingSlotDTO.find({
     parkingAreaId: id,
     isDeleted: {$ne: true}
-  }).populate('vehicleType');
+  }).populate('vehicleType reservationId');
   return slots;
 };
 

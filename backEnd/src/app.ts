@@ -6,6 +6,7 @@ import router from "./routes";
 import mongoConnect from "./dbs/mongo/index";
 import logger from "./dbs/logger/logger";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 
 const appMiddleware = (app: Application) => {
   app.use(cors({
@@ -34,7 +35,7 @@ const appMiddleware = (app: Application) => {
   // Logging HTTP requests using Morgan
   //app.use(morgan("combined", { stream: { write: (message) => logger.info(message.trim()) } }));
   app.use(morgan("dev"))
-
+  app.use(cookieParser());
   mongoConnect();
 
   app.use("/ping", (req: Request, res: Response) => {

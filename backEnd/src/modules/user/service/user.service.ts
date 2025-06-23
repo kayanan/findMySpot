@@ -80,7 +80,6 @@ const saveUser = async (
   if(data.role?.includes(roleIds[0] as unknown as string)){
     data.isActive=true
   }
-  console.log(data,"data---------------------------------------------------");
   const id: string | null =
     await UserRepository.saveUser(data as unknown as Partial<CreateUserRequest>);
   if (id != null) {
