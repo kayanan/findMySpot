@@ -118,12 +118,12 @@ const ParkingAreaList = ({ parkingOwner }) => {
       {parkingAreas.map((area) => {
         const slotTypeCount = getSlotTypeCount(area?.slots?.data || []);
         return (
-          <div key={area?._doc._id} className="bg-white shadow-md rounded-xl overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">
+          <div key={area?._id} className="bg-white shadow-md rounded-xl overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">
             {/* Header Section */}
             <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 p-4 text-white">
               <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold truncate">{area?._doc.name}</h3>
-                {(area?._doc?.parkingSubscriptionPaymentId?.subscriptionEndDate && dayjs(area?._doc?.parkingSubscriptionPaymentId?.subscriptionEndDate).isAfter(dayjs())) ? (
+                <h3 className="text-xl font-bold truncate">{area?.name}</h3>
+                {(area?.parkingSubscriptionPaymentId?.subscriptionEndDate && dayjs(area?.parkingSubscriptionPaymentId?.subscriptionEndDate).isAfter(dayjs())) ? (
                   <span className={`px-4 py-0.5 rounded-full text-sm font-semibold bg-cyan-100 text-cyan-800 `} >
                     Subscribed
                   </span>
@@ -132,11 +132,11 @@ const ParkingAreaList = ({ parkingOwner }) => {
                     Subscribe For Go Live
                   </span>
                 )}
-                <span className={`px-2 py-0.5 rounded-full text-sm font-semibold ${area?._doc.isActive
+                <span className={`px-2 py-0.5 rounded-full text-sm font-semibold ${area?.isActive
                   ? "bg-green-100 text-green-800"
                   : "bg-red-100 text-red-800"
                   }`}>
-                  {area?._doc.isActive ? "Active" : "Inactive"}
+                  {area?.isActive ? "Active" : "Inactive"}
                 </span>
               </div>
             </div>
@@ -145,11 +145,10 @@ const ParkingAreaList = ({ parkingOwner }) => {
             <div className="p-4 flex-1 flex flex-col">
               {/* Description */}
               <div className="">
-                <p className="text-gray-600 line-clamp-2">{area?.description}</p>
+                <p className="text-gray-600 line-clamp-2">{area?.description || "No description"}</p>
                 <div className="flex items-center text-gray-600">
                   <FaMapMarkerAlt className="mr-2 text-cyan-500" />
-                  <span className="text-sm">
-                    {area?._doc.addressLine1}, {area?._doc.addressLine2}, {area?._doc.city?.name}
+                  <span className="text-sm"> {area?.addressLine1}, {area?.addressLine2}, {area?.city?.name}
                   </span>
                 </div>
               </div>
@@ -181,22 +180,22 @@ const ParkingAreaList = ({ parkingOwner }) => {
               {/* Action Buttons */}
               <div className="flex gap-2 pt-4 mt-auto">
                 <Link
-                  to={`/parking-area/view/${area?._doc._id}`}
+                  to={`/parking-area/view/${area?._id}`}
                   state={{ slots: area?.slots, parkingOwnerId: parkingOwner?._id }}
                   className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white text-center py-2 rounded-lg transition duration-300 font-medium"
                 >
                   View Details
                 </Link>
-                {(parkingOwner?.isActive && area?._doc?.parkingSubscriptionPaymentId && dayjs(area?._doc?.parkingSubscriptionPaymentId?.subscriptionEndDate).isAfter(dayjs())) ? (
+                {(parkingOwner?.isActive && area?.parkingSubscriptionPaymentId && dayjs(area?.parkingSubscriptionPaymentId?.subscriptionEndDate).isAfter(dayjs())) ? (
                   <button
                     type="button"
-                    onClick={() => handleStatusChange(area?._doc._id, !area?._doc.isActive)}
-                    className={`flex-1 py-2 rounded-lg transition duration-300 font-medium ${area?._doc.isActive
+                    onClick={() => handleStatusChange(area?._id, !area?.isActive)}
+                        className={`flex-1 py-2 rounded-lg transition duration-300 font-medium ${area?.isActive
                       ? "bg-rose-500 hover:bg-rose-600 text-white"
                       : "bg-emerald-500 hover:bg-emerald-600 text-white"
                       }`}
                   >
-                    {area?._doc.isActive ? "Deactivate" : "Activate"}
+                    {area?.isActive ? "Deactivate" : "Activate"}
                   </button>
                 ) : (
                   <>
@@ -210,11 +209,11 @@ const ParkingAreaList = ({ parkingOwner }) => {
                         last_name: parkingOwner?.lastName,
                         email: parkingOwner?.email,
                         phone: parkingOwner?.phoneNumber,
-                        address: area?._doc?.addressLine1,
-                        city: area?._doc?.city?.name,
+                        address: area?.addressLine1,
+                        city: area?.city?.name,
                         country: "Sri Lanka",
                         custom_1: parkingOwner?._id,
-                        custom_2: area?._doc._id,
+                        custom_2: area?._id,
                         return_url: `/owner/view/${parkingOwner?._id}`,
                         cancel_url: `/owner/view/${parkingOwner?._id}`,
                         notify_url: `${import.meta.env.VITE_BACKEND_ADMIN_URL_PUBLIC}/api/admin/v1/subscription-payment/notify-payment`,
@@ -230,7 +229,7 @@ const ParkingAreaList = ({ parkingOwner }) => {
                       isOpen={isBankTransferOpen}
                       onClose={() => setIsBankTransferOpen(false)}
                       onSubmit={handleBankTransferSubmit}
-                      parkingAreaId={area?._doc._id}
+                      parkingAreaId={area?._id}
                       parkingOwnerId={parkingOwner?._id}
                       amount={amount}
                     />

@@ -79,10 +79,10 @@ const AppRoutes = () => {
   
 
 
-  //const isLoginPage = window.location.pathname === "/login";
+  const isLoginPage = window.location.pathname === "/login" || window.location.pathname === "/parking-owner/spot-details" || window.location.pathname === "/customer/register";
   //for testing purpose
-  const isLoginPage = false;
-  authState.isAuthenticated = true;
+  // const isLoginPage = false;
+  // authState.isAuthenticated = true;
 //--------------------------------
   return (
     <div className="flex">

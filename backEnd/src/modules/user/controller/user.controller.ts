@@ -82,10 +82,53 @@ export const login = async (req: Request, res: Response) => {
     });
     res.status(200).json(response);
   } catch (error: any) {
+    console.log(error)
     res.status(400).json(errorResponse(error.message));
   }
 };
 
+export const logout = async (req: Request, res: Response) => {
+  try {
+    // Clear the token cookie
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+    });
+    res.status(200).json({
+      status: true,
+      message: 'Logged out successfully'
+    });
+  } catch (error: any) {
+    res.status(500).json(errorResponse('Logout failed'));
+  }
+};
+
+export const getCurrentUser = async (req: any, res: Response) => {
+  try {
+    // The user data is already available from the checkToken middleware
+    const userData = req.userData;
+    
+    if (!userData) {
+      res.status(401).json(errorResponse('User not authenticated'));
+      return;
+    }
+
+    // Get full user details from database
+    const user = await UserService.getUser(userData.userId);
+    
+    res.status(200).json({
+      status: true,
+      user: user.user,
+      userId: userData.userId,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      roles: userData.roles,
+    });
+  } catch (error: any) {
+    res.status(400).json(errorResponse(error.message));
+  }
+};
 
 export const sendOTP = async (req: Request, res: Response) => {
   try {
@@ -205,6 +248,15 @@ export const checkDuplicateEntry = async (req: Request, res: Response) => {
     }
   } catch (error: any) {
     console.log(error)
+    res.status(400).json(errorResponse(error.message));
+  }
+};
+
+export const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const response: BaseResponse = await UserService.deleteUser(req.params.id);
+    res.status(200).json(response);
+  } catch (error: any) {
     res.status(400).json(errorResponse(error.message));
   }
 };

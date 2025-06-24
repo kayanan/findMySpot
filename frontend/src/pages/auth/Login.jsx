@@ -1,6 +1,6 @@
 // src/pages/auth/Login.jsx
 
-import { useState ,useEffect} from "react";
+import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -16,110 +16,25 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [attemptData, setAttemptData] = useState({
-    loginAttempts: 0,
-    lockUntil: null,
-  });
-  const [usernameError, setUsernameError] = useState("");
-  const [isInactive, setIsInactive] = useState(false);
-  useEffect(() => {
-    // on component mount, always re‑check username status
-    checkAttempts();
-  }, []);
-  const checkAttempts = async () => {
-    if (!credentials.username) return;
-    try {
-      // const { data } = await axios.post(
-      //   `${import.meta.env.VITE_BACKEND_URL}/auth/check-attempt`,
-      //   { username: credentials.username },
-      //   { withCredentials: true }
-      // );
-      // Reset inactive if previously set
-      setIsInactive(false);
-      setAttemptData({
-        loginAttempts: data.loginAttempts,
-        lockUntil: data.lockUntil,
-      });
-    } catch (error) {
-      if (error.response) {
-        // Username not found
-        if (error.response.status === 404) {
-          setUsernameError("Invalid username");
-        }
-        // User exists but inactive
-        else if (error.response.status === 403) {
-          setUsernameError("User account is inactive");
-          setIsInactive(true);
-        }
-        // Clear attempt data on error
-        setAttemptData({ loginAttempts: 0, lockUntil: null });
-      } else {
-        console.error("Error checking attempts:", error.message);
-      }
-    }
-  };
 
   const handleChange = (e) => {
     setCredentials((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
-    if (e.target.name === "username") {
-      setUsernameError("");
-      setIsInactive(false);
-    }
-  };
-  // Trigger checkAttempts when username loses focus
-  const handleUsernameBlur = async () => {
-    await checkAttempts();
-  };
-    // Check if account is locked
-    const isLocked = () => {
-      if (!attemptData.lockUntil) return false;
-      return new Date(attemptData.lockUntil) > new Date();
-    };
-     // Remaining lock time in minutes
-  const lockRemainingMinutes = () => {
-    if (!attemptData.lockUntil) return 0;
-    const remainingMs = new Date(attemptData.lockUntil) - new Date();
-    return Math.ceil(remainingMs / 60000);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
   
-    // 1) Re‑fetch actual username from DOM (covers autofill)
-    const realUsername = document.getElementById("username").value.trim();
-    if (realUsername && realUsername !== credentials.username) {
-      setCredentials(prev => ({ ...prev, username: realUsername }));
+    // 1) Re‑fetch actual email from DOM (covers autofill)
+    const realEmail = document.getElementById("email").value.trim();
+    if (realEmail && realEmail !== credentials.username) {
+      setCredentials(prev => ({ ...prev, username: realEmail }));
     }
   
-    // 2) Always re‑run checkAttempts so isInactive/isLocked update
-    await checkAttempts();
-  
-    // 3) If inactive, show toast & stop
-    if (isInactive) {
-      toast.error("User account is inactive", {
-        position: "top-center",
-        autoClose: 3000,
-      });
-      setIsLoading(false);
-      return;
-    }
-  
-    // 4) If locked, show locked toast & stop
-    if (isLocked()) {
-      const msg =
-        attemptData.loginAttempts >= 5
-          ? "Account is permanently locked. Please contact your administrator."
-          : `Account is locked. Try again in ${lockRemainingMinutes()} minute(s).`;
-      toast.error(msg, { position: "top-center", autoClose: 3000 });
-      setIsLoading(false);
-      return;
-    }
-  
-    // 5) Finally, attempt login
+    // 2) Finally, attempt login
     try {
       await login(credentials);
       toast.success("Login successful!", {
@@ -135,9 +50,9 @@ const Login = () => {
             autoClose: 3000,
           });
         }
-        // username not found
+        // email not found
         else if (error.response.status === 404) {
-          toast.error("Invalid username", {
+          toast.error("Invalid email", {
             position: "top-center",
             autoClose: 3000,
           });
@@ -162,8 +77,6 @@ const Login = () => {
           autoClose: 3000,
         });
       }
-    
-      await checkAttempts();
     } finally {
       setIsLoading(false);
     }    
@@ -188,16 +101,16 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="p-4 space-y-6">
             <div className="space-y-2">
               <label
-                htmlFor="username"
+                htmlFor="email"
                 className="block text-sm font-medium text-gray-700"
               >
-                Username
+                Email
               </label>
               <input
-                id="username"
+                id="email"
                 name="username"
-                type="text"
-                placeholder="Enter your username"
+                type="email"
+                placeholder="Enter your email"
                 value={credentials.username}
                 onChange={handleChange}
                 required

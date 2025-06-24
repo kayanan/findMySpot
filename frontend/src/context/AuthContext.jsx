@@ -23,13 +23,18 @@ export const AuthProvider = ({ children }) => {
 
   // Helper function: fetch full user from /auth/profile
   const fetchFullUser = async () => {
-    const { data } = await axios.get(
-      `${import.meta.env.VITE_BACKEND_API_URL}/v1/user/profile`,
-      {
-        withCredentials: true,
-      }
-    );
-    return data.user;
+    try {
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/profile/${authState.user?.userId}`,
+        {
+          withCredentials: true,
+        }
+      );
+      return data.user;
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      throw error;
+    }
   };
 
   // LOGIN
@@ -37,19 +42,27 @@ export const AuthProvider = ({ children }) => {
     try {
       // 1) Log in (which sets an HTTP-only cookie with the token)
       const { data } = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API_URL}/v1/auth/login`,
-        credentials,
+        `${import.meta.env.VITE_BACKEND_APP_URL}/v1/auth/login`,
+        {
+          email: credentials.username, // Backend expects 'email' field
+          password: credentials.password
+        },
         { withCredentials: true }
       );
-      // 2) Now fetch the full user from /auth/profile
-      const user = await fetchFullUser();
-      // 3) Update auth state
+      
+      // 2) Update auth state with the response data
       setAuthState({
         isAuthenticated: true,
-        user,
-        privilegeList: user.privilegeList || [],
-        
+        user: {
+          userId: data.userId,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          roles: data.roles,
+        },
+        privilegeList: data.roles || [],
       });
+      console.log("Login successful:", data);
       navigate("/dashboard");
     } catch (error) {
       console.error("Login failed:", error);
@@ -61,51 +74,61 @@ export const AuthProvider = ({ children }) => {
   // LOGOUT
   const logout = async (manual = false) => {
     try {
+      // Clear the cookie by calling logout endpoint
       await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/auth/logout`,
+        `${import.meta.env.VITE_BACKEND_APP_URL}/v1/auth/logout`,
         {},
         {
           withCredentials: true,
         }
       );
-      setAuthState({
-        isAuthenticated: false,
-        user: null,
-        privilegeList: [],
-      });
-      navigate("/login");
-      if (manual) {
-        toast.success("You have been logged out successfully", {
-          position: "top-center",
-          autoClose: 3000,
-        });
-      } else {
-        toast.info("You have been logged out due to inactivity", {
-          position: "top-center",
-          autoClose: 3000,
-        });
-      }
     } catch (error) {
-      console.error("Logout failed:", error.response?.data || error.message);
+      console.error("Logout API call failed:", error);
+    }
+    
+    // Always clear local state
+    setAuthState({
+      isAuthenticated: false,
+      user: null,
+      privilegeList: [],
+    });
+    navigate("/login");
+    
+    if (manual) {
+      toast.success("You have been logged out successfully", {
+        position: "top-center",
+        autoClose: 3000,
+      });
+    } else {
+      toast.info("You have been logged out due to inactivity", {
+        position: "top-center",
+        autoClose: 3000,
+      });
     }
   };
 
-  // VALIDATE TOKEN: check if the user is still logged in, then fetch user
+  // VALIDATE TOKEN: check if the user is still logged in
   const validateToken = async () => {
     try {
-      const tokenResponse = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/auth/validate-token`,
+      // Check if we have a valid session by making a request to the current user endpoint
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/current`,
         {
           withCredentials: true,
         }
       );
-      const user = await fetchFullUser();
-  
-   
+      
+      // If we get here, the user is authenticated
       setAuthState({
         isAuthenticated: true,
-        user,
-        privilegeList: user.privilegeList || [],
+        user: {
+          userId: response.data.userId,
+          firstName: response.data.firstName,
+          lastName: response.data.lastName,
+          email: response.data.email,
+          roles: response.data.roles,
+        },
+        privilegeList: response.data.roles || [],
       });
     } catch (error) {
       console.error(
@@ -190,7 +213,8 @@ export const AuthProvider = ({ children }) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        Loading...
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600"></div>
+        <span className="ml-3 text-gray-600">Loading...</span>
       </div>
     );
   }

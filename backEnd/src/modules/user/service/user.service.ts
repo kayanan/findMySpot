@@ -122,7 +122,7 @@ const login = async (req: any) => {
         userId: checkUser._id,
         roles: role.items.map(item => item.type),
       },
-      process.env.SECRET!,
+      process.env.JWT_SECRET!,
       {
         expiresIn: '6h',
       }
@@ -358,6 +358,14 @@ const checkDuplicateEntry = async (data: Partial<UserModel>): Promise<BaseRespon
   return { status: true, message: 'User not found' } as BaseResponse;
 };
 
+const deleteUser = async (id: string): Promise<BaseResponse> => {
+  const user = await UserRepository.softDeleteById(id);
+  if (!user) {
+    throw new Error('User not found');
+  }
+  return { status: true, message: 'User deleted successfully' } as BaseResponse;
+};
+
 export default {
   getUsers,
   getUser,
@@ -372,7 +380,8 @@ export default {
   rejectParkingOwner,
   getPendingOwnersCount,
   checkDuplicateEntry,
-  getUserByMobileNumber
+  getUserByMobileNumber,
+  deleteUser
 };
 
 

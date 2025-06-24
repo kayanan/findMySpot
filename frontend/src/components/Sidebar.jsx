@@ -223,7 +223,7 @@ const Sidebar = ({ isOpen }) => {
       {isOpen && (
         <div className="mt-auto border-t border-gray-700 p-4">
           <div className="text-xs text-gray-500 text-center">
-            &copy; {new Date().getFullYear()} Yaarl Tel
+            &copy; {new Date().getFullYear()} FindMySpot
           </div>
         </div>
       )}

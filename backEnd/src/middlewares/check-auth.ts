@@ -9,9 +9,15 @@ export const checkToken = async (
   next: NextFunction
 )=> {
   try {
-    if (!req.headers.authorization) throw new Error();
-    const token = req.headers.authorization.split(' ')[1];
-    req.userData = jwt.verify(token, process.env.SECRET!) as UserJWT;
+    console.log("checkToken--------------------------------", req.cookies);
+    // Check for token in cookies first, then fallback to Authorization header
+    const token = req.cookies?.token;
+    
+    if (!token) {
+      throw new Error('No token provided');
+    }
+    
+    req.userData = jwt.verify(token, process.env.JWT_SECRET!) as UserJWT;
     next();
   } catch (error) {
      res.status(401).json({

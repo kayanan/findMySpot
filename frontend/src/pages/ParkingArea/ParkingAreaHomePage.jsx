@@ -3,6 +3,7 @@ import { FaPlus, FaUsers, FaMapMarkerAlt, FaCar, FaEdit, FaTrash, FaEye, FaSearc
 import { toast, ToastContainer } from 'react-toastify';
 import axios from 'axios';
 import 'react-toastify/dist/ReactToastify.css';
+import { useAuth } from '../../context/AuthContext';
 
 const ParkingAreaHomePage = () => {
     const [parkingAreas, setParkingAreas] = useState([]);
@@ -14,6 +15,11 @@ const ParkingAreaHomePage = () => {
     const [selectedParkingArea, setSelectedParkingArea] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [roles, setRoles] = useState([]);
+    const [submittingParkingArea, setSubmittingParkingArea] = useState(false);
+    const [submittingStaff, setSubmittingStaff] = useState(false);
+    const { authState } = useAuth();
+    console.log("authState--------------------------------", authState);
 
     // Form states
     const [parkingAreaForm, setParkingAreaForm] = useState({
@@ -29,19 +35,31 @@ const ParkingAreaHomePage = () => {
         lastName: '',
         email: '',
         phone: '',
-        role: 'staff',
+        password: '',
+        role: 'USER',
         parkingAreaId: ''
     });
 
     useEffect(() => {
         fetchParkingAreas();
         fetchStaffMembers();
+        fetchRoles();
     }, []);
+
+    const fetchRoles = async () => {
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/role`);
+            setRoles(response.data.roles || []);
+        } catch (error) {
+            console.error('Error fetching roles:', error);
+        }
+    };
 
     const fetchParkingAreas = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-area`);
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-area/owner/${authState.user.userId}`);
+            console.log("response--------------------------------", response);
             setParkingAreas(response.data.data || []);
         } catch (error) {
             console.error('Error fetching parking areas:', error);
@@ -53,8 +71,8 @@ const ParkingAreaHomePage = () => {
 
     const fetchStaffMembers = async () => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user?role=staff`);
-            setStaffMembers(response.data.data || []);
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user?role=USER`);
+            setStaffMembers(response.data.users || []);
         } catch (error) {
             console.error('Error fetching staff members:', error);
             toast.error('Failed to fetch staff members');
@@ -64,7 +82,14 @@ const ParkingAreaHomePage = () => {
     const handleAddParkingArea = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-area`, parkingAreaForm);
+            const parkingAreaData = {
+                ...parkingAreaForm,
+                totalSlots: parseInt(parkingAreaForm.totalSlots),
+                hourlyRate: parseFloat(parkingAreaForm.hourlyRate),
+                isActive: true
+            };
+            
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-area`, parkingAreaData);
             if (response.data.success) {
                 toast.success('Parking area added successfully');
                 setShowAddModal(false);
@@ -73,23 +98,75 @@ const ParkingAreaHomePage = () => {
             }
         } catch (error) {
             console.error('Error adding parking area:', error);
-            toast.error('Failed to add parking area');
+            const errorMessage = error.response?.data?.message || 'Failed to add parking area';
+            toast.error(errorMessage);
         }
     };
 
     const handleAddStaff = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user`, staffForm);
-            if (response.data.success) {
+            // Find the role ID for the selected role type
+            const selectedRole = roles.find(role => role.type === staffForm.role);
+            if (!selectedRole) {
+                toast.error('Selected role not found');
+                return;
+            }
+
+            const staffData = {
+                firstName: staffForm.firstName,
+                lastName: staffForm.lastName,
+                email: staffForm.email,
+                phoneNumber: staffForm.phone,
+                password: staffForm.password,
+                role: [selectedRole._id], // Use the role ID
+                isActive: true,
+                parkingAreaId: staffForm.parkingAreaId || undefined
+            };
+            
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/signup`, staffData);
+            if (response.data.status) {
                 toast.success('Staff member added successfully');
                 setShowStaffModal(false);
-                setStaffForm({ firstName: '', lastName: '', email: '', phone: '', role: 'staff', parkingAreaId: '' });
+                setStaffForm({ firstName: '', lastName: '', email: '', phone: '', password: '', role: 'USER', parkingAreaId: '' });
                 fetchStaffMembers();
             }
         } catch (error) {
             console.error('Error adding staff member:', error);
-            toast.error('Failed to add staff member');
+            const errorMessage = error.response?.data?.message || 'Failed to add staff member';
+            toast.error(errorMessage);
+        }
+    };
+
+    const handleDeleteParkingArea = async (areaId) => {
+        if (window.confirm('Are you sure you want to delete this parking area?')) {
+            try {
+                const response = await axios.delete(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-area/${areaId}`);
+                if (response.data.success) {
+                    toast.success('Parking area deleted successfully');
+                    fetchParkingAreas();
+                }
+            } catch (error) {
+                console.error('Error deleting parking area:', error);
+                const errorMessage = error.response?.data?.message || 'Failed to delete parking area';
+                toast.error(errorMessage);
+            }
+        }
+    };
+
+    const handleDeleteStaff = async (staffId) => {
+        if (window.confirm('Are you sure you want to delete this staff member?')) {
+            try {
+                const response = await axios.delete(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/${staffId}`);
+                if (response.data.success) {
+                    toast.success('Staff member deleted successfully');
+                    fetchStaffMembers();
+                }
+            } catch (error) {
+                console.error('Error deleting staff member:', error);
+                const errorMessage = error.response?.data?.message || 'Failed to delete staff member';
+                toast.error(errorMessage);
+            }
         }
     };
 
@@ -99,8 +176,8 @@ const ParkingAreaHomePage = () => {
     };
 
     const filteredParkingAreas = parkingAreas.filter(area => {
-        const matchesSearch = area.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            area.address.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = area.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            area.address?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = filterStatus === 'all' || area.status === filterStatus;
         return matchesSearch && matchesStatus;
     });
@@ -237,7 +314,10 @@ const ParkingAreaHomePage = () => {
                                                     <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
                                                         <FaEdit />
                                                     </button>
-                                                    <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+                                                    <button 
+                                                        onClick={() => handleDeleteParkingArea(area._id)}
+                                                        className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                                                    >
                                                         <FaTrash />
                                                     </button>
                                                 </div>
@@ -319,11 +399,11 @@ const ParkingAreaHomePage = () => {
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="text-sm text-gray-900">{staff.email}</div>
-                                                            <div className="text-sm text-gray-500">{staff.phone}</div>
+                                                            <div className="text-sm text-gray-500">{staff.phoneNumber}</div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                                {staff.role}
+                                                                {staff.role?.[0]?.type || 'No Role'}
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -337,7 +417,10 @@ const ParkingAreaHomePage = () => {
                                                                 <button className="text-blue-600 hover:text-blue-900">
                                                                     <FaEdit />
                                                                 </button>
-                                                                <button className="text-red-600 hover:text-red-900">
+                                                                <button 
+                                                                    onClick={() => handleDeleteStaff(staff._id)}
+                                                                    className="text-red-600 hover:text-red-900"
+                                                                >
                                                                     <FaTrash />
                                                                 </button>
                                                             </div>
@@ -446,9 +529,10 @@ const ParkingAreaHomePage = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700"
+                                    disabled={submittingParkingArea}
+                                    className="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Add Parking Area
+                                    {submittingParkingArea ? 'Adding...' : 'Add Parking Area'}
                                 </button>
                             </div>
                         </form>
@@ -527,6 +611,19 @@ const ParkingAreaHomePage = () => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Password
+                                    </label>
+                                    <input
+                                        type="password"
+                                        required
+                                        value={staffForm.password}
+                                        onChange={(e) => setStaffForm({...staffForm, password: e.target.value})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                                        placeholder="Enter password"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Role
                                     </label>
                                     <select
@@ -534,9 +631,12 @@ const ParkingAreaHomePage = () => {
                                         onChange={(e) => setStaffForm({...staffForm, role: e.target.value})}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
                                     >
-                                        <option value="staff">Staff</option>
-                                        <option value="manager">Manager</option>
-                                        <option value="supervisor">Supervisor</option>
+                                        <option value="">Select role</option>
+                                        {roles.map(role => (
+                                            <option key={role._id} value={role.type}>
+                                                {role.type.replace(/_/g, ' ')}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div>
@@ -567,9 +667,10 @@ const ParkingAreaHomePage = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700"
+                                    disabled={submittingStaff}
+                                    className="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Add Staff Member
+                                    {submittingStaff ? 'Adding...' : 'Add Staff Member'}
                                 </button>
                             </div>
                         </form>

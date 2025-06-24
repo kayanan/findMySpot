@@ -158,6 +158,7 @@ export const getParkingAreasByOwnerIdController = async (req: Request, res: Resp
     try {
         const { ownerId } = req.params;
         const result = await getParkingAreasByOwnerId(ownerId);
+        console.log("result--------------------------------", result);
         res.status(200).json({
             success: true,
             data: result,

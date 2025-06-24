@@ -50,7 +50,7 @@ export const createParkingArea = async (parkingAreaData: Partial<CreateUpdatePar
         }));
         await createSlot(slotData);
     }
-    
+
     const mobileNumber = owner?.phoneNumber?.replace(/^0/, '94');
     if (!mobileNumber) throw new Error('Mobile number not found');
     const message = `Your parking area creation request has been successfully submitted.
@@ -102,6 +102,7 @@ export const getParkingAreasByOwnerId = async (ownerId: string) => {
     const parkingAreas = await getParkingAreasByOwnerIdRepo(ownerId);
     const parkingAreasWithSlots = await Promise.all(parkingAreas.map(async (parkingArea) => {
         const parkingSlots = await getSlotsByParkingAreaRepo(parkingArea._id as string);
+        console.log("parkingSlots--------------------------------", parkingSlots);
         return { ...parkingArea, slots: parkingSlots };
     }));
     return parkingAreasWithSlots;
@@ -124,16 +125,16 @@ export const deleteParkingAreaByOwnerId = async (ownerId: string) => {
 
 export const checkDuplicateEntry = async (data: Partial<ParkingAreaModel>) => {
     const query: any = {}
-   const arrayOfQuery = []
-   if(data.contactNumber){
-    arrayOfQuery.push({contactNumber: data.contactNumber})
-   }
-   if(data.email){
-    arrayOfQuery.push({email: data.email})
-   }
-   if (arrayOfQuery.length > 0) {
-    query.$or = arrayOfQuery
-   }
+    const arrayOfQuery = []
+    if (data.contactNumber) {
+        arrayOfQuery.push({ contactNumber: data.contactNumber })
+    }
+    if (data.email) {
+        arrayOfQuery.push({ email: data.email })
+    }
+    if (arrayOfQuery.length > 0) {
+        query.$or = arrayOfQuery
+    }
     const parkingArea = await ParkingAreaDTO.find(query);
     if (parkingArea.length > 0) {
         const errorMessage: any = {}
@@ -146,7 +147,7 @@ export const checkDuplicateEntry = async (data: Partial<ParkingAreaModel>) => {
             }
         }
 
-        return { status: false, message: 'Duplicate entry found' ,errorMessage} as BaseResponse;
+        return { status: false, message: 'Duplicate entry found', errorMessage } as BaseResponse;
     }
     return { status: true, message: 'No duplicate entry found' } as BaseResponse;
 }
