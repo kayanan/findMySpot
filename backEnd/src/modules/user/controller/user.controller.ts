@@ -75,6 +75,7 @@ export const saveUser = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const response: LoginResponse = await UserService.login(req);
+    console.log(response.accessToken,"response");
     res.cookie('token', response.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

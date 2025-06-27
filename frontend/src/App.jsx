@@ -11,6 +11,11 @@ import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import Login from "./pages/auth/Login";
 import NotFound from "./pages/NotFound"; // Make sure NotFound is imported
+// admin dashboard import start
+import AdminDashboard from "./pages/Dashboard/AdminDashboard";
+import CustomerDashboard from "./pages/Dashboard/CustomerDashboard";
+import ManagerDashboard from "./pages/Dashboard/ManagerDashboard";
+// admin dashboard import end
 import ProvinceList from "./pages/Location/Province/ProvinceList";
 import AddProvince from "./pages/Location/Province/AddProvince";
 import UpdateProvince from "./pages/Location/Province/UpdateProvince";
@@ -62,6 +67,13 @@ import ParkingAreaHomePage from "./pages/ParkingArea/ParkingAreaHomePage";
 // reports import start
 import ListParkingPayments from "./pages/Report/ParkingPayment/ListParkingPayments";
 // reports import end
+
+// customer import start
+import CustomerLandingPage from "./pages/CustomerUi/CustomerLandingPage";
+import FindParkingSpot from "./pages/CustomerUi/FindParkingSpot";
+// customer import end
+
+
 const ProtectedRoute = ({ children }) => {
   const { authState } = useAuth();
   if (!authState.isAuthenticated) {
@@ -105,6 +117,11 @@ const AppRoutes = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/customer/register" element={<Register />} />
             {/* ------------Location Route Start-------- */}
+            {/* admin dashboard route start */}
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+            <Route path="/manager/dashboard" element={<ManagerDashboard />} />
+            {/* admin dashboard route end */}
             {/* province route start */}
             <Route path="/province" element={<ProvinceList />} />
             <Route path="/province/add" element={<AddProvince />} />
@@ -172,6 +189,12 @@ const AppRoutes = () => {
             {/* parking area home page route start */}
             <Route path="/parking-area-home" element={<ParkingAreaHomePage />} />
             {/* parking area home page route end */}
+
+
+            {/* customer route start */}
+            <Route path="/customer-landing-page" element={<CustomerLandingPage />} />
+            <Route path="/customer/find-parking-spot" element={<FindParkingSpot />} />
+            {/* customer route end */}
 
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<NotFound />} />

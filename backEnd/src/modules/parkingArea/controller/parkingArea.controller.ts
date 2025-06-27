@@ -8,11 +8,12 @@ import {
     deleteParkingArea,
     getParkingAreaById,
     getAllParkingAreas,
-    getActiveParkingAreas,
     getParkingAreasByOwnerId,
-    checkDuplicateEntry
+    checkDuplicateEntry,
+    getNearestParkingSpots
 } from "../service/parkingArea.service";
 import { CreateUpdateParkingAreaRequest } from "./request/ceate.parkingArea.request";
+import { ParkingSlotModel } from "../data/dtos/parkingSlot.dto";
 
 
 
@@ -139,26 +140,25 @@ export const getAllParkingAreasController = async (req: Request, res: Response) 
     }
 };
 
-export const getActiveParkingAreasController = async (req: Request, res: Response) => {
-    try {
-        const result = await getActiveParkingAreas();
-        res.status(200).json({
-            success: true,
-            data: result,
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-        });
-    }
-};
+// export const getActiveParkingAreasController = async (req: Request, res: Response) => {
+//     try {
+//         const result = await getActiveParkingAreas();
+//         res.status(200).json({
+//             success: true,
+//             data: result,
+//         });
+//     } catch (error) {
+//         res.status(500).json({
+//             success: false,
+//             message: "Internal server error",
+//         });
+//     }
+// };
 
 export const getParkingAreasByOwnerIdController = async (req: Request, res: Response) => {
     try {
         const { ownerId } = req.params;
         const result = await getParkingAreasByOwnerId(ownerId);
-        console.log("result--------------------------------", result);
         res.status(200).json({
             success: true,
             data: result,
@@ -189,3 +189,27 @@ export const checkDuplicateEntryController = async (req: Request, res: Response)
         });
     }
 }
+
+export const getNearestParkingSpotsHandler = async (req: Request, res: Response) => {
+    try {
+      const { coords,radius=100000 ,vehicleType,startTime,endTime} = req.body;
+      const slotFilterData:{vehicleType:string,startTime:Date,endTime?:Date}= {
+        vehicleType:vehicleType,
+        startTime:new Date(startTime),
+        }
+      if(endTime){
+        slotFilterData.endTime = new Date(endTime);
+      }
+      console.log(coords,radius,slotFilterData);
+      const result = await getNearestParkingSpots(coords,radius,slotFilterData);
+      res.status(200).json(result);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        res.status(500).json({ message: error.message });
+        
+      } else {
+        res.status(500).json({ message: "An unknown error occurred" });
+       
+      }
+    }
+  };

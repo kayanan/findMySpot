@@ -1,16 +1,47 @@
 // MapComponent.js
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import L from 'leaflet'; // Import Leaflet for custom features
-import 'leaflet/dist/leaflet.css'; // Import Leaflet CSS for map styles
+import React, { useState, useEffect,useImperativeHandle,forwardRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents ,useMap} from 'react-leaflet';
+import { toast } from 'react-toastify';
 
-const MapComponent = ({ setPosition, position,zoom=15,width="100%",height="500px" }) => {
+import 'leaflet/dist/leaflet.css'; // Import Leaflet CSS for map styles
+import L from 'leaflet';
+import 'leaflet-control-geocoder/dist/Control.Geocoder.css';
+import 'leaflet-control-geocoder';
+
+const SearchControl = () => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+
+    const geocoder = L.Control.geocoder({
+      defaultMarkGeocode: true
+    })
+      .on('markgeocode', function (e) {
+        const bbox = e.geocode.bbox;
+        const center = e.geocode.center;
+        map.fitBounds(bbox); // or map.setView(center, zoom)
+      })
+      .addTo(map);
+
+    return () => {
+      map.removeControl(geocoder);
+    };
+  }, [map]);
+
+  return null;
+};
+
+const MapComponent = forwardRef(({ setPosition, position, zoom=15, width="100%", height="500px",message="Select the Parking Spot Location on the map" },ref) => {
     const [location, setLocation] = useState({
         latitude: null,
         longitude: null,
         error: null,
     });
-    // const [position, setPosition] = useState(null); // Store selected position (lat, lng)
+   
+    useImperativeHandle(ref, () => ({
+        getLocation: getLocation
+    }));
 
     // Custom hook to handle map events
     function MapEvents() {
@@ -21,59 +52,74 @@ const MapComponent = ({ setPosition, position,zoom=15,width="100%",height="500px
         });
         return null;
     }
+ 
+
     const getLocation = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
+                    toast.success('Location fetched successfully');
                     const { latitude, longitude } = position.coords;
                     setLocation({ latitude, longitude, error: null });
                     setPosition({ lat: latitude, lng: longitude });
+                   
                 },
                 (error) => {
+                    toast.error(error.message);
                     setLocation({ ...location, error: error.message });
                 }
             );
         } else {
+            toast.error('Geolocation is not supported by this browser.');
             setLocation({ ...location, error: 'Geolocation is not supported by this browser.' });
         }
     };
-    console.log(location);
+
     // Fetch location on component mount
     useEffect(() => {
         getLocation();
     }, []);
+    
 
     return (
         location.latitude && location.longitude && (
             <>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Select the Parking Spot Location on the map</label>
-        <div style={{ height: height, width: width }}>
-           
-            <MapContainer center={[location.latitude, location.longitude ]} zoom={zoom} style={{ width: '100%', height: '100%' }}>
-                {/* TileLayer for OpenStreetMap */}
-                <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
+                <label className="block font-bold text-gray-800 mb-2 text-center text-lg">{message.toUpperCase()}</label>
+                <div style={{ height, width }} >
+                    <MapContainer 
+                        center={[location.latitude, location.longitude]} 
+                        zoom={zoom} 
+                        style={{ width: '100%', height: '100%' }}
+                    >
+                        {/* TileLayer for OpenStreetMap */}
+                        <TileLayer
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        />
+                        <SearchControl />
 
-                {/* Add custom event handler */}
-                <MapEvents />
+                        {/* Add custom event handler */}
+                        <MapEvents />
+                        
+                        {/* If a position is selected, show a marker on the map */}
+                        {position && (
+                            <Marker position={position}>
+                                <Popup>
+                                    Latitude: {position.lat} <br /> Longitude: {position.lng}
+                                </Popup>
+                            </Marker>
+                            
+                           
+                            
+                            
 
-                {/* If a position is selected, show a marker on the map */}
-                {position && (
-                    <Marker position={position}>
-                        <Popup>
-                            Latitude: {position.lat} <br /> Longitude: {position.lng}
-                        </Popup>
-                    </Marker>
-                )}
-            </MapContainer>
-
-         
-        </div>
-        </>
+                        )}
+                        
+                    </MapContainer>
+                </div>
+            </>
         )
     );
-};
+});
 
 export default MapComponent;

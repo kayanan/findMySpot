@@ -12,7 +12,7 @@ import {
 import { validateCreateParkingArea, validateUpdateParkingArea } from "../validators/parkingArea.validator";
 import { CreateUpdateParkingAreaRequest } from "../controller/request/ceate.parkingArea.request";
 import { ParkingAreaDTO, ParkingAreaModel } from "../data/dtos/parkingArea.dto";
-import { createSlot, getSlotsByParkingArea as getSlotsByParkingAreaRepo } from "./parkingSlot.service";
+import { createSlot, filterParkingSlots, getSlotsByParkingArea as getSlotsByParkingAreaRepo } from "./parkingSlot.service";
 import { CreateUpdateParkingSlotRequest } from "../controller/request/create.parkingSlot.request";
 import { updateParkingSlotStatus } from "./parkingSlot.service";
 import { sendSMS } from "../../base/services/sms.service";
@@ -94,15 +94,14 @@ export const getAllParkingAreas = async () => {
     return await getAllParkingAreasRepo();
 };
 
-export const getActiveParkingAreas = async () => {
-    return await getActiveParkingAreasRepo();
-};
+// export const getActiveParkingAreas = async () => {
+//     return await getActiveParkingAreasRepo();
+// };
 
 export const getParkingAreasByOwnerId = async (ownerId: string) => {
     const parkingAreas = await getParkingAreasByOwnerIdRepo(ownerId);
     const parkingAreasWithSlots = await Promise.all(parkingAreas.map(async (parkingArea) => {
         const parkingSlots = await getSlotsByParkingAreaRepo(parkingArea._id as string);
-        console.log("parkingSlots--------------------------------", parkingSlots);
         return { ...parkingArea, slots: parkingSlots };
     }));
     return parkingAreasWithSlots;
@@ -150,4 +149,11 @@ export const checkDuplicateEntry = async (data: Partial<ParkingAreaModel>) => {
         return { status: false, message: 'Duplicate entry found', errorMessage } as BaseResponse;
     }
     return { status: true, message: 'No duplicate entry found' } as BaseResponse;
+}
+
+export const getNearestParkingSpots = async (coords: { lng: number, lat: number },radius:number=10000,slotFilterData:{vehicleType:string,startTime:Date,endTime?:Date}): Promise<ParkingAreaModel[]> => {
+    const parkingAreas = await getActiveParkingAreasRepo(coords,radius)
+    
+    const parkingSlots = await filterParkingSlots(slotFilterData,parkingAreas);
+    return parkingSlots;
 }

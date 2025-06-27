@@ -10,8 +10,8 @@ import cookieParser from "cookie-parser";
 
 const appMiddleware = (app: Application) => {
   app.use(cors({
-    //origin: "http://localhost:5173", // Allow from any origin
-    origin:true, // Allow from any origin
+   // origin: 'http://192.168.8.130:5173', // Allow from any origin
+    origin: true, // Allow from any origin
     credentials: true, // Allow cookies & authentication headers
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allowed HTTP methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers

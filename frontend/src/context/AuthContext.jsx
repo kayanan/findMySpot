@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // 1) Log in (which sets an HTTP-only cookie with the token)
       const { data } = await axios.post(
+       
         `${import.meta.env.VITE_BACKEND_APP_URL}/v1/auth/login`,
         {
           email: credentials.username, // Backend expects 'email' field
@@ -59,12 +60,15 @@ export const AuthProvider = ({ children }) => {
           lastName: data.lastName,
           email: data.email,
           roles: data.roles,
+          mobileNumber: data?.mobileNumber || '',
         },
         privilegeList: data.roles || [],
       });
       console.log("Login successful:", data);
       navigate("/dashboard");
     } catch (error) {
+     console.log(error,"error");
+      
       console.error("Login failed:", error);
       // rethrow the full error so error.response.status stays available
       throw error;
@@ -117,7 +121,6 @@ export const AuthProvider = ({ children }) => {
           withCredentials: true,
         }
       );
-      
       // If we get here, the user is authenticated
       setAuthState({
         isAuthenticated: true,
@@ -127,6 +130,7 @@ export const AuthProvider = ({ children }) => {
           lastName: response.data.lastName,
           email: response.data.email,
           roles: response.data.roles,
+          mobileNumber: response.data?.mobileNumber || '',
         },
         privilegeList: response.data.roles || [],
       });

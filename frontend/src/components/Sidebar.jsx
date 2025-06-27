@@ -19,7 +19,7 @@ import {
   ShieldCheckIcon,
   LocationMarkerIcon,
   CashIcon,
-
+  
 } from "@heroicons/react/outline";
 
 import { useAuth } from "../context/AuthContext";
@@ -67,6 +67,7 @@ const Sidebar = ({ isOpen }) => {
         { name: "Staffs", path: "/parking-staff", icon: IdentificationIcon },
       ],
     },
+    { name: "Customer", path: "/customer-landing-page", icon: UserCircleIcon },
 
   ];
 

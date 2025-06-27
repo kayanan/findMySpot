@@ -72,6 +72,7 @@ const Login = () => {
         }
       } else {
         // network / client‑side
+        console.log(error,"error");
         toast.error(error.message || "Network error", {
           position: "top-center",
           autoClose: 3000,

@@ -52,7 +52,7 @@ export const getActiveSlots = async () => {
 export const getSlotsByParkingArea = async (id: string) => {
   const slots = await ParkingSlotDTO.find({
     parkingAreaId: id,
-    isDeleted: {$ne: true}
+    isDeleted: { $ne: true }
   }).populate('vehicleType reservationId').lean();
   return slots;
 };
@@ -65,16 +65,108 @@ export const getSlotByNumberAndArea = async (parkingAreaId: string, slotNumber: 
   });
 };
 
-export const deleteManySlots = async (parkingAreaId: string ) => {
+export const deleteManySlots = async (parkingAreaId: string) => {
   return await ParkingSlotDTO.deleteMany({
-    parkingAreaId: parkingAreaId ,
+    parkingAreaId: parkingAreaId,
     isDeleted: true
   });
 };
 
 export const updateParkingSlotStatus = async (parkingAreaId: string[], status: boolean) => {
   return await ParkingSlotDTO.updateMany({
-    parkingAreaId: {$in: parkingAreaId} ,
+    parkingAreaId: { $in: parkingAreaId },
     isDeleted: false
   }, { $set: { isActive: status } });
+};
+
+export const filterParkingSlots = async (filter: any, parkingAreaIds: string[]) => {
+  const parkingSlots = await ParkingSlotDTO.aggregate([
+    {
+      $match: {
+        parkingAreaId: { $in: parkingAreaIds },
+        isReservationPending: { $ne: true },
+        isActive: true,
+        isDeleted: { $ne: true }
+      }
+    },
+    {
+      $lookup: {
+        from: 'vehicles',
+        localField: 'vehicleType',
+        foreignField: '_id',
+        as: 'vehicle'
+      },
+    },
+    {
+      $unwind: '$vehicle'
+    },
+    {
+      $match: {
+        'vehicle.vehicleType': filter.vehicleType,
+        'vehicle.isDeleted': { $ne: true }
+      }
+    },
+    {
+      $lookup: {
+        from: 'reservations',
+        localField: 'reservationId',
+        foreignField: '_id',
+        as: 'reservation'
+      }
+    },
+    {
+      $unwind: {
+        path: "$reservation",
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $match: {
+        $or: [
+          { 'reservation.endDateAndTime': { $lt: filter.startTime } },
+          { 'reservation': null },
+        ],
+        ...(filter?.endTime ? { 'reservation.startDateAndTime': { $gt: (filter.endTime) } } : { 'reservation': null }),
+
+      }
+    },
+    {
+      $group: {
+        _id: '$parkingAreaId',
+        slotCount: { $sum: 1 },
+        price: { $first: '$slotPrice' }
+      }
+    },
+    {
+      $lookup: {
+        from: 'parkingareas',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'parkingArea'
+      },
+    },
+    {
+      $unwind: '$parkingArea'
+    },
+    {
+      $project: {
+        slotCount: 1,
+        price: 1,
+        parkingArea: {
+          _id: 1,
+          name: 1,
+          location: 1,
+          contactNumber: 1,
+          email: 1,
+          district: 1,
+          city: 1,
+          province: 1,
+          averageRating: 1,
+        }
+      }
+    }
+
+  ])
+  console.log(parkingSlots, "parkingSlots");
+  return parkingSlots;
 };

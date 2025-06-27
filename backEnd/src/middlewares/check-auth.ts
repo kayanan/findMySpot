@@ -9,7 +9,6 @@ export const checkToken = async (
   next: NextFunction
 )=> {
   try {
-    console.log("checkToken--------------------------------", req.cookies);
     // Check for token in cookies first, then fallback to Authorization header
     const token = req.cookies?.token;
     
@@ -20,6 +19,7 @@ export const checkToken = async (
     req.userData = jwt.verify(token, process.env.JWT_SECRET!) as UserJWT;
     next();
   } catch (error) {
+    console.log(error,"error");
      res.status(401).json({
       message: 'Unauthorized',
     });

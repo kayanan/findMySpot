@@ -1,4 +1,5 @@
 import { BaseResponse } from "../../base/controller/responses/base.repsonse";
+import { PaymentStatus } from "../../parkingSubscriptionFee/data/dtos/subscriptionPayment.dto";
 import { ParkingAreaDTO, ParkingAreaModel } from "../data/dtos/parkingArea.dto";
 import { Types } from "mongoose";
 export const createParkingArea = async (parkingAreaData: Partial<ParkingAreaModel>) => {
@@ -38,8 +39,68 @@ export const getAllParkingAreas = async () => {
   return await ParkingAreaDTO.find({ isDeleted: false });
 };
 
-export const getActiveParkingAreas = async () => {
-  return await ParkingAreaDTO.find({ isActive: true, isDeleted: false });
+export const getActiveParkingAreas = async (coords: { lng: number, lat: number },radius:number=10000): Promise<ParkingAreaModel[]> => {
+  console.log(coords,radius,"coords");
+  return await ParkingAreaDTO.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: "Point",
+          coordinates: [coords.lng, coords.lat]
+        },
+        distanceField: "distance",
+        maxDistance: radius,
+        distanceMultiplier: 1,
+        query: {
+          isActive: true,
+          isDeleted: {$ne:true}
+        },
+        spherical: true
+      }
+    },
+    {
+      $match: {
+        isActive: true,
+        isDeleted: {$ne:true}
+      }
+    },
+    {
+      $lookup: {
+        from: 'subscriptionpayments',
+        localField: 'parkingSubscriptionPaymentId',
+        foreignField: '_id',
+        as: 'subscriptionPayment'
+      }
+    },
+    {
+      $unwind: '$subscriptionPayment'
+    },
+    {
+      $match: {
+        'subscriptionPayment.subscriptionEndDate': { $gt: new Date() },
+        'subscriptionPayment.paymentStatus': { $eq: PaymentStatus.SUCCESS },
+        'subscriptionPayment.isDeleted': { $ne: true }
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        location: 1,
+        contactNumber: 1,
+        email: 1,
+        images: 1,
+        description: 1,
+        addressLine1: 1,
+        addressLine2: 1,
+        city: 1,
+        district: 1,
+        province: 1,
+      }
+    }
+    ])
+
+
 };
 
 export const getParkingAreasByOwnerId = async (ownerId: string) => {

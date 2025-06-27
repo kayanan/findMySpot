@@ -13,6 +13,7 @@ import {
 } from "../service/parkingSlot.service";
 import { CreateUpdateParkingSlotRequest } from "./request/create.parkingSlot.request";
 import { ParkingSlotValidator } from "../validators/parkingSlot.validator";
+import { getNearestParkingSpots } from "../service/parkingArea.service";
 
 export const createSlotHandler = async (req: Request, res: Response) => {
   try {
@@ -148,3 +149,5 @@ export const deleteManySlotsHandler = async (req: Request, res: Response) => {
     }
   }
 };
+
+

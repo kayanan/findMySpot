@@ -112,7 +112,7 @@ const login = async (req: any) => {
     }, 0, 100,
   )
   if (role.items.length === 0) throw new Error('Role not found');
-
+  console.log(checkUser);
   if (compareRes) {
     const token = jwt.sign(
       {
@@ -121,6 +121,7 @@ const login = async (req: any) => {
         email: checkUser.email,
         userId: checkUser._id,
         roles: role.items.map(item => item.type),
+        mobileNumber: checkUser.phoneNumber,
       },
       process.env.JWT_SECRET!,
       {
@@ -134,6 +135,7 @@ const login = async (req: any) => {
       email: checkUser.email,
       userId: checkUser._id!.toString(),
       roles: role.items.map(item => item.type),
+      mobileNumber: checkUser.phoneNumber,
       accessToken: token,
     } as LoginResponse;
   }

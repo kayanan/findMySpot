@@ -1,6 +1,12 @@
 import mongoose, {  Schema, model } from "mongoose";
 import { BaseDTO } from "../../../base/data/dtos/base.dto";
 
+type Rating = {
+  rating: number;
+  comment: string;
+  userId: mongoose.Schema.Types.ObjectId;
+}
+
 export interface ParkingAreaModel extends BaseDTO {
   name: string;
   location: {
@@ -23,6 +29,8 @@ export interface ParkingAreaModel extends BaseDTO {
   description: string;
   addressLine1: string;
   addressLine2: string;
+  ratings: Rating[];
+  averageRating: number;
   city: mongoose.Schema.Types.ObjectId;
   district: mongoose.Schema.Types.ObjectId;
   province: mongoose.Schema.Types.ObjectId;
@@ -31,6 +39,12 @@ export interface ParkingAreaModel extends BaseDTO {
   isDeleted: boolean;
   
 }
+
+const RatingSchema = new Schema<Rating>({
+  rating: { type: Number, required: true },
+  comment: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
+});
 
 const ParkingAreaSchema = new Schema<ParkingAreaModel>(
   {
@@ -55,7 +69,8 @@ const ParkingAreaSchema = new Schema<ParkingAreaModel>(
       district: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "District" },
       province: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "Province" },
       postalCode: { type: String},
-
+      ratings: { type: [RatingSchema], required: false },
+      averageRating: { type: Number, required: false },
       contactNumber: { type: String, required: true,unique: true },
       email: { type: String, required: false,unique: true,lowercase: true },
       images: { type: [String], required: false },
@@ -66,4 +81,9 @@ const ParkingAreaSchema = new Schema<ParkingAreaModel>(
   { timestamps: true }
 );
 
+ParkingAreaSchema.index({ location: "2dsphere" });
+ParkingAreaSchema.post('save', function(doc, next) {
+  doc.averageRating = doc.ratings.reduce((sum, rating) => sum + rating.rating, 0) / doc.ratings.length;
+  next();
+});
 export const ParkingAreaDTO = model<ParkingAreaModel>("ParkingArea", ParkingAreaSchema); 

@@ -11,8 +11,10 @@ import {
   deleteManySlots as deleteManySlotsRepo,
   updateParkingSlotStatus as updateParkingSlotStatusRepo,
   updateSlotByParkingAreaId as updateSlotByParkingAreaIdRepo,
+  filterParkingSlots as filterParkingSlotsRepo,
 } from "../repository/parkingSlot.repository";
 import { CreateUpdateParkingSlotRequest } from "../controller/request/create.parkingSlot.request";
+import { ParkingAreaModel } from "../data/dtos/parkingArea.dto";
 
 export const createSlot = async (slotData: { slotDetails: Partial<CreateUpdateParkingSlotRequest>, count: number, parkingAreaId: string }[]) => {
   const { error } = ParkingSlotValidator.createSlotValidator(slotData.map((item) => item.slotDetails));
@@ -87,4 +89,10 @@ export const deleteManySlots = async (parkingAreaId: string) => {
 
 export const updateParkingSlotStatus = async (parkingAreaId: string[], status: boolean) => {
   return await updateParkingSlotStatusRepo(parkingAreaId, status);
+};
+
+export const filterParkingSlots = async (slotFilterData:any,parkingAreas:ParkingAreaModel[]) => {
+  const parkingAreaIds = parkingAreas.map((item) => item._id as string);
+  
+  return await filterParkingSlotsRepo(slotFilterData,parkingAreaIds);
 };
