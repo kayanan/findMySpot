@@ -25,7 +25,7 @@ export const getProvinces = async (
   if (listReq.search) {
     query.$or = {
       name: {
-        $regex: '.*' + listReq.search ? listReq.search : '.*',
+        $regex: '.*' + (listReq.search ? listReq.search : '.*'),
         $options: 'i',
       },
     };

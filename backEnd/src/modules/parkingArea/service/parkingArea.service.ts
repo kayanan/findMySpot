@@ -22,7 +22,7 @@ import { ParkingSlotDTO } from "../data/dtos/parkingSlot.dto";
 export const createParkingArea = async (parkingAreaData: Partial<CreateUpdateParkingAreaRequest & { longitude: number, latitude: number, slot: { type: string, count: number }[] }>) => {
     const { error } = validateCreateParkingArea(parkingAreaData);
     if (error) {
-        throw new Error(error.message);
+        throw new Error('Validation failed');
     }
     parkingAreaData.location = {
         type: "Point",
@@ -64,7 +64,7 @@ export const createParkingArea = async (parkingAreaData: Partial<CreateUpdatePar
 export const updateParkingArea = async (id: string, parkingAreaData: CreateUpdateParkingAreaRequest) => {
     const { error } = validateUpdateParkingArea(parkingAreaData);
     if (error) {
-        throw new Error(error.message);
+        throw new Error('Validation failed');
     }
     if (Object.keys(parkingAreaData).includes('isActive')) {
         await updateParkingSlotStatus([id], parkingAreaData.isActive as boolean);

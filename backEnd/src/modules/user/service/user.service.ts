@@ -166,7 +166,7 @@ const forgotPassword = async (
   // );
   const message = `Your OTP is ${otp}. Use this code to reset your password. It will expire in ${process.env?.OTP_EXPIRES_MINUTE} minutes. - FindMySpot`;
   const smsSent = await sendSMS(user?.phoneNumber?.replace(/^0/, '94')!, message);
-  if (smsSent) throw new Error('SMS not sent');
+  if (!smsSent) throw new Error('SMS not sent');
 
   return {
     status: true,
