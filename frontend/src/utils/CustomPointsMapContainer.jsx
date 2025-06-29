@@ -1,14 +1,11 @@
 
 import 'leaflet/dist/leaflet.css';
 import ReactDOMServer from 'react-dom/server';
-
-import { MapContainer, TileLayer, Marker, Popup, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
-import { useNavigate } from 'react-router-dom';
 import { FaParking } from 'react-icons/fa';
 
 const CustomPointsMapContainer = ({ parkingSpots, setSelectedArea, currentPosition ,zoom=12}) => {
-  const navigate = useNavigate();
   
   const VehicleIcon = () => (
     <div style={{ color: 'black', borderRadius: '50%', backgroundColor: 'white', padding: '5px' }}>

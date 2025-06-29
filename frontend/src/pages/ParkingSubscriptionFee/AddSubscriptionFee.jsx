@@ -14,7 +14,6 @@ const AddSubscriptionFee = () => {
   const [formData, setFormData] = useState({
     vehicleType: "",
     startDate: "",
-    endDate: "",
     below100: "",
     between100and300: "",
     between300and500: "",
@@ -187,7 +186,7 @@ const AddSubscriptionFee = () => {
               <p className="text-red-500 text-sm">{errors.startDate}</p>
             )}
           </div>
-          <div>
+          {/* <div>
             <label className="block text-gray-700">End Date</label>
             <input
               type="date"
@@ -201,7 +200,7 @@ const AddSubscriptionFee = () => {
             {errors.endDate && (
               <p className="text-red-500 text-sm">{errors.endDate}</p>
             )}
-          </div>
+          </div> */}
         </div>
 
         {/* Fee Ranges */}
@@ -223,7 +222,7 @@ const AddSubscriptionFee = () => {
             )}
           </div>
           <div>
-            <label className="block text-gray-700">Between 100-300</label>
+            <label className="block text-gray-700">Between 101-300</label>
             <input
               type="number"
               name="between100and300"
@@ -239,7 +238,7 @@ const AddSubscriptionFee = () => {
             )}
           </div>
           <div>
-            <label className="block text-gray-700">Between 300-500</label>
+            <label className="block text-gray-700">Between 301-500</label>
             <input
               type="number"
               name="between300and500"
@@ -255,7 +254,7 @@ const AddSubscriptionFee = () => {
             )}
           </div>
           <div>
-            <label className="block text-gray-700">Above 500</label>
+            <label className="block text-gray-700">Above 501</label>
             <input
               type="number"
               name="above500"

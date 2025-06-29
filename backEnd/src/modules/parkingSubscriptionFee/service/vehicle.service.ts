@@ -39,3 +39,11 @@ export const getVehicleTypes = async (): Promise<{ _id: string; vehicleType: str
     const vehicles = await VehicleRepository.findActiveVehicles();
     return vehicles.map(vehicle => ({ _id: vehicle._id as string, vehicleType: vehicle.vehicleType }));
   }
+
+export const getVehicleByVehicleType = async (vehicleType: string): Promise<VehicleModel> => {
+    const vehicle = await VehicleRepository.findByVehicleType(vehicleType.toLowerCase());
+    if (!vehicle || vehicle.isDeleted) {
+      throw new Error("Vehicle not found");
+    }
+    return vehicle;
+  }

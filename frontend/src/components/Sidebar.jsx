@@ -102,11 +102,11 @@ const Sidebar = ({ isOpen }) => {
           className={`${isOpen ? "text-2xl font-bold text-cyan-400" : "text-lg font-bold text-cyan-400"
             } transition-all duration-300`}
         >
-          {isOpen ? "Yaarl Tel" : "YT"}
+          {isOpen ? "FindMySpot" : "FMS"}
         </h2>
         {isOpen && (
           <p className="text-sm font-medium text-gray-400 mt-1 transition-opacity duration-300">
-            Distribution System
+            Parking Management System
           </p>
         )}
       </div>

@@ -16,13 +16,17 @@ import {
   findReservationsByMobileNumber
 } from "../data/repositories/reservation.repository";
 import { ReservationValidator } from "../validators/reservation.validator";
-import { Document } from "mongoose";
+import mongoose, { ObjectId, Document } from "mongoose";
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
+import { filterParkingSlots, updateSlot } from "../../parkingArea/service/parkingSlot.service";
+import { getVehicleByVehicleType } from "../../parkingSubscriptionFee/service/vehicle.service";
 
 
 export const createReservationService = async (reservationData: Omit<ReservationModel, "isDeleted">) => {
-  reservationData.startDateAndTime = new Date();
+  if(!reservationData?.startDateAndTime){
+    reservationData.startDateAndTime = new Date();
+  }
   const valResult = ReservationValidator.createReservationValidator(reservationData);
   if (valResult.error) {
     throw new Error(valResult.error.message);
@@ -110,3 +114,39 @@ export const updatePaymentStatusService = async (id: string, paymentStatus: stri
   return await updateReservation(id, { paymentStatus } as Partial<ReservationModel>);
 }; 
 
+export const createPreBookingReservationService = async (reservationData: Partial<ReservationModel>) => {
+    const slotFilterData:{vehicleType:string,startTime:Date,endTime?:Date}= {
+        vehicleType:reservationData.vehicleType?.toString().toLowerCase() as unknown as string,
+        startTime:new Date(reservationData.startDateAndTime as Date),
+        }
+      if(reservationData.endDateAndTime){
+        slotFilterData.endTime = new Date(reservationData.endDateAndTime as Date);
+      }
+     const [vehicle,parkingSlots] = await Promise.all([
+      getVehicleByVehicleType(reservationData.vehicleType as unknown as string),
+      filterParkingSlots(slotFilterData,[{_id:mongoose.Types.ObjectId.createFromHexString(reservationData.parkingArea as unknown as string)}])
+     ])
+     console.log(parkingSlots, "parkingSlots------------------------------");
+     console.log(vehicle, "vehicle------------------------------");
+    if(parkingSlots.length === 0){
+      throw new Error("No parking slots found");
+    }
+    if(parkingSlots[0].slotCount === 0){
+      throw new Error("No parking slots available");
+    }
+    const parkingSlotId = parkingSlots[0].slots[0];
+
+    reservationData.parkingSlot = parkingSlotId;
+    delete reservationData.vehicleType;
+    reservationData.vehicleType = vehicle._id as ObjectId;
+    const reservation = await createReservation(reservationData);
+    if (reservation){
+      await updateSlot(parkingSlotId, {
+        isReservationPending: true,
+        reservedVehicleNumber: reservationData.vehicleNumber,
+        reservationId: reservation._id as string
+      });
+    }
+    return reservation;
+  
+};

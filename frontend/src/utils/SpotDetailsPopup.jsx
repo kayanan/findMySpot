@@ -86,8 +86,9 @@ const SpotDetailsPopup = ({
                 customerName: formData.customerName.trim(),
                 duration: parseInt(formData.duration),
                 totalPrice: spotData.price * parseInt(formData.duration),
-                spotId: spotData.id,
-                spotName: spotData.name
+                parkingAreaId: spotData.id,
+                spotName: spotData.name,
+                vehicleType: spotData.vehicleType
             };
 
             await onSubmit(reservationData);

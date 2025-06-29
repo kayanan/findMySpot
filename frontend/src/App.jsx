@@ -11,6 +11,9 @@ import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import Login from "./pages/auth/Login";
 import NotFound from "./pages/NotFound"; // Make sure NotFound is imported
+// profile import start
+import Profile from "./pages/Profile/Profile";
+// profile import end
 // admin dashboard import start
 import AdminDashboard from "./pages/Dashboard/AdminDashboard";
 import CustomerDashboard from "./pages/Dashboard/CustomerDashboard";
@@ -66,6 +69,8 @@ import ParkingAreaHomePage from "./pages/ParkingArea/ParkingAreaHomePage";
 
 // reports import start
 import ListParkingPayments from "./pages/Report/ParkingPayment/ListParkingPayments";
+import AdminReport from "./pages/Report/AdminReport/AdminReport";
+import ParkingOwnerReport from "./pages/Report/ParkingOwnerReport/ParkingOwnerReport";
 // reports import end
 
 // customer import start
@@ -116,6 +121,7 @@ const AppRoutes = () => {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/customer/register" element={<Register />} />
+            <Route path="/profile" element={<Profile />} />
             {/* ------------Location Route Start-------- */}
             {/* admin dashboard route start */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -183,6 +189,8 @@ const AppRoutes = () => {
             {/* parking subscription fee route end */}
             {/* reports route start */}
             <Route path="/reports/parking-payments" element={<ListParkingPayments />} />
+            <Route path="/reports/admin" element={<AdminReport />} />
+            <Route path="/reports/parking-owner" element={<ParkingOwnerReport />} />
             {/* <Route path="/reports/parking-reservations" element={<ListParkingReservations />} />
             <Route path="/reports/parking-slots" element={<ListParkingSlots />} /> */}
             {/* reports route end */}

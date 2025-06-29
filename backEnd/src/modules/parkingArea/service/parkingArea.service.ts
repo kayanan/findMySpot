@@ -153,7 +153,11 @@ export const checkDuplicateEntry = async (data: Partial<ParkingAreaModel>) => {
 
 export const getNearestParkingSpots = async (coords: { lng: number, lat: number },radius:number=10000,slotFilterData:{vehicleType:string,startTime:Date,endTime?:Date}): Promise<ParkingAreaModel[]> => {
     const parkingAreas = await getActiveParkingAreasRepo(coords,radius)
-    
+   
     const parkingSlots = await filterParkingSlots(slotFilterData,parkingAreas);
-    return parkingSlots;
+    const refinedParkingSlots = parkingSlots.map((item) => {
+        delete item.slots;
+        return item;
+    });
+    return refinedParkingSlots;
 }

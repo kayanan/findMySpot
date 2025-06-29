@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaTimes, FaSpinner, FaUser, FaPhone, FaIdCard } from 'react-icons/fa';
+import { FaTimes, FaSpinner, FaUser, FaPhone, FaIdCard, FaEnvelope } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
@@ -18,6 +18,7 @@ const UserDetailsPopup = ({
         lastName: '',
         nic: '',
         customerMobile: '',
+        email: '',
         ...initialData
     });
     const [errors, setErrors] = useState({});
@@ -226,6 +227,29 @@ const UserDetailsPopup = ({
                     </div>
 
                     {/* Email */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Email Address
+                        </label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <FaEnvelope className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                className={`w-full pl-10 pr-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent ${errors.nic ? 'border-red-500' : 'border-gray-300'
+                                    }`}
+                                placeholder="example@gmail.com"
+                                maxLength="100"
+                            />
+                        </div>
+                        {errors.email && (
+                            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                        )}
+                    </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             NIC Number

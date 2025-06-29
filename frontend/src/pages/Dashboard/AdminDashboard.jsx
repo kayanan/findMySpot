@@ -146,10 +146,10 @@ const AdminDashboard = () => {
         metrics: {
             totalUsers: 2847,
             activeSpots: 160,
-            totalRevenue: 2450000,
+            totalRevenue: 245000,
             avgRating: 4.6,
             totalBookings: 1250,
-            pendingPayments: 89000
+            pendingPayments: 8900
         }
     };
 
@@ -209,76 +209,70 @@ const AdminDashboard = () => {
             </div>
 
             {/* Key Metrics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col items-center justify-between">
+                    <div className="p-3 bg-cyan-100 rounded-lg">
+                            <FaUsers className="text-cyan-600 text-xl" />
+                        </div>
                         <div>
                             <p className="text-sm font-medium text-gray-600">Total Users</p>
                             <p className="text-2xl font-bold text-gray-900">{mockData.metrics.totalUsers.toLocaleString()}</p>
                         </div>
-                        <div className="p-3 bg-cyan-100 rounded-lg">
-                            <FaUsers className="text-cyan-600 text-xl" />
-                        </div>
+                        
                     </div>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col items-center justify-between">
+                    <div className="p-3 bg-blue-100 rounded-lg">
+                            <FaParking className="text-blue-600 text-xl" />
+                        </div>
                         <div>
                             <p className="text-sm font-medium text-gray-600">Active Spots</p>
                             <p className="text-2xl font-bold text-gray-900">{mockData.metrics.activeSpots}</p>
                         </div>
-                        <div className="p-3 bg-blue-100 rounded-lg">
-                            <FaParking className="text-blue-600 text-xl" />
-                        </div>
+                        
                     </div>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col items-center justify-between">
+                    <div className="p-3 bg-green-100 rounded-lg">
+                            <FaMoneyBillWave className="text-green-600 text-xl" />
+                        </div>
                         <div>
                             <p className="text-sm font-medium text-gray-600">Total Revenue</p>
                             <p className="text-2xl font-bold text-gray-900">{formatCurrency(mockData.metrics.totalRevenue)}</p>
                         </div>
-                        <div className="p-3 bg-green-100 rounded-lg">
-                            <FaMoneyBillWave className="text-green-600 text-xl" />
-                        </div>
+                        
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600">Avg Rating</p>
-                            <p className="text-2xl font-bold text-gray-900">{mockData.metrics.avgRating}</p>
-                        </div>
-                        <div className="p-3 bg-yellow-100 rounded-lg">
-                            <FaStar className="text-yellow-600 text-xl" />
-                        </div>
-                    </div>
-                </div>
 
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col items-center justify-between">
+                    <div className="p-3 bg-purple-100 rounded-lg">
+                            <FaChartLine className="text-purple-600 text-xl" />
+                        </div>
                         <div>
                             <p className="text-sm font-medium text-gray-600">Total Bookings</p>
                             <p className="text-2xl font-bold text-gray-900">{mockData.metrics.totalBookings.toLocaleString()}</p>
                         </div>
-                        <div className="p-3 bg-purple-100 rounded-lg">
-                            <FaChartLine className="text-purple-600 text-xl" />
-                        </div>
+                        
                     </div>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col items-center justify-between">
+                    <div className="p-3 bg-orange-100 rounded-lg">
+                            <FaClock className="text-orange-600 text-xl" />
+                        </div>
                         <div>
                             <p className="text-sm font-medium text-gray-600">Pending Payments</p>
                             <p className="text-2xl font-bold text-gray-900">{formatCurrency(mockData.metrics.pendingPayments)}</p>
                         </div>
-                        <div className="p-3 bg-orange-100 rounded-lg">
-                            <FaClock className="text-orange-600 text-xl" />
-                        </div>
+                        
                     </div>
                 </div>
             </div>

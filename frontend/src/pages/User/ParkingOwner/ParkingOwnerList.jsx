@@ -104,9 +104,9 @@ const ParkingOwnerList = () => {
       </div>
       
       {/* Filters */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-2 sm:grid-cols-4">
         
-        <h1 className="text-1xl sm:text-2xl font-bold text-gray-500">
+        <h1 className="text-1xl sm:text-2xl font-bold text-gray-500 w-full">
           Approved Parking Owners List
         </h1>
 
@@ -121,7 +121,7 @@ const ParkingOwnerList = () => {
         />
         <Link 
           to="/owner/pending-request" 
-          className="ml-10 inline-flex items-center justify-center w-1/2 bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-full transition duration-200 shadow-md hover:shadow-lg relative"
+          className="ml-10 inline-flex items-center justify-center w-1/2 bg-cyan-500 hover:bg-cyan-600 text-white px-2 py-1 h-10 rounded-full transition duration-200 shadow-md hover:shadow-lg relative"
         >
           <span> Pending Requests</span>
           {pendingOwnersCount > 0 && (
@@ -130,6 +130,12 @@ const ParkingOwnerList = () => {
             </span>
           )}
         </Link>
+        <button
+            onClick={() => navigate("/owner/add", { state: { isActive } })}
+            className="bg-cyan-500 hover:bg-cyan-600 text-white px-2 py-1 h-10 rounded-md shadow-md transition w-full sm:w-auto"
+          >
+            Add Parking Owner
+          </button>
       </div>
       
 

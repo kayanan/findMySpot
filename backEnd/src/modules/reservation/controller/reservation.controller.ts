@@ -18,6 +18,7 @@ import {
   completeReservationService,
   cancelReservationService,
   updatePaymentStatusService,
+  createPreBookingReservationService,
 } from "../service/reservation.service";
 
 export const createReservationHandler = async (req: Request, res: Response) => {
@@ -498,4 +499,31 @@ export const updatePaymentStatusHandler = async (req: Request, res: Response) =>
     }
   }
 }; 
+
+export const createPreBookingReservationHandler = async (req: Request, res: Response) => {
+  try {
+    const reservationData = req.body as Partial<ReservationModel>;
+    const reservation = await createPreBookingReservationService(reservationData);
+    res.status(200).json({
+      success: true,
+      data: reservation,
+      message: "Pre-booking reservation created successfully"
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.log(error, "error1");
+      res.status(500).json({ 
+        success: false,
+        message: error.message 
+      });
+    } else {
+      console.log(error, "error2");
+      res.status(500).json({ 
+        success: false,
+        message: "An unknown error occurred" 
+      });
+    }
+  }
+};
+
 

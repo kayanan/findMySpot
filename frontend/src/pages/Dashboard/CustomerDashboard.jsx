@@ -584,7 +584,7 @@ const CustomerDashboard = () => {
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center">
                                                         <FaMoneyBillWave className="text-cyan-600 mr-3" />
-                                                        <div>
+        <div>
                                                             <p className="font-medium text-gray-900">{account.accountHolderName}</p>
                                                             <p className="text-sm text-gray-600">{account.bankName} - {account.branchName}</p>
                                                         </div>

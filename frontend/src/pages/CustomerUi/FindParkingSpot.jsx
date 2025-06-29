@@ -38,11 +38,6 @@ const FindParkingSpot = () => {
         coords: position,
         startTime: dateAndTime ? dateAndTime : new Date()
     });
-    const [selectedSpot, setSelectedSpot] = useState(null);
-
-
-
-
     useEffect(() => {
         if (selectedArea && position) {
             const getDistance = async () => {
@@ -91,7 +86,7 @@ const FindParkingSpot = () => {
         }
 
     }, [selectedArea]);
-
+    console.log(selectedSpotData, "selectedSpotData");
 
     useEffect(() => {
 
@@ -129,11 +124,15 @@ const FindParkingSpot = () => {
                     id: item._id,
                     name: item.parkingArea.name,
                     coords: [item?.parkingArea?.location?.coordinates[1], item?.parkingArea?.location?.coordinates[0]],
-                    address: item?.parkingArea?.location?.address,
-                    available: item.slotCount > 0,
-                    vehicleType: item.vehicleType,
-                    price: item.price,
+                    address: item?.parkingArea?.addressLine1 + " " + item?.parkingArea?.addressLine2,
+                    slotCount: item?.slotCount,
+                    vehicleType: item?.vehicleType,
+                    price: item?.price,
                     rating: item?.parkingArea?.averageRating || 0,
+                    available:item?.slotCount>0,
+                    city: item?.parkingArea?.city,
+                    district: item?.parkingArea?.district,
+                    province: item?.parkingArea?.province
 
                 }));
                 setParkingSpots(filteredResponse);
@@ -152,16 +151,28 @@ const FindParkingSpot = () => {
     const handleReservationSubmit = async (reservationData) => {
         setIsLoading(true);
         try {
-            // Here you would typically make an API call to save the reservation
+            const data = {
+                parkingArea: selectedArea.id,
+                startDateAndTime: new Date(reservationData.startDateAndTime || new Date()),
+                endDateAndTime: new Date(reservationData.duration ? new Date(new Date().setHours(new Date().getHours() + reservationData.duration)) : null),
+                user: authState.user._id,
+                type: "pre-booking",
+                vehicleNumber: reservationData.vehicleNumber,
+                vehicleType: vehicleType,
+                perHourRate: selectedArea.price,
+                status: "pending",
+                paymentType: "card",
+                customerMobile: reservationData.customerMobile,
+                createdBy: authState.user._id,
+            }
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/pre-booking`, data)
+            console.log(response, "response");
             console.log('Reservation data:', reservationData);
 
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            
 
             toast.success('Reservation confirmed successfully!');
 
-            // You can navigate to a confirmation page or update the UI
-            // navigate('/customer/reservation-confirmation', { state: { reservationData } });
 
         } catch (error) {
             toast.error('Failed to confirm reservation. Please try again.');
@@ -174,6 +185,7 @@ const FindParkingSpot = () => {
     const handleClosePopup = () => {
         setIsPopupOpen(false);
         setSelectedSpotData(null);
+        setSelectedArea(null);
     };
 
 
@@ -287,8 +299,10 @@ const FindParkingSpot = () => {
                                     {parkingSpots.map(spot => (
                                         <div
                                             key={spot.id}
-                                            className={`border rounded-lg p-3 flex items-center gap-4 cursor-pointer hover:shadow-md transition ${selectedSpot?.id === spot.id ? 'border-cyan-500 bg-cyan-50' : 'border-gray-200 bg-white'}`}
-                                            onClick={() => setSelectedSpot(spot)}
+                                            className={`border rounded-lg p-3 flex items-center gap-4 cursor-pointer hover:shadow-md transition ${selectedSpotData?.id === spot.id ? 'border-cyan-500 bg-cyan-50' : 'border-gray-200 bg-white'}`}
+                                            onClick={() => setSelectedArea(spot)
+
+                                            }
                                         >
                                             <div className="text-cyan-500 text-2xl">
                                                 {vehicleTypes.find(v => v.value === spot.vehicleType)?.icon}
@@ -296,11 +310,11 @@ const FindParkingSpot = () => {
                                             <div className="flex-1">
                                                 <div className="font-semibold text-gray-800">{spot.name}</div>
                                                 <div className="text-sm text-gray-500">{spot.address}</div>
-                                                <div className="text-xs text-gray-400">{spot.distance} km away</div>
+                                                <div className="text-xs text-gray-400">{spot.city}, {spot.district}, {spot.province}</div>
                                             </div>
                                             <div className="text-right">
                                                 <div className="font-bold text-cyan-700">Rs.{spot?.price?.toFixed(2) || "N/A"}/hr</div>
-                                                <div className={`text-xs ${spot.available ? 'text-green-600' : 'text-red-500'}`}>{spot.available ? 'Available' : 'Full'}</div>
+                                                <div className={`text-xs ${spot.slotCount > 5 ? 'text-green-600' : 'text-red-500'}`}>{spot.slotCount > 5 ? 'Available' : 'Limited Slots'}</div>
                                             </div>
                                         </div>
                                     ))}

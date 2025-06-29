@@ -41,13 +41,13 @@ export const createSlot = async (slotData: { slotDetails: Partial<CreateUpdatePa
   return result;
 };
 
-export const updateSlot = async (id: string, slotData: CreateUpdateParkingSlotRequest ) => {
+export const updateSlot = async (id: string, slotData: Partial<CreateUpdateParkingSlotRequest> ) => {
   
   const { error } = ParkingSlotValidator.updateSlotValidator(slotData);
   if (error) {
     throw new Error(error.message);
   }
-  return await updateSlotRepo(id, slotData);
+  return await updateSlotRepo(id, slotData as CreateUpdateParkingSlotRequest);
 };
 
 export const updateSlotByParkingAreaId = async (parkingAreaId: string, slotData: CreateUpdateParkingSlotRequest & { vehicleId: string }) => {
@@ -91,7 +91,7 @@ export const updateParkingSlotStatus = async (parkingAreaId: string[], status: b
   return await updateParkingSlotStatusRepo(parkingAreaId, status);
 };
 
-export const filterParkingSlots = async (slotFilterData:any,parkingAreas:ParkingAreaModel[]) => {
+export const filterParkingSlots = async (slotFilterData:any,parkingAreas:Partial<ParkingAreaModel>[]) => {
   const parkingAreaIds = parkingAreas.map((item) => item._id as string);
   
   return await filterParkingSlotsRepo(slotFilterData,parkingAreaIds);

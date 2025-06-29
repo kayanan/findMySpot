@@ -13,6 +13,7 @@ const createReservationSchema = z.object({
     .min(1, "Customer mobile is required")
     .regex(/^(\+94|0)?[1-9][0-9]{8}$/, "Invalid mobile number format"),
   startTime: z.date().optional(),
+  endTime: z.date().optional(),
   totalAmount: z.number().positive("Total amount must be positive").optional(),
   perHourRate: z.number().positive("Per hour rate must be positive").optional(),
   vehicleType: z.string().min(1, "Vehicle type is required"),

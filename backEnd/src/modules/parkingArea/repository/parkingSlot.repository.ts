@@ -80,6 +80,8 @@ export const updateParkingSlotStatus = async (parkingAreaId: string[], status: b
 };
 
 export const filterParkingSlots = async (filter: any, parkingAreaIds: string[]) => {
+  console.log(filter, "filter------------------------------");
+  console.log(parkingAreaIds, "parkingAreaIds------------------------------");
   const parkingSlots = await ParkingSlotDTO.aggregate([
     {
       $match: {
@@ -125,15 +127,24 @@ export const filterParkingSlots = async (filter: any, parkingAreaIds: string[]) 
         $or: [
           { 'reservation.endDateAndTime': { $lt: filter.startTime } },
           { 'reservation': null },
-        ],
-        ...(filter?.endTime ? { 'reservation.startDateAndTime': { $gt: (filter.endTime) } } : { 'reservation': null }),
-
-      }
+        ]
+       
+      } 
+    },
+    {
+      $match: filter?.endTime ? ({
+        $or: [
+          { 'reservation.startDateAndTime': { $gt: filter?.endTime } },
+          { 'reservation': null },
+        ]
+       
+      }):{} 
     },
     {
       $group: {
         _id: '$parkingAreaId',
         slotCount: { $sum: 1 },
+        slots: { $push: '$_id' },
         price: { $first: '$slotPrice' }
       }
     },
@@ -145,22 +156,59 @@ export const filterParkingSlots = async (filter: any, parkingAreaIds: string[]) 
         as: 'parkingArea'
       },
     },
+    
     {
       $unwind: '$parkingArea'
     },
     {
+      $lookup: {
+        from: 'provinces',
+        localField: 'parkingArea.province',
+        foreignField: '_id',
+        as: 'province'
+      },
+    },
+    {
+      $unwind: '$province'
+    },
+    {
+      $lookup: {
+        from: 'districts',
+        localField: 'parkingArea.district',
+        foreignField: '_id',
+        as: 'district'
+      },
+    },
+    {
+      $unwind: '$district'
+    },
+    {
+      $lookup: {
+        from: 'cities',
+        localField: 'parkingArea.city',
+        foreignField: '_id',
+        as: 'city'
+      },
+    },
+    {
+      $unwind: '$city'
+    },
+    {
       $project: {
         slotCount: 1,
+        slots: {$slice: ['$slots',10]},
         price: 1,
         parkingArea: {
           _id: 1,
           name: 1,
+          addressLine1: 1,
+          addressLine2: 1,
           location: 1,
           contactNumber: 1,
           email: 1,
-          district: 1,
-          city: 1,
-          province: 1,
+          district: '$district.name',
+          city: '$city.name',
+          province: '$province.name',
           averageRating: 1,
         }
       }
