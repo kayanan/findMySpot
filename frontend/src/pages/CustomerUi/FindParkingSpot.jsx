@@ -7,6 +7,7 @@ import SpotDetailsPopup from '../../utils/SpotDetailsPopup';
 import { toast, ToastContainer } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
+import dayjs from 'dayjs';
 
 
 const vehicleTypes = [
@@ -17,7 +18,6 @@ const vehicleTypes = [
 
 const FindParkingSpot = () => {
     const { authState } = useAuth();
-    console.log(authState, "authState");
     const mapRef = useRef(null);
     const navigate = useNavigate();
     const { vehicleType, position: positionFromState, dateAndTime } = useLocation().state || {};
@@ -86,8 +86,6 @@ const FindParkingSpot = () => {
         }
 
     }, [selectedArea]);
-    console.log(selectedSpotData, "selectedSpotData");
-
     useEffect(() => {
 
         if (filters.radius / 1000 <= 1) {
@@ -153,22 +151,21 @@ const FindParkingSpot = () => {
         try {
             const data = {
                 parkingArea: selectedArea.id,
-                startDateAndTime: new Date(reservationData.startDateAndTime || new Date()),
-                endDateAndTime: new Date(reservationData.duration ? new Date(new Date().setHours(new Date().getHours() + reservationData.duration)) : null),
-                user: authState.user._id,
-                type: "pre-booking",
+                startDateAndTime: dayjs(reservationData.startDateAndTime || new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                endDateAndTime: dayjs(reservationData.duration ? new Date(new Date().setHours(new Date().getHours() + reservationData.duration)) : null).format('YYYY-MM-DD HH:mm:ss'),
+                user: authState.user.userId,
+                type: "pre_booking",
                 vehicleNumber: reservationData.vehicleNumber,
                 vehicleType: vehicleType,
                 perHourRate: selectedArea.price,
                 status: "pending",
                 paymentType: "card",
                 customerMobile: reservationData.customerMobile,
-                createdBy: authState.user._id,
+                createdBy: authState.user.userId,
             }
+            
             const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/pre-booking`, data)
             console.log(response, "response");
-            console.log('Reservation data:', reservationData);
-
             
 
             toast.success('Reservation confirmed successfully!');

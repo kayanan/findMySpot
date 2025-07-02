@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Request, Response, NextFunction } from "express";
+import mongoose from "mongoose";
 
 const createSlotValidator = (data: any) => {
   const schema = z.array(z.object({
@@ -27,7 +28,7 @@ const updateSlotValidator = (data: any) => {
     isReservationPending: z.boolean().optional(),
     isReserved: z.boolean().optional(),
     reservedVehicleNumber: z.string().optional(),
-    reservationId: z.string().optional(),
+    reservationId: z.union([z.string(), z.instanceof(mongoose.Types.ObjectId).optional()]).optional(),
     isBooked: z.boolean().optional(),
     isActive: z.boolean().optional(),
     isDeleted: z.boolean().optional(),

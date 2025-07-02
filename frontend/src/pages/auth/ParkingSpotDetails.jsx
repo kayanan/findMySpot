@@ -525,13 +525,7 @@ const ParkingSpotDetails = () => {
                 Back
               </button>}
               {/* Add Another Parking Spot Button */}
-              <button
-                type="button"
-                onClick={() => navigate("/customer/register", { state: { userData: userData, signupAs: "PARKING_OWNER" } })}
-                className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200 mx-2"
-              >
-                Add Another Parking Spot
-              </button>
+              
               {ownerId && <button
                 type="button"
                 onClick={() => navigate(`/owner/view/${ownerId}`)}

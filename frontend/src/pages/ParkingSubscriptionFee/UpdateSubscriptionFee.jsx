@@ -214,7 +214,7 @@ const UpdateSubscriptionFee = () => {
             )}
           </div>
           <div>
-            <label className="block text-gray-700 mb-2">Between 100-300</label>
+            <label className="block text-gray-700 mb-2">Between 101-300</label>
             <input
               type="number"
               name="between100and300"
@@ -230,7 +230,7 @@ const UpdateSubscriptionFee = () => {
             )}
           </div>
           <div>
-            <label className="block text-gray-700 mb-2">Between 300-500</label>
+            <label className="block text-gray-700 mb-2">Between 301-500</label>
             <input
               type="number"
               name="between300and500"
@@ -246,7 +246,7 @@ const UpdateSubscriptionFee = () => {
             )}
           </div>
           <div>
-            <label className="block text-gray-700 mb-2">Above 500</label>
+            <label className="block text-gray-700 mb-2">Above 501</label>
             <input
               type="number"
               name="above500"

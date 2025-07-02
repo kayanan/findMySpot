@@ -3,10 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaArrowLeft, FaEnvelope, FaPhone, FaBuilding, FaParking, FaCar, FaCheck, FaTimes, FaPlus } from "react-icons/fa";
+import { FaArrowLeft, FaEnvelope, FaPhone, FaBuilding, FaParking, FaCar, FaCheck, FaTimes, FaPlus, FaToggleOn, FaToggleOff } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ParkingAreaList from "./ParkingArea/ParkingAreaList";
+import ConfirmationPopup from "../../../utils/ConfirmationPopup";
+import PromptPopup from "../../../utils/PromptPopup";
+
 const SkeletonLoader = () => (
   <div className="grid md:grid-cols-2 gap-6 animate-pulse">
     {/* Profile Skeleton */}
@@ -38,10 +41,18 @@ const ViewParkingOwner = () => {
 
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const filters = location.state?.filters || {};
   const [owner, setOwner] = useState(null);
-  const filters = useLocation().state?.filters || {};
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Popup states
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [showRejectPrompt, setShowRejectPrompt] = useState(false);
+  const [showStatusConfirm, setShowStatusConfirm] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState(null);
+
   const fetchParkingOwner = async () => {
     setLoading(true);
     setError(null);
@@ -85,14 +96,8 @@ const ViewParkingOwner = () => {
     }
   };
 
-  const handleReject = async () => {
+  const handleReject = async (reason) => {
     try {
-      const confirm = window.confirm("Do you want to reject this application?.")
-      if (!confirm) {
-        return
-      }
-      const reason = window.prompt("plese provide a reason for this rejection")
-
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/reject/${id}`, { reason }, { withCredentials: true });
 
       toast.success(response.data.message || "Parking owner rejected successfully", {
@@ -102,16 +107,12 @@ const ViewParkingOwner = () => {
         autoClose: 1000,
       });
     } catch (err) {
-      toast.error(err.response.data.message || "Error rejecting parking owner");
+      toast.error(err.response?.data?.message || "Error rejecting parking owner");
     }
   };
 
   const handleStatusChange = async (isActive) => {
     try {
-      const confirm = window.confirm(`Do you want to ${isActive ? 'activate' : 'deactivate'} this user?`)
-      if (!confirm) {
-        return
-      }
       await axios.patch(
         `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/users/update/${id}`,
         { isActive },
@@ -125,7 +126,30 @@ const ViewParkingOwner = () => {
     }
   };
 
+  const initiateReject = () => {
+    setShowRejectConfirm(true);
+  };
 
+  const onRejectConfirm = () => {
+    setShowRejectConfirm(false);
+    setShowRejectPrompt(true);
+  };
+
+  const onRejectPromptConfirm = (reason) => {
+    setShowRejectPrompt(false);
+    handleReject(reason);
+  };
+
+  const initiateStatusChange = (isActive) => {
+    setPendingStatusChange(isActive);
+    setShowStatusConfirm(true);
+  };
+
+  const onStatusConfirm = () => {
+    setShowStatusConfirm(false);
+    handleStatusChange(pendingStatusChange);
+    setPendingStatusChange(null);
+  };
 
   if (loading) {
     return (
@@ -272,7 +296,7 @@ const ViewParkingOwner = () => {
                   <span className="font-semibold">Approve Parking Owner</span>
                 </button>
                 <button
-                  onClick={handleReject}
+                  onClick={initiateReject}
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 px-6 rounded-lg transition duration-300 hover:shadow-lg hover:from-red-600 hover:to-red-700"
                 >
                   <FaTimes className="text-lg" />
@@ -281,26 +305,29 @@ const ViewParkingOwner = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                  <p className="text-blue-800 text-sm">Manage the active status of this approved parking owner.</p>
+                <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+                  <p className="text-green-800 text-sm">This parking owner has been approved. You can manage their active status below.</p>
                 </div>
-                {!owner.isActive ? (
-                  <button
-                    onClick={() => handleStatusChange(true)}
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-3 px-6 rounded-lg transition duration-300 hover:shadow-lg hover:from-emerald-600 hover:to-emerald-700"
-                  >
-                    <FaCheck className="text-lg" />
-                    <span className="font-semibold">Activate User Account</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleStatusChange(false)}
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-rose-600 text-white py-3 px-6 rounded-lg transition duration-300 hover:shadow-lg hover:from-rose-600 hover:to-rose-700"
-                  >
-                    <FaTimes className="text-lg" />
-                    <span className="font-semibold">Deactivate User Account</span>
-                  </button>
-                )}
+                <button
+                  onClick={() => initiateStatusChange(!owner.isActive)}
+                  className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg transition duration-300 hover:shadow-lg font-semibold ${
+                    owner.isActive
+                      ? "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700"
+                      : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
+                  }`}
+                >
+                  {owner.isActive ? (
+                    <>
+                      <FaToggleOff className="text-lg" />
+                      <span>Deactivate Parking Owner</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaToggleOn className="text-lg" />
+                      <span>Activate Parking Owner</span>
+                    </>
+                  )}
+                </button>
               </div>
             )}
           </div>
@@ -318,6 +345,45 @@ const ViewParkingOwner = () => {
         </div>
         <ParkingAreaList parkingOwner={owner} />
       </div>
+
+      {/* Popups */}
+      <ConfirmationPopup
+        isOpen={showRejectConfirm}
+        onClose={() => setShowRejectConfirm(false)}
+        onConfirm={onRejectConfirm}
+        title="Confirm Rejection"
+        message="Do you want to reject this parking owner application? This action cannot be undone."
+        confirmText="Yes, Reject"
+        cancelText="Cancel"
+        confirmButtonClass="bg-red-500 hover:bg-red-600"
+        icon="danger"
+      />
+
+      <PromptPopup
+        isOpen={showRejectPrompt}
+        onClose={() => setShowRejectPrompt(false)}
+        onConfirm={onRejectPromptConfirm}
+        title="Rejection Reason"
+        message="Please provide a reason for rejecting this parking owner application:"
+        placeholder="Enter the reason for rejection..."
+        confirmText="Submit Rejection"
+        cancelText="Cancel"
+        confirmButtonClass="bg-red-500 hover:bg-red-600"
+        required={true}
+        maxLength={200}
+      />
+
+      <ConfirmationPopup
+        isOpen={showStatusConfirm}
+        onClose={() => setShowStatusConfirm(false)}
+        onConfirm={onStatusConfirm}
+        title="Confirm Status Change"
+        message={`Do you want to ${pendingStatusChange ? 'activate' : 'deactivate'} this parking owner?`}
+        confirmText={pendingStatusChange ? "Activate" : "Deactivate"}
+        cancelText="Cancel"
+        confirmButtonClass={pendingStatusChange ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}
+        icon={pendingStatusChange ? "info" : "warning"}
+      />
 
       <ToastContainer />
     </div>
