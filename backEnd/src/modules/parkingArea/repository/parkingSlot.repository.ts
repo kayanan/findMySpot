@@ -1,3 +1,4 @@
+import { ReservationStatus } from "@/modules/reservation/data/dtos/reservation.dto";
 import { CreateUpdateParkingSlotRequest } from "../controller/request/create.parkingSlot.request";
 import { ParkingSlotDTO } from "../data/dtos/parkingSlot.dto";
 
@@ -9,9 +10,18 @@ export const createSlot = async (slotData: Partial<CreateUpdateParkingSlotReques
 };
 
 export const updateSlot = async (id: string, slotData: CreateUpdateParkingSlotRequest) => {
+  const data: any = { $set: slotData };
+  if (slotData.addReservationId) {
+    data.$push = { reservationIds: slotData.addReservationId };
+    delete data.$set.addReservationId;
+  }
+  if (slotData.removeReservationId) {
+    data.$pull = { reservationIds: slotData.removeReservationId };
+    delete data.$set.removeReservationId;
+  }
   const slot = await ParkingSlotDTO.findByIdAndUpdate(
     id,
-    { $set: slotData },
+    data,
     { new: true }
   );
   if (!slot) {
@@ -21,7 +31,7 @@ export const updateSlot = async (id: string, slotData: CreateUpdateParkingSlotRe
 };
 
 export const updateSlotByParkingAreaId = async (parkingAreaId: string, slotData: CreateUpdateParkingSlotRequest & { vehicleId: string }) => {
-  console.log(slotData, "slotData------------------------------");
+
   const slot = await ParkingSlotDTO.updateMany({ parkingAreaId, vehicleType: slotData?.vehicleId }, { $set: { slotPrice: slotData?.slotPrice } });
   return slot;
 };
@@ -54,7 +64,7 @@ export const getSlotsByParkingArea = async (id: string) => {
   const slots = await ParkingSlotDTO.find({
     parkingAreaId: id,
     isDeleted: { $ne: true }
-  }).populate('vehicleType reservationId').lean();
+  }).populate('vehicleType reservationIds').lean();
   return slots;
 };
 
@@ -81,13 +91,11 @@ export const updateParkingSlotStatus = async (parkingAreaId: string[], status: b
 };
 
 export const filterParkingSlots = async (filter: any, parkingAreaIds: string[]) => {
-  console.log(filter, "filter------------------------------");
-  console.log(parkingAreaIds, "parkingAreaIds------------------------------");
+
   const parkingSlots = await ParkingSlotDTO.aggregate([
     {
       $match: {
         parkingAreaId: { $in: parkingAreaIds },
-        isReservationPending: { $ne: true },
         isActive: true,
         isDeleted: { $ne: true }
       }
@@ -110,36 +118,78 @@ export const filterParkingSlots = async (filter: any, parkingAreaIds: string[]) 
       }
     },
     {
-      $lookup: {
-        from: 'reservations',
-        localField: 'reservationId',
-        foreignField: '_id',
-        as: 'reservation'
+      $addFields: {
+        reservationIds: { $ifNull: ['$reservationIds', []] }
       }
     },
     {
-      $unwind: {
-        path: "$reservation",
-        preserveNullAndEmptyArrays: true
+      $lookup: {
+        from: 'reservations',
+        let: { reservationId: '$reservationIds' },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $in: ['$_id', '$$reservationId'] }
+            }
+          }
+        ],
+        as: 'reservations'
       }
     },
     {
       $match: {
         $or: [
-          { 'reservation.endDateAndTime': { $lt: filter.startTime } },
-          { 'reservation': null },
+          { $expr: { $eq: [{ $size: "$reservations" }, 0] } },
+          {
+            $or: [
+              {
+                reservations: {
+                  $not: {
+                    $elemMatch: {
+                      status: ReservationStatus.PENDING,
+                      startDateAndTime: {
+                        $gt: new Date(new Date().getTime() - 1000 * 60 * 5)
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                reservations: {
+                  $elemMatch: {
+                    status: { $ne: ReservationStatus.PENDING },
+                    endDateAndTime: { $gt: new Date(filter.startTime + 1000 * 60 * 60 * 2) }
+                  }
+                }
+              }
+            ]
+          }
         ]
-       
-      } 
+      }
     },
     {
-      $match: filter?.endTime ? ({
-        $or: [
-          { 'reservation.startDateAndTime': { $gt: filter?.endTime } },
-          { 'reservation': null },
-        ]
-       
-      }):{} 
+      $match: filter?.endTime
+        ? {
+          $or: [
+            { $expr: { $eq: [{ $size: "$reservations" }, 0] } },
+            {
+              reservations: {
+                $not: {
+                  $elemMatch: {
+                    status: { $ne: ReservationStatus.PENDING },
+                    startDateAndTime: { $lte: new Date(filter.endTime + 1000 * 60 * 60 * 2) }
+                  }
+                }
+              }
+            },
+            {
+              reservations: {
+                $elemMatch: { status: ReservationStatus.PENDING }
+              }
+            }
+          ]
+        }
+        : {}
     },
     {
       $group: {
@@ -157,7 +207,7 @@ export const filterParkingSlots = async (filter: any, parkingAreaIds: string[]) 
         as: 'parkingArea'
       },
     },
-    
+
     {
       $unwind: '$parkingArea'
     },
@@ -197,7 +247,7 @@ export const filterParkingSlots = async (filter: any, parkingAreaIds: string[]) 
     {
       $project: {
         slotCount: 1,
-        slots: {$slice: ['$slots',10]},
+        slots: { $slice: ['$slots', 10] },
         price: 1,
         parkingArea: {
           _id: 1,

@@ -15,6 +15,8 @@ export interface CreateUpdateParkingSlotRequest {
     reservedVehicleNumber: string;
     reservationId: string;
     isBooked: boolean;
+    addReservationId: string;
+    removeReservationId: string;
     
   }
   

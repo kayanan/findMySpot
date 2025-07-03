@@ -10,7 +10,7 @@ export interface ParkingSlotModel extends BaseDTO {
   slotSize: number;
   slotPrice: number;
   reservedVehicleNumber: string;
-  reservationId: ObjectId;
+  reservationIds: Array<ObjectId>;
   isReserved: boolean;
   isOccupied: boolean;
   isReservationPending: boolean;
@@ -28,7 +28,7 @@ const ParkingSlotSchema = new Schema<ParkingSlotModel>(
     slotPrice: { type: Number, required: false },
     slotNumber: { type: Number, required: true },
     reservedVehicleNumber: { type: String, required: false },
-    reservationId: { type: Schema.Types.ObjectId, ref: "Reservation" },
+    reservationIds: { type: [Schema.Types.ObjectId], ref: "Reservation", required: false },
     isOccupied: { type: Boolean, default: false },
     isReserved: { type: Boolean, default: false },
     isReservationPending: { type: Boolean, default: false },

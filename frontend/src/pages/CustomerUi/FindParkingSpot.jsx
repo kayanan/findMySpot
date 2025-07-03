@@ -147,12 +147,13 @@ const FindParkingSpot = () => {
 
 
     const handleReservationSubmit = async (reservationData) => {
+        console.log(reservationData, "reservationData");
         setIsLoading(true);
         try {
             const data = {
                 parkingArea: selectedArea.id,
-                startDateAndTime: dayjs(reservationData.startDateAndTime || new Date()).format('YYYY-MM-DD HH:mm:ss'),
-                endDateAndTime: dayjs(reservationData.duration ? new Date(new Date().setHours(new Date().getHours() + reservationData.duration)) : null).format('YYYY-MM-DD HH:mm:ss'),
+                startDateAndTime: reservationData.startDateAndTime || new Date(),
+                endDateAndTime: reservationData.endDateAndTime || reservationData.duration ? new Date(new Date().setHours(new Date().getHours() + reservationData.duration)) : null,
                 user: authState.user.userId,
                 type: "pre_booking",
                 vehicleNumber: reservationData.vehicleNumber,
@@ -163,9 +164,10 @@ const FindParkingSpot = () => {
                 customerMobile: reservationData.customerMobile,
                 createdBy: authState.user.userId,
             }
+            console.log(data, "data");
             
             const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/pre-booking`, data)
-            console.log(response, "response");
+            
             
 
             toast.success('Reservation confirmed successfully!');

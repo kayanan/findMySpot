@@ -205,9 +205,10 @@ export const getNearestParkingSpotsHandler = async (req: Request, res: Response)
       res.status(200).json(result);
     } catch (error: unknown) {
       if (error instanceof Error) {
+        console.log(error,"error");
         res.status(500).json({ message: error.message });
-        
       } else {
+        console.log(error,"error2");
         res.status(500).json({ message: "An unknown error occurred" });
        
       }

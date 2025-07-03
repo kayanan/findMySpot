@@ -97,7 +97,8 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
                 });
 
 
-                await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/${selectedSlot._id}`, { isOccupied: true, reservedVehicleNumber: details.vehicleNumber, reservationId: reservation.data.data._id });
+                await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/${selectedSlot._id}`,
+                     { isOccupied: true, reservedVehicleNumber: details.vehicleNumber, addReservationId: reservation.data.data._id });
 
 
 
@@ -194,7 +195,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
             paymentStatus: "paid",
             paidBy: "667367367367367367367367",
         })
-        await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/${selectedSlot._id}`, { isOccupied: false, reservedVehicleNumber: null, reservationId: null });
+        await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/${selectedSlot._id}`, { isOccupied: false, reservedVehicleNumber: null, removeReservationId: selectedSlot?.reservationId?._id });
         toast.success("Bank transfer submitted successfully");
         setIsBankTransferPopupOpen(false);
         fetchParkingSlots();
@@ -213,7 +214,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
                 paymentStatus: "paid",
                 paidBy: "667367367367367367367367",
             })
-            await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/${selectedSlot._id}`, { isOccupied: false, reservedVehicleNumber: null, reservationId: null });
+            await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/${selectedSlot._id}`, { isOccupied: false, reservedVehicleNumber: null, removeReservationId: selectedSlot?.reservationId?._id });
             toast.success("Payment received successfully");
         }
         else if (data.paymentMethod === "bank_transfer") {
@@ -234,7 +235,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
                         <h3 className="text-3xl font-bold text-gray-700">{vehicleType.toUpperCase()}</h3>
                         <div className="flex gap-10 items-center pb-4">
                             <h3 className="text-xl font-bold mb-3 text-cyan-700">Total Slots: {slots.length}</h3>
-                            <h3 className="text-xl font-bold mb-3 text-emerald-700 border-l-2 border-gray-400 pl-4">Available Slots: {slots.filter(slot => slot?.isActive && !slot?.isReserved).length}</h3>
+                            <h3 className="text-xl font-bold mb-3 text-emerald-700 border-l-2 border-gray-400 pl-4">Available Slots: {slots.filter(slot => slot?.isActive && (!slot?.isReserved && !slot?.isOccupied && !slot?.isReservationPending)).length}</h3>
                             <h3 className="text-xl font-bold mb-3 text-cyan-700 border-l-2 border-gray-400 pl-4">Price: </h3>
                             <span className="text-cyan-700 font-bold text-3xl mb-3">{slots[0].slotPrice ? `Rs.${slots[0].slotPrice}/hr` : 'N/A'}</span>
                             <button

@@ -134,7 +134,7 @@ export const createPreBookingReservationService = async (reservationData: Partia
       throw new Error("No parking slots available");
     }
     const parkingSlotId = parkingSlots[0].slots[0];
-    
+
 
     reservationData.parkingSlot = parkingSlotId;
     delete reservationData.vehicleType;
@@ -144,7 +144,7 @@ export const createPreBookingReservationService = async (reservationData: Partia
       await updateSlot(parkingSlotId, {
         isReservationPending: true,
         reservedVehicleNumber: reservationData.vehicleNumber,
-        reservationId: reservation._id as unknown as string
+        addReservationId: reservation._id as unknown as string
       });
     }
     return reservation;
