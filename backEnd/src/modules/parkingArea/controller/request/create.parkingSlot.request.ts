@@ -10,13 +10,12 @@ export interface CreateUpdateParkingSlotRequest {
     slotWidth: number;
     isActive: boolean;
     isDeleted: boolean;
-    isReservationPending: boolean;
-    isReserved: boolean;
-    reservedVehicleNumber: string;
     reservationId: string;
     isBooked: boolean;
     addReservationId: string;
     removeReservationId: string;
+    isOccupied: boolean;
+
     
   }
   

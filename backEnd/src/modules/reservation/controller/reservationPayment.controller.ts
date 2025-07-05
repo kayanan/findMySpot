@@ -19,7 +19,9 @@ import {
   getSuccessfulPaymentsService,
   getFailedPaymentsService,
   getPendingPaymentsService,
-  getRefundedPaymentsService
+  getRefundedPaymentsService,
+  generateHashService,
+  notifyPaymentService
 } from "../service/reservationPayment.service";
 import multer from "multer";
 import path from "path";
@@ -51,14 +53,14 @@ export const createReservationPaymentHandler = [upload.array("images", 10), asyn
       message: "Reservation payment created successfully"
     });
   } catch (error: unknown) {
-    console.log(error,"error--------------------------------");
+    console.log(error);
     if (error instanceof Error) {
       res.status(500).json({ 
         success: false,
         message: error.message 
       });
     } else {
-        console.log(error,"error--------------------------------");
+        console.log(error);
       res.status(500).json({ 
         success: false,
         message: "An unknown error occurred" 
@@ -166,10 +168,12 @@ export const getAllReservationPaymentsHandler = async (req: Request, res: Respon
       const start = new Date(startDate as string);
       const end = new Date(endDate as string);
       payments = await getReservationPaymentsByDateRangeService(start, end);
-    } else if (parkingArea) {
-      // Filter by parking area
-      payments = await getReservationPaymentsByParkingAreaService(parkingArea as string);
-    } else if (paymentStatus) {
+    }
+    //  else if (parkingArea) {
+    //   // Filter by parking area
+    //   payments = await getReservationPaymentsByParkingAreaService(parkingArea as string);
+    // } 
+    else if (paymentStatus) {
       // Filter by payment status
       payments = await getReservationPaymentsByPaymentStatusService(paymentStatus as string);
     } else if (paymentMethod) {
@@ -194,11 +198,12 @@ export const getAllReservationPaymentsHandler = async (req: Request, res: Respon
 
     // Apply additional filters if multiple filters are provided
     if (payments && payments.length > 0) {
-      if (parkingArea && !startDate && !endDate && !paymentStatus && !paymentMethod && !customer && !paidBy && !minAmount) {
-        // Already filtered by parking area
-      } else if (parkingArea) {
-        payments = payments.filter(p => p.parkingArea?.toString() === parkingArea);
-      }
+      // if (parkingArea && !startDate && !endDate && !paymentStatus && !paymentMethod && !customer && !paidBy && !minAmount) {
+      //   // Already filtered by parking area
+      // } 
+      // else if (parkingArea) {
+      //   payments = payments.filter(p => p.reservation?.parkingAreaId?.toString() === parkingArea);
+      // }
 
       if (paymentStatus && !startDate && !endDate && !parkingArea && !paymentMethod && !customer && !paidBy && !minAmount) {
         // Already filtered by payment status
@@ -593,3 +598,26 @@ export const getRefundedPaymentsHandler = async (req: Request, res: Response) =>
     }
   }
 }; 
+
+export const generateHashController = async (req: Request, res: Response) => {
+  try{    
+      const hash = await generateHashService(req.body);
+      res.status(200).json(hash);
+  }catch(error){
+      res.status(500).send(error);
+  }
+};
+
+export const notifyPaymentController = async (req: Request, res: Response) => {
+  try{
+  const notifyPayment = await notifyPaymentService(req.body);
+  if(notifyPayment.success){  
+      res.status(200).json({message:"Payment successful"});
+  }else{
+      res.status(400).json({message:"Payment verification failed"});
+  }
+  }catch(error){
+      console.log(error);
+      res.status(500).send(error);
+  }
+};

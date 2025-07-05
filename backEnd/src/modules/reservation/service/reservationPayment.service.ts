@@ -21,11 +21,19 @@ import {
   findRefundedPayments
 } from "../data/repositories/reservationPayment.repository";
 import { ReservationPaymentValidator } from "../validators/reservationPayment.validator";
+import crypto from "crypto";
+import { PaymentMethod, PaymentStatus } from "../data/dtos/reservationPayment.dto";
+import { updateReservation } from "../data/repositories/reservation.repository";
+import { ReservationStatus } from "../data/dtos/reservation.dto";
+import { updateSlot } from "@/modules/parkingArea/repository/parkingSlot.repository";
+import { getReservationByIdService } from "./reservation.service";
+import { ParkingSlotModel } from "@/modules/parkingArea/data/dtos/parkingSlot.dto";
+import { CreateUpdateParkingSlotRequest } from "@/modules/parkingArea/controller/request/create.parkingSlot.request";
 
 export const createReservationPaymentService = async (data: Omit<ReservationPaymentModel, "isDeleted">) => {
   try {
-    const value=ReservationPaymentValidator.createReservationPaymentValidator(data);
-    if(!value.success){
+    const value = ReservationPaymentValidator.createReservationPaymentValidator(data);
+    if (!value.success) {
       throw new Error(value.error.message);
     }
     const reservationPayment = await createReservationPayment(data);
@@ -201,4 +209,95 @@ export const getRefundedPaymentsService = async () => {
   } catch (error) {
     throw new Error(`Failed to get refunded payments: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
-}; 
+};
+
+export const generateHashService = async (body: any) => {
+  const { order_id, amount, currency } = body;
+  const hashedMerchantSecret = crypto.createHash("md5").update(process.env.MERCHANT_SECRET!)
+    .digest("hex").toString().toUpperCase();
+
+  const hash = crypto.createHash("md5")
+    .update(process.env.MERCHANT_ID!.toString() + order_id + amount + currency + hashedMerchantSecret)
+    .digest("hex").toUpperCase();
+  return { hash, merchant_id: process.env.MERCHANT_ID };
+};
+
+export const notifyPaymentService = async (body: any) => {
+  const { merchant_id, order_id, payhere_amount, payhere_currency, status_code, md5sig } = body;
+
+  const local_md5sig = crypto
+    .createHash("md5")
+    .update(
+      merchant_id +
+      order_id +
+      payhere_amount +
+      payhere_currency +
+      status_code +
+      crypto
+        .createHash("md5")
+        .update(process.env.MERCHANT_SECRET!.toString())
+        .digest("hex")
+        .toUpperCase()
+    )
+    .digest("hex")
+    .toUpperCase();
+  if (local_md5sig === md5sig && status_code == "2") {
+    const reservationPayment = {
+      paymentAmount: body?.payhere_amount || 0,
+      paymentStatus: PaymentStatus.PAID,
+      paymentDate: new Date(),
+      paymentMethod: PaymentMethod.CARD,
+      referenceNumber: body?.payment_id || "",
+      cardPaymentDetails: {
+        cardNumber: body?.card_no || "",
+        cardHolderName: body?.card_holder_name || "",
+        cardExpiryMonth: body?.card_exp?.split("/")[0] || "",
+        cardExpiryYear: body?.card_exp?.split("/")[1] || "",
+      },
+      paidBy: body?.custom_1 || "",
+      customer: body?.custom_1 || "",
+      reservation: body?.order_id || "",
+    }
+    const newReservationPayment = await createReservationPayment(reservationPayment);
+
+    // want to implement  in redis if falback to database
+    try {
+      await updateReservation(body?.order_id,
+        {
+          $set: { paymentStatus: PaymentStatus.PAID, advanceAmount: body?.payhere_amount || 0, status: ReservationStatus.CONFIRMED },
+          $push: { paymentIds: newReservationPayment._id }
+        })
+      return { success: true, message: "Payment successful" };
+    } catch (error) {
+      console.log(error);
+      return { success: false, message: "Payment verification failed" };
+    }
+
+  }
+  else {
+    const reservationPayment = {
+      paymentAmount: body?.payhere_amount || 0,
+      paymentStatus: PaymentStatus.FAILED,
+      paymentDate: new Date(),
+      paymentMethod: PaymentMethod.CARD,
+      referenceNumber: body?.payment_id || "",
+      cardPaymentDetails: {
+        cardNumber: body?.card_no || "",
+        cardHolderName: body?.card_holder_name || "",
+        cardExpiryMonth: body?.card_exp?.split("/")[0] || "",
+        cardExpiryYear: body?.card_exp?.split("/")[1] || "",
+      },
+      paidBy: body?.custom_1 || "",
+      customer: body?.custom_1 || "",
+      reservation: body?.order_id || "",
+    }
+    const newReservationPayment = await createReservationPayment(reservationPayment);
+    try {
+      await updateReservation(body?.order_id, { $set: { paymentStatus: PaymentStatus.FAILED }, $push: { paymentIds: newReservationPayment._id } })
+      return { success: false, message: "Payment verification failed" };
+    } catch (error) {
+      console.log(error);
+      return { success: false, message: "Payment verification failed and database update failed" };
+    }
+  }
+};

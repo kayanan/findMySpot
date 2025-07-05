@@ -1,12 +1,12 @@
-import { ReservationDTO, ReservationStatus } from "../dtos/reservation.dto";
-import { Document } from "mongoose";
+import { ReservationDTO, ReservationModel, ReservationStatus } from "../dtos/reservation.dto";
+import { UpdateQuery } from "mongoose";
 
-export const createReservation = async (data: Partial<Document>) => {
+export const createReservation = async (data: Partial<ReservationModel>) => {
   return await ReservationDTO.create(data);
 };
 
-export const updateReservation = async (id: string, data: Partial<Document>) => {
-  return await ReservationDTO.findByIdAndUpdate(id, data, { new: true });
+export const updateReservation = async (id: string, data: UpdateQuery<Partial<ReservationModel>>) => {
+  return await ReservationDTO.findByIdAndUpdate(id, data, { new: true }).populate("parkingSlot");
 };
 
 export const deleteReservation = async (id: string) => {
@@ -14,7 +14,7 @@ export const deleteReservation = async (id: string) => {
 };
 
 export const findReservationById = async (id: string) => {
-  return await ReservationDTO.findOne({ _id: id, isDeleted: false }).populate("parkingSlot parkingArea user createdBy");
+  return await ReservationDTO.findOne({ _id: id, isDeleted: false }).populate("parkingSlot parkingArea user createdBy vehicleType");
 };
 
 export const findAllReservations = async () => {

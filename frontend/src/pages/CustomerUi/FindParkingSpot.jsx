@@ -6,6 +6,7 @@ import CustomPointsMapContainer from '../../utils/CustomPointsMapContainer';
 import SpotDetailsPopup from '../../utils/SpotDetailsPopup';
 import { toast, ToastContainer } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
+import handlePayment from '../../utils/payherePaymentOption';
 import axios from 'axios';
 import dayjs from 'dayjs';
 
@@ -28,8 +29,6 @@ const FindParkingSpot = () => {
     const [parkingSpots, setParkingSpots] = useState([]);
     const [position, setPosition] = useState(positionFromState || null);
     const [zoom, setZoom] = useState(12);
-
-
     const [filters, setFilters] = useState({
         date: dateAndTime ? dateAndTime.toISOString().split('T')[0] : '',
         time: dateAndTime ? dateAndTime.toISOString().split('T')[1] : '',
@@ -160,20 +159,40 @@ const FindParkingSpot = () => {
                 vehicleType: vehicleType,
                 perHourRate: selectedArea.price,
                 status: "pending",
-                paymentType: "card",
                 customerMobile: reservationData.customerMobile,
                 createdBy: authState.user.userId,
             }
-            console.log(data, "data");
+            
             
             const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/pre-booking`, data)
-            
-            
+            console.log(response,"response");
+            const paymentDetails = {
+                order_id: response.data.data._id,
+                amount: selectedArea.price.toFixed(2),
+                currency: "LKR",
+                return_url: `/customer/find-parking-spot`,
+                cancel_url: `/customer/find-parking-spot`,
+                notify_url: `${import.meta.env.VITE_BACKEND_APP_URL_PUBLIC}/api/v1/reservation-payment/notify`,
+                first_name: authState.user.firstName,
+                last_name: authState.user.lastName,
+                email: authState.user.email,
+                phone: authState.user.phoneNumber,
+                address: selectedArea.address || "No Address",
+                city: selectedArea.city || "No City",
+                country: "Sri Lanka",
+                items: "Parking Reservation",
+                custom_1: authState.user.userId,
+                custom_2: response.data.data.parkingSlot,
+            }
+            handlePayment({paymentDetails,onComplete:()=>{
+                toast.success('Reservation confirmed successfully!');
+            },hashUrl:`/v1/reservation-payment/generate-hash`})
 
             toast.success('Reservation confirmed successfully!');
 
 
         } catch (error) {
+            console.log(error, "error");
             toast.error('Failed to confirm reservation. Please try again.');
             throw error;
         } finally {

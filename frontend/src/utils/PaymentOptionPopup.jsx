@@ -14,9 +14,6 @@ const PaymentOptionPopup = ({
 }) => {
   const [selectedOption, setSelectedOption] = useState('');
   const [paymentOptions, setPaymentOptions] = useState([
-    { id: 'cash', name: 'Cash Payment', icon: FaMoneyBillWave, color: 'text-green-600' },
-    { id: 'card', name: 'Card Payment', icon: FaCreditCard, color: 'text-blue-600' },
-    { id: 'bank_transfer', name: 'Bank Transfer', icon: FaUniversity, color: 'text-purple-600' },
     ...initialOptions
   ]);
   const [showAddOption, setShowAddOption] = useState(false);

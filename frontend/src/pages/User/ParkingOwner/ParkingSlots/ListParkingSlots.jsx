@@ -9,6 +9,7 @@ import BankTransferPopup from '../../../../utils/BankTransferPopup';
 import PaymentOptionPopup from '../../../../utils/PaymentOptionPopup';
 import ConfirmationPopup from '../../../../utils/ConfirmationPopup';
 import PromptPopup from '../../../../utils/PromptPopup';
+import ReservationDetailsPopup from '../../../../utils/ReservationDetailsPopup';
 import dayjs from 'dayjs';
 
 const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
@@ -25,6 +26,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
     const [isConfirmationPopupOpen, setIsConfirmationPopupOpen] = useState(false);
     const [isPromptPopupOpen, setIsPromptPopupOpen] = useState(false);
     const [vehicleTypeForPriceChange, setVehicleTypeForPriceChange] = useState(null);
+    const [isReservationDetailsOpen, setIsReservationDetailsOpen] = useState(false);
     // Group slots by vehicle type
     const groupedSlots = slots?.reduce((acc, slot) => {
         const vehicleType = slot.vehicleType?.vehicleType || "Unknown";
@@ -36,12 +38,41 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
     }, {});
 
     const getSlotBackgroundColor = (slot) => {
-        if (!slot.isActive) return "rose";
-        if (slot.isOccupied) return "slate";
-        if (slot.isReservationPending) return "amber";
-        if (slot.isReserved) return "indigo";
-        return "emerald";
+        switch (getSlotStatus(slot)) {
+            case "Inactive":
+                return "rose"
+            case "Available":
+                return "emerald"
+            case "Pending":
+                return "amber"
+            case "Reserved":
+                return "indigo"
+            case "Occupied":
+                return "slate"
+            default: return "emerald"
+        }
     };
+    const getSlotStatus = (slot) => {
+        if (!slot?.isActive) {
+            return "Inactive"
+        }
+        else if (!slot?.reservationIds && slot?.isActive) {
+            return "Available"
+        }
+        else if (slot?.reservationIds?.filter(reservation => { return (reservation?.status === "pending" && new Date(reservation?.startDateAndTime) >= new Date() - 1000 * 60 * 5) }).length > 0) {
+            return "Pending"
+        }
+        else if (slot?.reservationIds?.filter(reservation => { return (reservation?.status === "confirmed" && new Date(reservation?.startDateAndTime) <= new Date() && reservation?.endDateAndTime ? new Date(reservation?.endDateAndTime) >= new Date() : true) }).length > 0) {
+            return "Reserved"
+        }
+        else if (slot?.isOccupied) {
+            return "Occupied"
+        }
+        else {
+            return "Available"
+        }
+
+    }
 
     // const fetchSlotData = async (slot) => {
     //     try {
@@ -98,7 +129,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
 
 
                 await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/${selectedSlot._id}`,
-                     { isOccupied: true, reservedVehicleNumber: details.vehicleNumber, addReservationId: reservation.data.data._id });
+                    { isOccupied: true, reservedVehicleNumber: details.vehicleNumber, addReservationId: reservation.data.data._id });
 
 
 
@@ -129,9 +160,9 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
     console.log(groupedSlots);
 
     const handleSlotClick = (slot) => {
-        if (slot.isReservationPending) {
-            return;
-        }
+        // if (slot.isReservationPending) {
+        //     return;
+        // }
         setSelectedSlot(slot);
         setIsPopupOpen(true);
     };
@@ -141,7 +172,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
             // Open parking details popup for reservation
             setIsParkingDetailsOpen(true);
         }
-         else {
+        else {
             try {
                 await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/${selectedSlot._id}`, updates);
                 toast.success("Slot status updated successfully");
@@ -160,6 +191,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
             - Slot Number: ${slot.slotNumber}
             - Price: ${slot.slotPrice ? `Rs.${slot.slotPrice}/hr` : 'N/A'}
             - Status: ${!slot.isActive ? 'Inactive' : slot.isReserved ? 'Reserved' : slot.isOccupied ? 'Occupied' : slot.isReservationPending ? 'Pending' : 'Available'}
+            - Reservation: ${slot.isReservationPending ? 'Pending' : 'Confirmed'}
             - Reserved Vehicle Number: ${slot.reservedVehicleNumber || 'N/A'}
         `;
     };
@@ -253,31 +285,39 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
                                 <div
                                     key={slot._id}
                                     className={`bg-${getSlotBackgroundColor(slot)}-300 hover:bg-${getSlotBackgroundColor(slot)}-400 rounded-lg p-2 hover:shadow-lg transition-shadow duration-300`}
-                                    onClick={() => handleSlotClick(slot)}
+
                                 >
-                                    <div className="flex items-center justify-between mb-1">
-                                        <div className="flex items-center">
-                                            <div className="w-5 h-5 bg-cyan-100 rounded-full flex items-center justify-center mr-1">
-                                                {vehicleType.toLowerCase() === "car" && <FaCar className="text-cyan-500 text-xs" />}
-                                                {vehicleType.toLowerCase() === "truck" && <FaTruck className="text-cyan-500 text-xs" />}
-                                                {vehicleType.toLowerCase() === "bus" && <FaBus className="text-cyan-500 text-xs" />}
-                                                {vehicleType.toLowerCase() === "motorcycle" && <FaMotorcycle className="text-cyan-500 text-xs" />}
+                                    <div onClick={() => handleSlotClick(slot)} >
+                                        <div className="flex items-center justify-between mb-1">
+                                            <div className="flex items-center">
+                                                <div className="w-5 h-5 bg-cyan-100 rounded-full flex items-center justify-center mr-1">
+                                                    {vehicleType.toLowerCase() === "car" && <FaCar className="text-cyan-500 text-xs" />}
+                                                    {vehicleType.toLowerCase() === "truck" && <FaTruck className="text-cyan-500 text-xs" />}
+                                                    {vehicleType.toLowerCase() === "bus" && <FaBus className="text-cyan-500 text-xs" />}
+                                                    {vehicleType.toLowerCase() === "motorcycle" && <FaMotorcycle className="text-cyan-500 text-xs" />}
+                                                </div>
+                                                <span className="text-xs font-medium">{`${vehicleType.charAt(0).toUpperCase()}-${slot.slotNumber}`}</span>
                                             </div>
-                                            <span className="text-xs font-medium">{`${vehicleType.charAt(0).toUpperCase()}-${slot.slotNumber}`}</span>
+                                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] bg-${getSlotBackgroundColor(slot)}-100 text-${getSlotBackgroundColor(slot)}-800`}>
+                                                {getSlotStatus(slot)}
+                                            </span>
                                         </div>
-                                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] bg-${getSlotBackgroundColor(slot)}-100 text-${getSlotBackgroundColor(slot)}-800`}>
-                                            {!slot.isActive ? "Inactive" : slot.isOccupied ? "Occupied" : slot.isReservationPending ? "Pending" : slot.isReserved ? "Reserved" : "Available"}
-                                        </span>
+                                        <div className="space-y-1 text-[10px]">
+                                            <div className="flex justify-between items-center bg-white px-1.5 py-0.5 rounded">
+                                                <span className="text-gray-600">Vehicle Number:</span>
+                                                <span className="w-1/2 font-bold text-2xltext-cyan-600">{slot.reservedVehicleNumber ? `${slot.reservedVehicleNumber}` : "N/A"}</span>
+                                            </div>
+
+                                        </div>
+
                                     </div>
-                                    <div className="space-y-1 text-[10px]">
-                                        <div className="flex justify-between items-center bg-white px-1.5 py-0.5 rounded">
-                                            <span className="text-gray-600">Vehicle Number:</span>
-                                            <span className="w-1/2 font-bold text-2xltext-cyan-600">{slot.reservedVehicleNumber ? `${slot.reservedVehicleNumber}` : "N/A"}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center bg-white px-1.5 py-0.5 rounded">
-                                            <span className="text-gray-600">Price:</span>
-                                            <span className="w-1/2 font-bold text-cyan-800">{slot.slotPrice ? `Rs.${slot.slotPrice}/hr` : "N/A"}</span>
-                                        </div>
+                                    <div className="flex justify-between items-center bg-white px-1.5 py-0.5 rounded mt-2" onClick={() => {
+                                        setIsReservationDetailsOpen(true)
+                                        setSelectedSlot(slot)
+                                    }
+                                    }>
+                                        <span className="text-gray-600 text-[10px]">{"Active Reservations: "}</span>
+                                        <span className="w-1/2 font-bold text-cyan-800 text-xs">{slot?.reservationIds?.length > 0 ? `${slot.reservationIds.length}` : 0}</span>
                                     </div>
                                 </div>
                             ))}
@@ -367,6 +407,13 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
                 type="number"
                 placeholder="Enter the new price"
                 minValue={0}
+            />
+            <ReservationDetailsPopup
+                isOpen={isReservationDetailsOpen}
+                onClose={() => setIsReservationDetailsOpen(false)}
+                parkingSlotId={selectedSlot?._id}
+                parkingSlotData={selectedSlot}
+                onReservationUpdate={fetchParkingSlots}
             />
         </>
     );

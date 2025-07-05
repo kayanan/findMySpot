@@ -13,6 +13,12 @@ export enum PaymentMethod {
     CARD = "card",
     BANK_TRANSFER = "bank_transfer",
 }
+export interface CardPaymentDetails {
+    cardNumber: string;
+    cardHolderName: string;
+    cardExpiryMonth: string;
+    cardExpiryYear: string;
+}
 export interface ReservationPaymentModel extends BaseDTO {
     reservation: ObjectId;
     paymentStatus: PaymentStatus;
@@ -22,13 +28,11 @@ export interface ReservationPaymentModel extends BaseDTO {
     referenceNumber: string;
     bankName: string;
     branch: string;
-    cardNumber: string;
+    cardPaymentDetails: CardPaymentDetails;
     transactionDate: Date;
     images: Array<string>;
     paidBy: ObjectId;
     customer: ObjectId;
-    parkingArea: ObjectId;
-    parkingSlot: ObjectId;
 
 }
 
@@ -42,12 +46,10 @@ const ReservationPaymentSchema = new Schema<ReservationPaymentModel>(
         referenceNumber: { type: String, required: false },
         bankName: { type: String, required: false },
         branch: { type: String, required: false },
-        cardNumber: { type: String, required: false },
+        cardPaymentDetails: { type: Object, required: false },
         images: { type: [String], required: false },
         paidBy: { type: Schema.Types.ObjectId, required: true, ref: "User" },
         customer: { type: Schema.Types.ObjectId, required: true, ref: "User" },
-        parkingArea: { type: Schema.Types.ObjectId, required: true, ref: "ParkingArea" },
-        parkingSlot: { type: Schema.Types.ObjectId, required: true, ref: "ParkingSlot" },
         isDeleted: { type: Boolean, default: false },
     },
     { timestamps: true }

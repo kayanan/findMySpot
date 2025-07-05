@@ -19,6 +19,7 @@ import {
   cancelReservationService,
   updatePaymentStatusService,
   createPreBookingReservationService,
+  changeSlotService,
 } from "../service/reservation.service";
 
 export const createReservationHandler = async (req: Request, res: Response) => {
@@ -167,9 +168,9 @@ export const getAllReservationsHandler = async (req: Request, res: Response) => 
         reservations = reservations.filter(r => r.paymentStatus === paymentStatus);
       }
 
-      if (paymentType) {
-        reservations = reservations.filter(r => r.paymentType === paymentType);
-      }
+          // if (paymentType) {
+          //   reservations = reservations.filter(r => r.paymentType === paymentType);
+          // }
     }
 
     res.status(200).json({
@@ -526,4 +527,29 @@ export const createPreBookingReservationHandler = async (req: Request, res: Resp
   }
 };
 
+export const changeSlotHandler = async (req: Request, res: Response) => {
+  try {
+    const { id: reservationId } = req.params;
+    const reservation = await changeSlotService(reservationId);
+    res.status(200).json({
+      success: true,
+      data: reservation,
+      message: "Slot changed successfully"
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.log(error, "error3");
+      res.status(500).json({ 
+        success: false,
+        message: error.message 
+      });
+    } else {
+      console.log(error, "error4");
+      res.status(500).json({ 
+        success: false,
+        message: "An unknown error occurred" 
+      });
+    }
+  }
+};
 

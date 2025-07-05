@@ -16,7 +16,8 @@ import {
   completeReservationHandler,
   cancelReservationHandler,
   updatePaymentStatusHandler,
-  createPreBookingReservationHandler
+  createPreBookingReservationHandler,
+  changeSlotHandler
 } from "../../../controller/reservation.controller";
 
 const router = Router();
@@ -71,5 +72,8 @@ router.get("/:id", getReservationByIdHandler as RequestHandler);
 
 // Create pre-booking reservation
 router.post("/pre-booking", createPreBookingReservationHandler as RequestHandler);
+
+// Change slot
+router.patch("/:id/change-slot", changeSlotHandler as RequestHandler);
 
 export default router; 

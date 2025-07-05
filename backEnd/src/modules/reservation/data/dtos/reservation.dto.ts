@@ -1,5 +1,7 @@
 import { ObjectId, Schema, model } from "mongoose";
 import { BaseDTO } from "../../../base/data/dtos/base.dto";
+import { VehicleModel } from "../../../parkingSubscriptionFee/data/dtos/vehicle.dto";
+import { ParkingAreaModel } from "../../../parkingArea/data/dtos/parkingArea.dto";
 
 export enum ReservationStatus {
   PENDING = "pending",
@@ -14,17 +16,12 @@ export enum ReservationType {
 export enum PaymentStatus{
   PENDING = "pending",
   PAID = "paid",
-  FAILED = "failed",
   REFUNDED = "refunded",
 }
-export enum PaymentType {
-  CASH = "cash",
-  CARD = "card",
-  BANK_TRANSFER = "bank_transfer",
-}
+
 export interface ReservationModel extends BaseDTO {
   parkingSlot: ObjectId;
-  parkingArea: ObjectId;
+  parkingArea: ObjectId | ParkingAreaModel;
   user: ObjectId;
   type: ReservationType;
   perHourRate: number;
@@ -34,11 +31,10 @@ export interface ReservationModel extends BaseDTO {
   endDateAndTime?: Date;
   advanceAmount: number;
   totalAmount: number;
-  vehicleType: ObjectId;
+  vehicleType: ObjectId | VehicleModel;
   status: ReservationStatus;
   paymentIds: ObjectId[];
   paymentStatus: PaymentStatus;
-  paymentType: PaymentType;
   isDeleted: boolean;
   createdBy: ObjectId;
 }
@@ -68,12 +64,6 @@ const ReservationSchema = new Schema<ReservationModel>(
       required: true, 
       enum: PaymentStatus,
       default: PaymentStatus.PENDING
-    },
-    paymentType: { 
-      type: String, 
-      required: true, 
-      enum: PaymentType,
-      default: PaymentType.CASH
     },
     paymentIds: { type: [Schema.Types.ObjectId], required: true },
     isDeleted: { type: Boolean, default: false },

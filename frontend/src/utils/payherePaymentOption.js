@@ -1,30 +1,16 @@
 /*global payhere*/
-import React from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-const PaymentButton = ({ paymentDetails ,onComplete}) => {
+ 
   
-  const navigate = useNavigate();
-  const handlePayment = async () => {
-    // paymentDetails = {
-    //   order_id: "ItemNo12345",
-    //   amount: "1005.00",
-    //   currency: "LKR",
-    //   first_name: "Saman",
-    //   last_name: "Perera",
-    //   email: "samanp@gmail.com",
-    //   phone: "0771234567",
-    //   address: "No.1, Galle Road",
-    //   city: "Colombo",
-    //   country: "Sri Lanka",
-    // };
+  const handlePayment = async ({ paymentDetails ,onComplete,hashUrl}) => {
+
 
     try {
       //Request backend to generate the hash value
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_ADMIN_URL}/v1/subscription-payment/generate-hash`,
+        `${import.meta.env.VITE_BACKEND_APP_URL}${hashUrl}`,
         paymentDetails,
         {
           headers: {
@@ -58,12 +44,9 @@ const PaymentButton = ({ paymentDetails ,onComplete}) => {
           custom_2: paymentDetails.custom_2,
           hash: hash,
         };
-        const modifiedPayment = {
-          ...payment,
-          iframe: undefined,
-        };
-        delete modifiedPayment.iframe;
-        console.log(modifiedPayment,"--------------------------------modifiedPayment--------------------------------");
+        
+        //delete modifiedPayment.iframe;
+        //console.log(modifiedPayment,"--------------------------------modifiedPayment--------------------------------");
         //Initialize PayHere payment
         // const redirectToPayHere = (paymentData) => {
         //   const form = document.createElement('form');
@@ -84,40 +67,34 @@ const PaymentButton = ({ paymentDetails ,onComplete}) => {
         // };
 
         // redirectToPayHere(payment);
-        payhere.startPayment(modifiedPayment);
+        payhere.startPayment(payment);
         // Payment completed. It can be a successful failure.
         payhere.onCompleted = function onCompleted(orderId) {
-        
+          console.log(orderId,"orderId");
         onComplete();
           // Note: validate the payment and show success or failure page to the customer
         };
 
-       // Payment window closed
-        // payhere.onDismissed = function onDismissed() {
-        //  // navigate(paymentDetails.cancel_url);
-        // };
+       //Payment window closed
+        payhere.onDismissed = function onDismissed() {
+          toast.error("Payment cancelled");
+         // navigate(paymentDetails.cancel_url);
+        };
 
         // Error occurred
         payhere.onError = function onError(error) {
+          console.log(error,"error");
           toast.error("Payment failed");
         };
       } else {
-        alert("Failed to generate hash for payment.");
+        toast.error("Failed to process payment");
         console.error("Failed to generate hash for payment.");
       }
     } catch (error) {
-      alert("An error occurred:");
+      toast.error("An unexpected error occurred");
       console.error("An error occurred:", error);
     }
   };
+  export default handlePayment;
 
-  return (
-    <div>
-      <button id="payhere-payment" onClick={handlePayment} className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">
-        Card Payment
-      </button>
-    </div>
-  );
-};
-
-export default PaymentButton;
+ 

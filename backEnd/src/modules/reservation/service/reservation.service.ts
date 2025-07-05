@@ -21,17 +21,20 @@ import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import { filterParkingSlots, updateSlot } from "../../parkingArea/service/parkingSlot.service";
 import { getVehicleByVehicleType } from "../../parkingSubscriptionFee/service/vehicle.service";
+import { CreateUpdateParkingSlotRequest } from "@/modules/parkingArea/controller/request/create.parkingSlot.request";
+import { VehicleModel } from "@/modules/parkingSubscriptionFee/data/dtos/vehicle.dto";
+import { ParkingAreaModel } from "@/modules/parkingArea/data/dtos/parkingArea.dto";
 
 
 export const createReservationService = async (reservationData: Omit<ReservationModel, "isDeleted">) => {
-  if(!reservationData?.startDateAndTime){
+  if (!reservationData?.startDateAndTime) {
     reservationData.startDateAndTime = new Date();
   }
   const valResult = ReservationValidator.createReservationValidator(reservationData);
   if (valResult.error) {
     throw new Error(valResult.error.message);
   }
-  return await createReservation(valResult.data as Partial<Document>);
+  return await createReservation(valResult.data as unknown as Partial<ReservationModel>);
 };
 
 export const updateReservationService = async (id: string, reservationData: Partial<ReservationModel>) => {
@@ -96,10 +99,10 @@ export const completeReservationService = async (id: string) => {
     throw new Error("Reservation not found");
   }
   dayjs.extend(duration);
-  const endTime : Date = new Date();
-  const startTime : Date = new Date(reservation.startDateAndTime);
+  const endTime: Date = new Date();
+  const startTime: Date = new Date(reservation.startDateAndTime);
   const diff = dayjs.duration(endTime.getTime() - startTime.getTime());
-  const hoursDiff = Math.ceil(diff.asMinutes()/60);
+  const hoursDiff = Math.ceil(diff.asMinutes() / 60);
   return await updateReservation(id, {
     endDateAndTime: endTime,
     totalAmount: Math.ceil(hoursDiff) * (reservation.perHourRate || 0)
@@ -112,41 +115,73 @@ export const cancelReservationService = async (id: string) => {
 
 export const updatePaymentStatusService = async (id: string, paymentStatus: string) => {
   return await updateReservation(id, { paymentStatus } as Partial<ReservationModel>);
-}; 
+};
 
 export const createPreBookingReservationService = async (reservationData: Partial<ReservationModel>) => {
-    const slotFilterData:{vehicleType:string,startTime:Date,endTime?:Date}= {
-        vehicleType:reservationData.vehicleType?.toString().toLowerCase() as unknown as string,
-        startTime:new Date(reservationData.startDateAndTime as Date),
-        }
-      if(reservationData.endDateAndTime){
-        slotFilterData.endTime = new Date(reservationData.endDateAndTime as Date);
-      }
-     const [vehicle,parkingSlots] = await Promise.all([
-      getVehicleByVehicleType(reservationData.vehicleType as unknown as string),
-      filterParkingSlots(slotFilterData,[{_id:mongoose.Types.ObjectId.createFromHexString(reservationData.parkingArea as unknown as string)}])
-     ])
-     
-    if(parkingSlots.length === 0){
-      throw new Error("No parking slots found");
-    }
-    if(parkingSlots[0].slotCount === 0){
-      throw new Error("No parking slots available");
-    }
-    const parkingSlotId = parkingSlots[0].slots[0];
+  const slotFilterData: { vehicleType: string, startTime: Date, endTime?: Date } = {
+    vehicleType: reservationData.vehicleType?.toString().toLowerCase() as unknown as string,
+    startTime: new Date(reservationData.startDateAndTime as Date),
+  }
+  if (reservationData.endDateAndTime) {
+    slotFilterData.endTime = new Date(reservationData.endDateAndTime as Date);
+  }
+  const [vehicle, parkingSlots] = await Promise.all([
+    getVehicleByVehicleType(reservationData.vehicleType as unknown as string),
+    filterParkingSlots(slotFilterData, [{ _id: new mongoose.Types.ObjectId(reservationData.parkingArea as unknown as string) }])
+  ])
+
+  if (parkingSlots.length === 0) {
+    throw new Error("No parking slots found");
+  }
+  if (parkingSlots[0].slotCount === 0) {
+    throw new Error("No parking slots available");
+  }
+  const parkingSlotId = parkingSlots[0].slots[0];
 
 
-    reservationData.parkingSlot = parkingSlotId;
-    delete reservationData.vehicleType;
-    reservationData.vehicleType = vehicle._id as ObjectId;
-    const reservation = await createReservation(reservationData);
-    if (reservation){
-      await updateSlot(parkingSlotId, {
-        isReservationPending: true,
-        reservedVehicleNumber: reservationData.vehicleNumber,
-        addReservationId: reservation._id as unknown as string
-      });
-    }
-    return reservation;
+  reservationData.parkingSlot = parkingSlotId;
+  delete reservationData.vehicleType;
+  reservationData.vehicleType = vehicle._id as ObjectId;
+  const reservation = await createReservation(reservationData);
+  if (reservation) {
+    await updateSlot(parkingSlotId, {
+      addReservationId: reservation._id as unknown as string
+    });
+  }
+  return reservation;
+
+};
+
+export const changeSlotService = async (reservationId: string) => {
+  const reservation: ReservationModel | null = await findReservationById(reservationId);
+  if (!reservation) {
+    throw new Error("Reservation not found");
+
+  }
+  const vehicleType = reservation.vehicleType as VehicleModel;
+  const slotFilterData: { vehicleType: string, startTime: Date, endTime?: Date } = {
+    vehicleType: vehicleType.vehicleType.toLowerCase() as unknown as string,
+    startTime: new Date(reservation.startDateAndTime as Date),
+  }
+  if (reservation.endDateAndTime) {
+    slotFilterData.endTime = new Date(reservation.endDateAndTime as Date);
+  }
+  const parkingArea=reservation.parkingArea as ParkingAreaModel;
   
+
+  const parkingSlots = await filterParkingSlots(slotFilterData, [{ _id: parkingArea._id as unknown as string }], 9999)
+
+  if (parkingSlots.length === 0) {
+    throw new Error("No parking slots found");
+  }
+  if (parkingSlots[0].slotCount === 0) {
+    throw new Error("No parking slots available");
+  }
+  const parkingSlotId = parkingSlots[0].slots[parkingSlots[0].slots.length - 1] ;
+  const [slotRes, slotRes2, reservationRes] = await Promise.all([
+    updateSlot(reservation.parkingSlot as unknown as string, { removeReservationId: reservationId }),
+    updateSlot(parkingSlotId, { addReservationId: reservationId, isOccupied: true }),
+    updateReservation(reservationId, { parkingSlot: parkingSlotId } as Partial<ReservationModel>)
+  ])
+  return reservationRes;
 };

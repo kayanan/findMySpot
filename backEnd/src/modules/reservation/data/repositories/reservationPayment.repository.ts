@@ -1,11 +1,10 @@
-import { ReservationPaymentDTO } from "../dtos/reservationPayment.dto";
-import { Document } from "mongoose";
+import { ReservationPaymentDTO, ReservationPaymentModel } from "../dtos/reservationPayment.dto";
 
-export const createReservationPayment = async (data: Partial<Document>) => {
+export const createReservationPayment = async (data: Partial<ReservationPaymentModel>) => {
   return await ReservationPaymentDTO.create(data);
 };
 
-export const updateReservationPayment = async (id: string, data: Partial<Document>) => {
+export const updateReservationPayment = async (id: string, data: Partial<ReservationPaymentModel>) => {
   return await ReservationPaymentDTO.findByIdAndUpdate(id, data, { new: true });
 };
 
@@ -100,3 +99,4 @@ export const findRefundedPayments = async () => {
     isDeleted: false 
   }).populate("reservation paidBy customer parkingArea parkingSlot");
 }; 
+

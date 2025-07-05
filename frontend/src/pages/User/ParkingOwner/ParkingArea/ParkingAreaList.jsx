@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
-import { FaBuilding, FaParking, FaCar, FaMapMarkerAlt } from "react-icons/fa";
+import { FaBuilding, FaParking, FaCar, FaMapMarkerAlt, FaCreditCard, FaUniversity, FaMoneyBillWave } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import PayhereButton from "../../../../utils/PayhereButton";
 import axios from "axios";
 import BankTransferPopup from "../../../../utils/BankTransferPopup";
 import dayjs from "dayjs";
+import handlePayment from "../../../../utils/payherePaymentOption";
+import PaymentOptionPopup from "../../../../utils/PaymentOptionPopup";
 
 const getSlotTypeCount = (slots) => {
   const countByType = {};
@@ -31,8 +32,14 @@ const calculateAmount = (parkingArea, subscriptionFee) => {
 const ParkingAreaList = ({ parkingOwner }) => {
   const [isBankTransferOpen, setIsBankTransferOpen] = useState(false);
   const [parkingAreas, setParkingAreas] = useState([]);
+  const [selectedParkingArea, setSelectedParkingArea] = useState(null);
   const [activeSubscriptionFee, setActiveSubscriptionFee] = useState(0);
   const [amount, setAmount] = useState(0);
+  const [isPaymentOptionPopupOpen, setIsPaymentOptionPopupOpen] = useState(false);
+  const paymentOptions = [
+    { id: 'card', name: 'Card Payment', icon: FaCreditCard, color: 'text-blue-600' },
+    { id: 'bank_transfer', name: 'Bank Transfer', icon: FaUniversity, color: 'text-purple-600' },
+  ]
 
   const handleBankTransferSubmit = async (formData) => {
 
@@ -112,6 +119,37 @@ const ParkingAreaList = ({ parkingOwner }) => {
       toast.error("Failed to update parking area status");
     }
   }
+  const handlePaymentOptionSubmit = async (paymentOption) => {
+    console.log(paymentOption);
+    if (paymentOption.paymentMethod === 'card') {
+      setIsPaymentOptionPopupOpen(false);
+      const paymentDetails = {
+        order_id: "ItemNo12345",
+        amount: paymentOption.amount,
+        currency: "LKR",
+        items: "Parking Subscription",
+        first_name: parkingOwner?.firstName,
+        last_name: parkingOwner?.lastName,
+        email: parkingOwner?.email,
+        phone: parkingOwner?.phoneNumber,
+        address: selectedParkingArea?.addressLine1,
+        city: selectedParkingArea?.city?.name,
+        country: "Sri Lanka",
+        custom_1: parkingOwner?._id,
+        custom_2: selectedParkingArea?._id,
+        return_url: `/owner/view/${parkingOwner?._id}`,
+        cancel_url: `/owner/view/${parkingOwner?._id}`,
+        notify_url: `${import.meta.env.VITE_BACKEND_APP_URL_PUBLIC}/api/v1/subscription-payment/notify-payment`,
+      }
+      handlePayment({paymentDetails,onComplete:()=>{
+        toast.success('Payment successful!');
+      },hashUrl:`/v1/subscription-payment/generate-hash`})
+    } else if (paymentOption.paymentMethod === 'bank_transfer') {
+      setIsPaymentOptionPopupOpen(false);
+      setIsBankTransferOpen(true)
+      setAmount(calculateAmount(area, activeSubscriptionFee).toFixed(2).toString())
+    }
+  }
 
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -178,7 +216,7 @@ const ParkingAreaList = ({ parkingOwner }) => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2 pt-4 mt-auto">
+              <div className="grid grid-cols-2 gap-2 pt-4 mt-auto">
                 <Link
                   to={`/parking-area/view/${area?._id}`}
                   state={{ slots: area?.slots, parkingOwnerId: parkingOwner?._id }}
@@ -190,7 +228,7 @@ const ParkingAreaList = ({ parkingOwner }) => {
                   <button
                     type="button"
                     onClick={() => handleStatusChange(area?._id, !area?.isActive)}
-                        className={`flex-1 py-2 rounded-lg transition duration-300 font-medium ${area?.isActive
+                    className={`flex-1 py-2 rounded-lg transition duration-300 font-medium ${area?.isActive
                       ? "bg-rose-500 hover:bg-rose-600 text-white"
                       : "bg-emerald-500 hover:bg-emerald-600 text-white"
                       }`}
@@ -199,8 +237,8 @@ const ParkingAreaList = ({ parkingOwner }) => {
                   </button>
                 ) : (
                   <>
-                    <PayhereButton paymentDetails={
-                      {
+                    {/* <button id="payhere-payment" onClick={()=>{
+                      const paymentDetails = {
                         order_id: "ItemNo12345",
                         amount: calculateAmount(area, activeSubscriptionFee).toFixed(2).toString(),
                         currency: "LKR",
@@ -218,18 +256,20 @@ const ParkingAreaList = ({ parkingOwner }) => {
                         cancel_url: `/owner/view/${parkingOwner?._id}`,
                         notify_url: `${import.meta.env.VITE_BACKEND_ADMIN_URL_PUBLIC}/api/admin/v1/subscription-payment/notify-payment`,
                       }
-                    } onComplete={fetchParkingAreas} />
-                    <button className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-lg" onClick={() => {
-                      setIsBankTransferOpen(true)
+                      handlePayment({paymentDetails,onComplete:fetchParkingAreas})
+                    }}> Card Payment</button> */}
+                    <button className="bg-teal-500 hover:bg-teal-600 text-white p-2 rounded-lg" onClick={() => {
+                      setIsPaymentOptionPopupOpen(true)
                       setAmount(calculateAmount(area, activeSubscriptionFee).toFixed(2).toString())
+                      setSelectedParkingArea(area)
                     }}>
-                      Bank Transfer
+                      Make Payment
                     </button>
                     <BankTransferPopup
                       isOpen={isBankTransferOpen}
                       onClose={() => setIsBankTransferOpen(false)}
                       onSubmit={handleBankTransferSubmit}
-                      parkingAreaId={area?._id}
+                      parkingAreaId={selectedParkingArea?._id}
                       parkingOwnerId={parkingOwner?._id}
                       amount={amount}
                     />
@@ -242,7 +282,16 @@ const ParkingAreaList = ({ parkingOwner }) => {
           </div>
         );
       })}
+      <PaymentOptionPopup
+        isOpen={isPaymentOptionPopupOpen}
+        onClose={() => setIsPaymentOptionPopupOpen(false)}
+        onSubmit={handlePaymentOptionSubmit}
+        amount={amount}
+        title="Payment Options"
+        initialOptions={paymentOptions}
+      />
     </div>
+
   )
 }
 

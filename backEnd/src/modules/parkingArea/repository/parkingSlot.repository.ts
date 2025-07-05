@@ -9,7 +9,7 @@ export const createSlot = async (slotData: Partial<CreateUpdateParkingSlotReques
   return result;
 };
 
-export const updateSlot = async (id: string, slotData: CreateUpdateParkingSlotRequest) => {
+export const updateSlot = async (id: string, slotData: Partial<CreateUpdateParkingSlotRequest>) => {
   const data: any = { $set: slotData };
   if (slotData.addReservationId) {
     data.$push = { reservationIds: slotData.addReservationId };
@@ -19,11 +19,13 @@ export const updateSlot = async (id: string, slotData: CreateUpdateParkingSlotRe
     data.$pull = { reservationIds: slotData.removeReservationId };
     delete data.$set.removeReservationId;
   }
+  console.log(data, "data---------------------------------------------------------------------------------------");
   const slot = await ParkingSlotDTO.findByIdAndUpdate(
     id,
     data,
     { new: true }
   );
+  console.log(slot, "slot---------------------------------------------------------------------------------------");
   if (!slot) {
     throw new Error("Slot not found");
   }
@@ -90,7 +92,15 @@ export const updateParkingSlotStatus = async (parkingAreaId: string[], status: b
   }, { $set: { isActive: status } });
 };
 
-export const filterParkingSlots = async (filter: any, parkingAreaIds: string[]) => {
+export const filterParkingSlots = async (filter: any, parkingAreaIds: any[], filteredSlotsCount: number = 10) => {
+  const matchCondition:any =  [
+    { $expr: { $eq: [{ $size: "$reservations" }, 0] } },
+    { $expr: { $eq: [{ $size: "$filteredReservations" }, 0] } },
+    { filteredReservations: { $not: { $elemMatch: { endDateAndTime: { $gte: new Date(filter.startTime - 1000 * 60 * 60 * 2) } } } } }
+ ]
+  if(filter.endTime){
+    matchCondition.push({ filteredReservations: { $not: { $elemMatch: { startDateAndTime: { $lte: new Date(filter.endTime + 1000 * 60 * 60 * 2) } } } } })
+  }
 
   const parkingSlots = await ParkingSlotDTO.aggregate([
     {
@@ -137,59 +147,31 @@ export const filterParkingSlots = async (filter: any, parkingAreaIds: string[]) 
       }
     },
     {
-      $match: {
-        $or: [
-          { $expr: { $eq: [{ $size: "$reservations" }, 0] } },
-          {
-            $or: [
-              {
-                reservations: {
-                  $not: {
-                    $elemMatch: {
-                      status: ReservationStatus.PENDING,
-                      startDateAndTime: {
-                        $gt: new Date(new Date().getTime() - 1000 * 60 * 5)
-                      }
-                    }
-                  }
-                }
-              },
-              {
-                reservations: {
-                  $elemMatch: {
-                    status: { $ne: ReservationStatus.PENDING },
-                    endDateAndTime: { $gt: new Date(filter.startTime + 1000 * 60 * 60 * 2) }
-                  }
-                }
-              }
-            ]
+      $addFields: {
+        filteredReservations: {
+          $filter: {
+            input: '$reservations',
+            as: 'reservation',
+            cond: {
+              $or: [
+                {
+                  $and: [
+                    { $eq: ["$$reservation.status", ReservationStatus.PENDING] },
+                    { $gte: ["$$reservation.createdAt", new Date(new Date().getTime() - 1000 * 60 * 5)] }
+                  ]
+                },
+                { $eq: ["$$reservation.status", ReservationStatus.CONFIRMED] }
+              ]
+
+            }
           }
-        ]
+        }
       }
     },
     {
-      $match: filter?.endTime
-        ? {
-          $or: [
-            { $expr: { $eq: [{ $size: "$reservations" }, 0] } },
-            {
-              reservations: {
-                $not: {
-                  $elemMatch: {
-                    status: { $ne: ReservationStatus.PENDING },
-                    startDateAndTime: { $lte: new Date(filter.endTime + 1000 * 60 * 60 * 2) }
-                  }
-                }
-              }
-            },
-            {
-              reservations: {
-                $elemMatch: { status: ReservationStatus.PENDING }
-              }
-            }
-          ]
-        }
-        : {}
+      $match: {
+        $or:matchCondition
+      }
     },
     {
       $group: {
@@ -247,7 +229,7 @@ export const filterParkingSlots = async (filter: any, parkingAreaIds: string[]) 
     {
       $project: {
         slotCount: 1,
-        slots: { $slice: ['$slots', 10] },
+        slots: { $slice: ['$slots', filteredSlotsCount] },
         price: 1,
         parkingArea: {
           _id: 1,

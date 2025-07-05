@@ -17,7 +17,9 @@ import {
   getSuccessfulPaymentsHandler,
   getFailedPaymentsHandler,
   getPendingPaymentsHandler,
-  getRefundedPaymentsHandler
+  getRefundedPaymentsHandler,
+  notifyPaymentController,
+  generateHashController
 } from "../../../controller/reservationPayment.controller";
 
 const router = Router();
@@ -75,5 +77,11 @@ router.patch("/:id", updateReservationPaymentHandler as RequestHandler);
 
 // Get reservation payment by ID (must be last to avoid conflicts)
 router.get("/:id", getReservationPaymentByIdHandler as RequestHandler);
+
+// Generate hash
+router.post("/generate-hash", generateHashController as RequestHandler);
+
+// Notify payment
+router.post("/notify", notifyPaymentController as RequestHandler);
 
 export default router; 

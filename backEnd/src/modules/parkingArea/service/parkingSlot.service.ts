@@ -91,8 +91,10 @@ export const updateParkingSlotStatus = async (parkingAreaId: string[], status: b
   return await updateParkingSlotStatusRepo(parkingAreaId, status);
 };
 
-export const filterParkingSlots = async (slotFilterData:any,parkingAreas:Partial<ParkingAreaModel>[]) => {
+export const filterParkingSlots = async (slotFilterData:any,parkingAreas:Partial<ParkingAreaModel>[],filteredSlotsCount:number=10) => {
   const parkingAreaIds = parkingAreas.map((item) => item._id as string);
-  
-  return await filterParkingSlotsRepo(slotFilterData,parkingAreaIds);
+  console.log(slotFilterData, "slotFilterData==========----------==========----------==========-------------======");
+  console.log(parkingAreaIds, "parkingAreaIds==========----------==========----------==========-------------======");
+  console.log(filteredSlotsCount, "filteredSlotsCount==========----------==========----------==========-------------======");
+  return await filterParkingSlotsRepo(slotFilterData,parkingAreaIds,filteredSlotsCount);
 };
