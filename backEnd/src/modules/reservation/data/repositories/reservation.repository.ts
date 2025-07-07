@@ -1,5 +1,6 @@
 import { ReservationDTO, ReservationModel, ReservationStatus } from "../dtos/reservation.dto";
-import { UpdateQuery } from "mongoose";
+import mongoose, { UpdateQuery } from "mongoose";
+import { ReservationPaymentModel } from "../dtos/reservationPayment.dto";
 
 export const createReservation = async (data: Partial<ReservationModel>) => {
   return await ReservationDTO.create(data);
@@ -13,8 +14,8 @@ export const deleteReservation = async (id: string) => {
   return await ReservationDTO.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
 };
 
-export const findReservationById = async (id: string) => {
-  return await ReservationDTO.findOne({ _id: id, isDeleted: false }).populate("parkingSlot parkingArea user createdBy vehicleType");
+export const findReservationById = async (id: string):Promise<ReservationModel & { paymentIds: ReservationPaymentModel[] } | null> => {
+  return await ReservationDTO.findOne({ _id: id, isDeleted: false }).populate(["parkingSlot", "parkingArea" ,"user" ,"createdBy" ,"vehicleType", "paymentIds" ]).lean() as ReservationModel & { paymentIds: ReservationPaymentModel[] } | null;
 };
 
 export const findAllReservations = async () => {
@@ -46,10 +47,26 @@ export const findReservationsByPaymentStatus = async (paymentStatus: string) => 
 };
 
 export const findReservationByVehicleNumber = async (vehicleNumber: string) => {
-  const reservation = await ReservationDTO.findOne({ 
-    vehicleNumber: vehicleNumber.toLowerCase().trim(), 
-    status: {$in: [ReservationStatus.PENDING, ReservationStatus.CONFIRMED]}, 
-    isDeleted: {$ne: true}
+  const reservation = await ReservationDTO.findOne({
+    vehicleNumber: vehicleNumber.toLowerCase().replace(/\s+/g, ''),
+    $or: [
+      {
+        status: ReservationStatus.PENDING,
+        createdAt: { $gte: new Date(new Date().getTime() - 1000 * 60 * 5) }
+      },
+      {
+        status: ReservationStatus.CONFIRMED,
+        $or: [
+          {
+            startDateAndTime: { $gte: new Date() }
+          },
+          {
+            startDateAndTime: { $gte: new Date(new Date().getTime() - 1000 * 60 * 60 * 1) }
+          }
+        ]
+      }
+    ],
+    isDeleted: { $ne: true }
   })
   return reservation;
 };
@@ -62,8 +79,8 @@ export const findReservationsByDateRange = async (startDate: Date, endDate: Date
 };
 
 export const findReservationsByMobileNumber = async (mobileNumber: string) => {
-  return await ReservationDTO.find({ 
-    customerMobile: mobileNumber, 
-    isDeleted: false 
+  return await ReservationDTO.find({
+    customerMobile: mobileNumber,
+    isDeleted: false
   }).populate("parkingSlot parkingArea user");
 };

@@ -8,20 +8,20 @@ import { toast, ToastContainer } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import handlePayment from '../../utils/payherePaymentOption';
 import axios from 'axios';
-import dayjs from 'dayjs';
 
 
 const vehicleTypes = [
     { label: 'Car', value: 'car', icon: <FaCar /> },
     { label: 'Motorcycle', value: 'motorcycle', icon: <FaMotorcycle /> },
     { label: 'Bus', value: 'bus', icon: <FaBus /> },
+    { label: 'Van', value: 'van', icon: <FaCar /> },
 ];
 
 const FindParkingSpot = () => {
     const { authState } = useAuth();
     const mapRef = useRef(null);
     const navigate = useNavigate();
-    const { vehicleType, position: positionFromState, dateAndTime } = useLocation().state || {};
+    const { vehicleType, position: positionFromState, startDateAndTime, endDateAndTime } = useLocation().state || {};
     const [selectedArea, setSelectedArea] = useState(null);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [selectedSpotData, setSelectedSpotData] = useState(null);
@@ -30,13 +30,24 @@ const FindParkingSpot = () => {
     const [position, setPosition] = useState(positionFromState || null);
     const [zoom, setZoom] = useState(12);
     const [filters, setFilters] = useState({
-        date: dateAndTime ? dateAndTime.toISOString().split('T')[0] : '',
-        time: dateAndTime ? dateAndTime.toISOString().split('T')[1] : '',
-        vehicleType: vehicleType.toLowerCase() || '',
+        startTime: startDateAndTime ? new Date(startDateAndTime) : null,
+        endTime: endDateAndTime ? new Date(endDateAndTime) : null,
+        vehicleType: vehicleType?.toLowerCase() || '',
         radius: 10000,
         coords: position,
-        startTime: dateAndTime ? dateAndTime : new Date()
     });
+    const [errors, setErrors] = useState({
+        startDateAndTime: '',
+        endDateAndTime: '',
+        vehicleType: '',
+        radius: '',
+        coords: '',
+    });
+
+    useEffect(() => {
+        setFilters(prev => ({ ...prev, coords: position }));
+    }, [position]); 
+    
     useEffect(() => {
         if (selectedArea && position) {
             const getDistance = async () => {
@@ -115,25 +126,7 @@ const FindParkingSpot = () => {
                 getParkingSpots();
             }, 1000)
 
-            const getParkingSpots = async () => {
-                const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-area/nearest-parking-spots`, filters)
-                const filteredResponse = response.data.map(item => ({
-                    id: item._id,
-                    name: item.parkingArea.name,
-                    coords: [item?.parkingArea?.location?.coordinates[1], item?.parkingArea?.location?.coordinates[0]],
-                    address: item?.parkingArea?.addressLine1 + " " + item?.parkingArea?.addressLine2,
-                    slotCount: item?.slotCount,
-                    vehicleType: item?.vehicleType,
-                    price: item?.price,
-                    rating: item?.parkingArea?.averageRating || 0,
-                    available:item?.slotCount>0,
-                    city: item?.parkingArea?.city,
-                    district: item?.parkingArea?.district,
-                    province: item?.parkingArea?.province
-
-                }));
-                setParkingSpots(filteredResponse);
-            }
+           
             return () => clearTimeout(setTimeOut);
 
 
@@ -142,30 +135,46 @@ const FindParkingSpot = () => {
             console.log(error, "error");
         }
 
-    }, [position, filters]);
+    }, [position, filters.radius]);
 
+    const getParkingSpots = async () => {
+        const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-area/nearest-parking-spots`, filters)
+        const filteredResponse = response.data.map(item => ({
+            id: item._id,
+            name: item.parkingArea.name,
+            coords: [item?.parkingArea?.location?.coordinates[1], item?.parkingArea?.location?.coordinates[0]],
+            address: item?.parkingArea?.addressLine1 + " " + item?.parkingArea?.addressLine2,
+            slotCount: item?.slotCount,
+            vehicleType: item?.vehicleType,
+            price: item?.price,
+            rating: item?.parkingArea?.averageRating || 0,
+            available: item?.slotCount > 0,
+            city: item?.parkingArea?.city,
+            district: item?.parkingArea?.district,
+            province: item?.parkingArea?.province
+
+        }));
+        setParkingSpots(filteredResponse);
+    }
 
     const handleReservationSubmit = async (reservationData) => {
-        console.log(reservationData, "reservationData");
         setIsLoading(true);
         try {
             const data = {
                 parkingArea: selectedArea.id,
-                startDateAndTime: reservationData.startDateAndTime || new Date(),
-                endDateAndTime: reservationData.endDateAndTime || reservationData.duration ? new Date(new Date().setHours(new Date().getHours() + reservationData.duration)) : null,
+                startDateAndTime: filters?.startTime ? new Date(filters?.startTime) : new Date(),
+                endDateAndTime:  filters?.endTime ? new Date(filters?.endTime) : null,
                 user: authState.user.userId,
                 type: "pre_booking",
-                vehicleNumber: reservationData.vehicleNumber,
-                vehicleType: vehicleType,
+                vehicleNumber: reservationData.vehicleNumber.replace(/\s+/g, ''),
+                vehicleType: vehicleType || filters?.vehicleType,
                 perHourRate: selectedArea.price,
                 status: "pending",
                 customerMobile: reservationData.customerMobile,
                 createdBy: authState.user.userId,
             }
-            
-            
+           
             const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/pre-booking`, data)
-            console.log(response,"response");
             const paymentDetails = {
                 order_id: response.data.data._id,
                 amount: selectedArea.price.toFixed(2),
@@ -184,11 +193,13 @@ const FindParkingSpot = () => {
                 custom_1: authState.user.userId,
                 custom_2: response.data.data.parkingSlot,
             }
-            handlePayment({paymentDetails,onComplete:()=>{
-                toast.success('Reservation confirmed successfully!');
-            },hashUrl:`/v1/reservation-payment/generate-hash`})
+            handlePayment(
+                {
+                    paymentDetails,
+                    onComplete: () => { navigate("/customer-landing-page") },
+                    hashUrl: `/v1/reservation-payment/generate-hash`
+                })
 
-            toast.success('Reservation confirmed successfully!');
 
 
         } catch (error) {
@@ -219,7 +230,7 @@ const FindParkingSpot = () => {
                 <div className="max-w-7xl mx-auto">
                     <div className="flex flex-col md:flex-row gap-6">
                         {/* Map: always on top for mobile, right for desktop */}
-                        <div className="grid grid-cols-1 order-1 md:order-2 w-full md:w-1/2 flex items-center justify-center">
+                        {parkingSpots?.length > 0 &&(<div className="grid grid-cols-1 order-1 md:order-2 w-full md:w-1/2 flex items-center justify-center">
 
                             <div className="w-full max-w-xl bg-white rounded-xl shadow-lg p-2 md:p-4 h-56 xs:h-64 sm:h-72 md:h-[500px] flex items-center z-0">
                                 <CustomPointsMapContainer parkingSpots={parkingSpots} setSelectedArea={setSelectedArea} currentPosition={position} zoom={zoom} />
@@ -244,7 +255,7 @@ const FindParkingSpot = () => {
                                 </div>
                             </div>
 
-                        </div>
+                        </div>)}
 
                         {/* Filter: below map on mobile, left on desktop */}
                         <div className="order-2 md:order-1 w-full md:w-1/2 flex flex-col gap-6">
@@ -276,31 +287,56 @@ const FindParkingSpot = () => {
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <input
-                                            type="date"
-                                            value={filters.date}
-                                            onChange={e => setFilters(f => ({ ...f, date: e.target.value }))}
-                                            className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
-                                        />
-                                        <input
+                                    <div>
+                                            <label className="text-sm font-bold text-black">{("Select Vehicle Type").toUpperCase()}</label>
+                                            <select
+                                                value={filters.vehicleType}
+                                                onChange={e => setFilters(f => ({ ...f, vehicleType: e.target.value }))}
+                                                className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 col-span-2"
+                                                placeholder="Select Vehicle Type"
+                                            >
+                                                {vehicleTypes.map(type => (
+                                                    <option key={type.value} value={type.value}>{type.label}</option>
+                                                ))}
+                                            </select>
+                                            {errors.vehicleType && <p className="text-red-500 text-sm">{errors.vehicleType}</p>}
+                                        </div>
+                                        <div className="grid grid-cols-1  lg:grid-cols-2  gap-2 mt-4 justify-center">
+                                            <div>
+                                                <label className="text-sm font-bold text-black">{("Arrival Date and Time").toUpperCase()}</label>
+                                                <input
+                                                    type="datetime-local"
+                                                    value={filters.startTime}
+                                                    onChange={e => setFilters(f => ({ ...f, startTime: e.target.value }))}
+                                                    className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
+                                                />
+                                            </div>
+                                            {errors.startDateAndTime && <p className="text-red-500 text-sm">{errors.startDateAndTime}</p>}
+                                            <div>
+                                                <label className="text-sm font-bold text-black">{("Departure Date and Time").toUpperCase() + "(optional)"}</label>
+                                                <input
+                                                    type="datetime-local"
+                                                    value={filters.endTime}
+                                                    onChange={e => setFilters(f => ({ ...f, endTime: e.target.value }))}
+                                                    className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
+                                                />
+
+                                            </div>
+                                            {errors.endDateAndTime && <p className="text-red-500 text-sm">{errors.endDateAndTime}</p>}
+                                        </div>
+                                        {/* <input
                                             type="time"
                                             value={filters.time}
                                             onChange={e => setFilters(f => ({ ...f, time: e.target.value }))}
                                             className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
-                                        />
-                                        <select
-                                            value={filters.vehicleType}
-                                            onChange={e => setFilters(f => ({ ...f, vehicleType: e.target.value }))}
-                                            className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 col-span-2"
-                                        >
-                                            <option value="">All Vehicle Types</option>
-                                            {vehicleTypes.map(type => (
-                                                <option key={type.value} value={type.value}>{type.label}</option>
-                                            ))}
-                                        </select>
+                                        /> */}
+                                        
                                     </div>
                                     <button className=" flex flex-col bg-emerald-500 text-white p-2 rounded-md hover:bg-emerald-600 transition-all duration-300  flex items-center justify-center mt-2  h-12"
-                                        onClick={() => navigate("/customer/find-parking-spot")}>
+                                        onClick={() =>{ 
+                                            getParkingSpots();
+                                            //navigate("/customer/find-parking-spot", { state: { ...filters }, key: filters?.startDateAndTime })
+                                            }}>
 
 
                                         <span className="text-sm font-bold ">Find Parking Spot</span>
@@ -308,7 +344,7 @@ const FindParkingSpot = () => {
                                 </div>
                             </div>)}
                             {/* Results List */}
-                            <div className="bg-white rounded-xl shadow-md p-4">
+                           {parkingSpots?.length > 0 &&( <div className="bg-white rounded-xl shadow-md p-4">
                                 <h3 className="text-lg font-bold text-cyan-700 mb-4">Available Spots</h3>
                                 <div className="flex flex-col gap-4">
                                     {parkingSpots.length === 0 && (
@@ -337,7 +373,7 @@ const FindParkingSpot = () => {
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                            </div>)}
                         </div>
                     </div>
                 </div>)}

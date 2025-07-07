@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaTimes, FaSpinner, FaCreditCard, FaMoneyBillWave, FaUniversity, FaPlus, FaTrash } from 'react-icons/fa';
+import { FaTimes, FaSpinner, FaCreditCard, FaPlus, FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -79,15 +79,6 @@ const PaymentOptionPopup = ({
       setSelectedOption('');
     }
     toast.success('Payment option removed successfully');
-  };
-
-  const getIconComponent = (iconName) => {
-    const iconMap = {
-      FaCreditCard: FaCreditCard,
-      FaMoneyBillWave: FaMoneyBillWave,
-      FaUniversity: FaUniversity,
-    };
-    return iconMap[iconName] || FaCreditCard;
   };
 
   if (!isOpen) return null;

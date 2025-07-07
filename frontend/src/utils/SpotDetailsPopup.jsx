@@ -14,7 +14,6 @@ const SpotDetailsPopup = ({
     const [formData, setFormData] = useState({
         vehicleNumber: '',
         customerMobile: userData?.mobileNumber || '',
-        duration: '1', // Default 1 hour
         customerName: userData?.firstName + " " + userData?.lastName || ''
     });
     const [errors, setErrors] = useState({});
@@ -24,7 +23,6 @@ const SpotDetailsPopup = ({
             setFormData({
                 vehicleNumber: '',
                 customerMobile: userData?.mobileNumber || '',
-                duration: '1',
                 customerName: userData?.firstName + " " + userData?.lastName || ''
             });
             setErrors({});
@@ -84,8 +82,6 @@ const SpotDetailsPopup = ({
                 vehicleNumber: formData.vehicleNumber.trim().toUpperCase(),
                 customerMobile: formData.customerMobile.trim(),
                 customerName: formData.customerName.trim(),
-                duration: parseInt(formData.duration),
-                totalPrice: spotData.price * parseInt(formData.duration),
                 parkingAreaId: spotData.id,
                 spotName: spotData.name,
                 vehicleType: spotData.vehicleType
@@ -95,7 +91,6 @@ const SpotDetailsPopup = ({
             setFormData({
                 vehicleNumber: '',
                 customerMobile: '',
-                duration: '1',
                 customerName: ''
             });
             setErrors({});
@@ -109,7 +104,6 @@ const SpotDetailsPopup = ({
         setFormData({
             vehicleNumber: '',
             customerMobile: '',
-            duration: '1',
             customerName: ''
         });
         setErrors({});

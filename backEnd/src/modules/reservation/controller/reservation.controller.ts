@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { ReservationModel } from "../data/dtos/reservation.dto";
 import {
-  createReservationService,
   updateReservationService,
   deleteReservationService,
   getReservationByIdService,
@@ -18,8 +17,9 @@ import {
   completeReservationService,
   cancelReservationService,
   updatePaymentStatusService,
-  createPreBookingReservationService,
+  createReservationService,
   changeSlotService,
+  calculateFinalAmountService
 } from "../service/reservation.service";
 
 export const createReservationHandler = async (req: Request, res: Response) => {
@@ -432,6 +432,7 @@ export const completeReservationHandler = async (req: Request, res: Response) =>
       message: "Reservation completed successfully"
     });
   } catch (error: unknown) {
+    console.log(error, "error");
     if (error instanceof Error) {
       res.status(500).json({ 
         success: false,
@@ -445,6 +446,24 @@ export const completeReservationHandler = async (req: Request, res: Response) =>
     }
   }
 };
+export const calculateFinalAmountHandler = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const reservation = await calculateFinalAmountService(id);
+    res.status(200).json({
+      success: true,
+      data: reservation,
+      message: "Final amount calculated successfully"
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      res.status(500).json({ 
+        success: false,
+        message: error.message 
+      });
+    }
+  }
+}
 
 export const cancelReservationHandler = async (req: Request, res: Response) => {
   try {
@@ -504,7 +523,7 @@ export const updatePaymentStatusHandler = async (req: Request, res: Response) =>
 export const createPreBookingReservationHandler = async (req: Request, res: Response) => {
   try {
     const reservationData = req.body as Partial<ReservationModel>;
-    const reservation = await createPreBookingReservationService(reservationData);
+    const reservation = await createReservationService(reservationData);
     res.status(200).json({
       success: true,
       data: reservation,

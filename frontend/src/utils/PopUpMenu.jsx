@@ -11,7 +11,8 @@ const PopUpMenu = ({
     type = 'info', // 'info', 'success', 'warning', 'error'
     showCloseButton = true
 }) => {
-    const filteredButtons = buttons?.filter(button => button !== false);
+    console.log(buttons)
+    const filteredButtons = buttons?.filter(button => Object.keys(button).length > 0);
 
     const getIcon = () => {
         switch (type) {

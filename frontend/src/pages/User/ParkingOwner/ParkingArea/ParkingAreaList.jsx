@@ -70,6 +70,10 @@ const ParkingAreaList = ({ parkingOwner }) => {
     //   amount: number
     // }
   };
+  const activeReservation = (area) => {
+    return area?.slots?.data?.filter(slot => slot?.reservationIds?.filter(reservation => reservation?.status === "confirmed" && new Date(reservation?.startDateAndTime) <= new Date() && (!reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime() + 1000 * 60 * 60 * 1) >= new Date().getTime() : (reservation?.endDateAndTime ? new Date(reservation?.endDateAndTime) >= new Date().getTime() : true))).length > 0)
+  }
+
 
   const fetchParkingAreas = async () => {
     try {
@@ -88,6 +92,7 @@ const ParkingAreaList = ({ parkingOwner }) => {
       });
     }
   };
+  console.log(parkingAreas, "parkingAreas")
   const fetchActiveSubscriptionFee = async () => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-subscription-fee/active`);
@@ -141,9 +146,11 @@ const ParkingAreaList = ({ parkingOwner }) => {
         cancel_url: `/owner/view/${parkingOwner?._id}`,
         notify_url: `${import.meta.env.VITE_BACKEND_APP_URL_PUBLIC}/api/v1/subscription-payment/notify-payment`,
       }
-      handlePayment({paymentDetails,onComplete:()=>{
-        toast.success('Payment successful!');
-      },hashUrl:`/v1/subscription-payment/generate-hash`})
+      handlePayment({
+        paymentDetails, onComplete: () => {
+          toast.success('Payment successful!');
+        }, hashUrl: `/v1/subscription-payment/generate-hash`
+      })
     } else if (paymentOption.paymentMethod === 'bank_transfer') {
       setIsPaymentOptionPopupOpen(false);
       setIsBankTransferOpen(true)
@@ -216,7 +223,7 @@ const ParkingAreaList = ({ parkingOwner }) => {
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-2 pt-4 mt-auto">
+              <div className="flex flex-row gap-2 pt-4 mt-auto">
                 <Link
                   to={`/parking-area/view/${area?._id}`}
                   state={{ slots: area?.slots, parkingOwnerId: parkingOwner?._id }}
@@ -224,7 +231,7 @@ const ParkingAreaList = ({ parkingOwner }) => {
                 >
                   View Details
                 </Link>
-                {(parkingOwner?.isActive && area?.parkingSubscriptionPaymentId && dayjs(area?.parkingSubscriptionPaymentId?.subscriptionEndDate).isAfter(dayjs())) ? (
+                {(parkingOwner?.isActive && area?.parkingSubscriptionPaymentId && dayjs(area?.parkingSubscriptionPaymentId?.subscriptionEndDate).isAfter(dayjs())) ? (activeReservation(area).length === 0 &&
                   <button
                     type="button"
                     onClick={() => handleStatusChange(area?._id, !area?.isActive)}

@@ -8,11 +8,11 @@ const createReservationPaymentSchema = z.object({
   paymentDate: z.date().default(new Date()),
   paymentMethod: z.enum(Object.values(PaymentMethod) as [string]).default(PaymentMethod.CASH),
   referenceNumber: z.string().optional(),
+  bankName: z.string().optional(),
+  branch: z.string().optional(),
   images: z.array(z.string()).optional(),
   paidBy: z.string().min(1, "Paid by is required"),
   customer: z.string().min(1, "Customer is required"),
-  parkingArea: z.string().min(1, "Parking area is required"),
-  parkingSlot: z.string().min(1, "Parking slot is required"),
 });
 
 const updateReservationPaymentSchema = z.object({
@@ -22,11 +22,11 @@ const updateReservationPaymentSchema = z.object({
   paymentDate: z.date().optional(),
   paymentMethod: z.enum(Object.values(PaymentMethod) as [string]).optional(),
   referenceNumber: z.string().optional(),
+  bankName: z.string().optional(),
+  branch: z.string().optional(),
   images: z.array(z.string()).optional(),
   paidBy: z.string().min(1, "Paid by is required").optional(),
   customer: z.string().min(1, "Customer is required").optional(),
-  parkingArea: z.string().min(1, "Parking area is required").optional(),
-  parkingSlot: z.string().min(1, "Parking slot is required").optional(),
   isDeleted: z.boolean().default(false).optional(),
 });
 

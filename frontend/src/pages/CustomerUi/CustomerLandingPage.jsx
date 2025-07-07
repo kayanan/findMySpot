@@ -379,7 +379,8 @@ const CustomerLandingPage = () => {
                                                     state: { 
                                                         vehicleType: selectedVehicle, 
                                                         position: position, 
-                                                        dateAndTime: new Date() 
+                                                        startDateAndTime: new Date() ,
+                                                        endDateAndTime: new Date(new Date().setHours(new Date().getHours() + 1))
                                                     } 
                                                 })}
                                             >

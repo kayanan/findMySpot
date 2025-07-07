@@ -93,14 +93,7 @@ export const updateParkingSlotStatus = async (parkingAreaId: string[], status: b
 };
 
 export const filterParkingSlots = async (filter: any, parkingAreaIds: any[], filteredSlotsCount: number = 10) => {
-  const matchCondition:any =  [
-    { $expr: { $eq: [{ $size: "$reservations" }, 0] } },
-    { $expr: { $eq: [{ $size: "$filteredReservations" }, 0] } },
-    { filteredReservations: { $not: { $elemMatch: { endDateAndTime: { $gte: new Date(filter.startTime - 1000 * 60 * 60 * 2) } } } } }
- ]
-  if(filter.endTime){
-    matchCondition.push({ filteredReservations: { $not: { $elemMatch: { startDateAndTime: { $lte: new Date(filter.endTime + 1000 * 60 * 60 * 2) } } } } })
-  }
+  console.log(filter, "filter=====-------========---------========---------=========----------=========");
 
   const parkingSlots = await ParkingSlotDTO.aggregate([
     {
@@ -160,9 +153,13 @@ export const filterParkingSlots = async (filter: any, parkingAreaIds: any[], fil
                     { $gte: ["$$reservation.createdAt", new Date(new Date().getTime() - 1000 * 60 * 5)] }
                   ]
                 },
-                { $eq: ["$$reservation.status", ReservationStatus.CONFIRMED] }
-              ]
+                {
+                  $and: [
+                    { $eq: ["$$reservation.status", ReservationStatus.CONFIRMED] }
+                  ]
+                }
 
+              ]
             }
           }
         }
@@ -170,7 +167,43 @@ export const filterParkingSlots = async (filter: any, parkingAreaIds: any[], fil
     },
     {
       $match: {
-        $or:matchCondition
+        $or: [
+          { $expr: { $eq: [{ $size: "$reservations" }, 0] } },
+          { $expr: { $eq: [{ $size: "$filteredReservations" }, 0] } },
+          {
+            $and: [
+              { filteredReservations: { $not: { $elemMatch: { endDateAndTime: { $eq: null } } } } },
+              { filteredReservations: { $not: { $elemMatch: { isParked: { $eq: true }, endDateAndTime: { $gte: new Date(filter.startTime - 1000 * 60 * 60 * 2) } } } } },
+              { filteredReservations: { $not: { $elemMatch: { isParked: { $eq: true }, ...(filter?.endTime ? { startDateAndTime: { $lte: new Date(filter.endTime + 1000 * 60 * 60 * 2) } } : { startDateAndTime: { $gte: new Date(filter.startTime) } }) } } } },
+            ]
+          },
+          {
+            $and: [
+              { filteredReservations: { $not: { $elemMatch: { endDateAndTime: { $eq: null } } } } },
+              { filteredReservations: { $not: { $elemMatch: { isParked: { $eq: true }, endDateAndTime: { $lte: new Date() } } } } }
+
+            ]
+          }
+
+          ,
+          {
+            $and: [
+              { filteredReservations: { $not: { $elemMatch: { endDateAndTime: { $eq: null } } } } },
+              { filteredReservations: { $not: { $elemMatch: { isParked: { $ne: true }, startDateAndTime: { $gte: new Date() }} } } },
+              { filteredReservations: { $not: { $elemMatch: { isParked: { $ne: true },...(filter?.endTime ? { startDateAndTime: { $lte: new Date(filter.endTime + 1000 * 60 * 60 * 2) } } :  { startDateAndTime: { $gte: new Date(filter.startTime) } }) } } } },
+              { filteredReservations: { $not: { $elemMatch: { isParked: { $ne: true }, endDateAndTime: { $gte: new Date(filter.startTime - 1000 * 60 * 60 * 2) } } } } },
+            ]
+          },
+          {
+            $and: [
+              { filteredReservations: { $not: { $elemMatch: { endDateAndTime: { $eq: null } } } } },
+              { filteredReservations: { $not: { $elemMatch: { isParked: { $ne: true }, startDateAndTime: { $gte: new Date(new Date().getTime() - 1000 * 60 * 60 * 1) } } } } },
+            ]
+          }
+
+
+
+        ]
       }
     },
     {
@@ -251,3 +284,8 @@ export const filterParkingSlots = async (filter: any, parkingAreaIds: any[], fil
   console.log(parkingSlots, "parkingSlots");
   return parkingSlots;
 };
+
+
+
+
+

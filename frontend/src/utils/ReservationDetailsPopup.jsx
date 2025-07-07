@@ -10,11 +10,11 @@ const ReservationDetailsPopup = ({
     parkingSlotData,
     onReservationUpdate
 }) => {
-    const [reservations, setReservations] = useState(parkingSlotData?.reservationIds || []);
+    const [reservations, setReservations] = useState(parkingSlotData?.reservationIds?.filter(reservation => reservation?.status === "confirmed" && (!reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime()+1000*60*60*1) >= new Date():true)) || []) ;
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState({});
     const [search, setSearch] = useState('');
-    const [filteredReservations, setFilteredReservations] = useState(parkingSlotData?.reservationIds || []);
+    const [filteredReservations, setFilteredReservations] = useState(parkingSlotData?.reservationIds?.filter(reservation => reservation?.status === "confirmed" && (!reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime()+1000*60*60*1) >= new Date():true)) || []) ;
     useEffect(() => {
         if (isOpen && parkingSlotId) {
             fetchReservations();
@@ -22,14 +22,15 @@ const ReservationDetailsPopup = ({
     }, [isOpen, parkingSlotId]);
 
 
-
+console.log(filteredReservations , "filteredReservations")
     const fetchReservations = async () => {
         setLoading(true);
         try {
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/parking-slot/${parkingSlotId}`);
+            console.log(response.data.data , "response.data.data")
             if (response.data.success) {
-                setReservations(response.data.data);
-                setFilteredReservations(response.data.data);
+                setReservations(response.data.data.filter(reservation => reservation?.status === "confirmed" && (!reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime()+1000*60*60*1) >= new Date():true)) || []);
+                setFilteredReservations(response.data.data.filter(reservation => reservation?.status === "confirmed" && (!reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime()+1000*60*60*1) >= new Date():true)) || []);
 
             }
         } catch (error) {
@@ -55,7 +56,6 @@ const ReservationDetailsPopup = ({
             setFilteredReservations(reservations);
         }
     }, [search]);
-
     const handleAction = async (action, reservationId) => {
         setActionLoading(prev => ({ ...prev, [reservationId]: true }));
 
@@ -72,6 +72,9 @@ const ReservationDetailsPopup = ({
                     break;
                 case 'slotChange':
                     response = await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/${reservationId}/change-slot`);
+                    break;
+                case 'markAsOccupied':
+                    response = await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/${reservationId}/mark-as-occupied`);
                     break;
                 default:
                     throw new Error('Invalid action');
@@ -188,7 +191,7 @@ const ReservationDetailsPopup = ({
                         <div className="flex items-center justify-center py-12">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div>
                         </div>
-                    ) : filteredReservations.length === 0 ? (
+                    ) : filteredReservations?.length === 0 ? (
                         <div className="text-center py-12">
                             <FaCar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-gray-900 mb-2">No Reservations</h3>
@@ -196,7 +199,7 @@ const ReservationDetailsPopup = ({
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {filteredReservations.map((reservation) => (
+                            {filteredReservations?.map((reservation) => (
                                 <div key={reservation._id} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                                     {/* Reservation Header */}
                                     <div className="flex items-center justify-between mb-4">
@@ -212,11 +215,14 @@ const ReservationDetailsPopup = ({
                                             </div>
                                         </div>
                                         <div className="flex space-x-2">
+                                        <span className={`px-3 py-1  text-xs font-medium  border-2 border-dashed border-gray-300 rounded-md ${new Date(reservation.startDateAndTime) <= new Date() && !reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime()+1000*60*60*1) >= new Date():true ? "bg-cyan-100 text-cyan-800" : "bg-red-100 text-red-800"}`}>
+                                                {new Date(reservation.startDateAndTime) <= new Date() && (!reservation?.isParked ? (new Date(new Date(reservation?.startDateAndTime).getTime()+1000*60*60*1) >= new Date()):true) ? "Current Reservation" : "Upcoming Reservation"}
+                                            </span>
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(reservation.status)}`}>
                                                 {reservation.status}
                                             </span>
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(reservation.paymentStatus)}`}>
-                                                {reservation.paymentStatus}
+                                                {"Advance : "+ reservation.paymentStatus}
                                             </span>
                                         </div>
                                     </div>
@@ -297,7 +303,7 @@ const ReservationDetailsPopup = ({
                                         {/* Complete Reservation */}
                                         {reservation.status === 'confirmed' && (
                                             <button
-                                                onClick={() => handleAction('complete', reservation._id)}
+                                                onClick={() => handleAction('markAsOccupied', reservation._id)}
                                                 disabled={actionLoading[reservation._id]}
                                                 className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                                             >
@@ -342,7 +348,7 @@ const ReservationDetailsPopup = ({
                 {/* Footer */}
                 <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
                     <div className="text-sm text-gray-600">
-                        Total Reservations: {reservations.length}
+                        Total Reservations: {reservations?.length > 0 ? reservations.length : 0}
                     </div>
                     <button
                         onClick={onClose}

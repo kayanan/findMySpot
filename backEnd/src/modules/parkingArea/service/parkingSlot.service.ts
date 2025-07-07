@@ -93,8 +93,6 @@ export const updateParkingSlotStatus = async (parkingAreaId: string[], status: b
 
 export const filterParkingSlots = async (slotFilterData:any,parkingAreas:Partial<ParkingAreaModel>[],filteredSlotsCount:number=10) => {
   const parkingAreaIds = parkingAreas.map((item) => item._id as string);
-  console.log(slotFilterData, "slotFilterData==========----------==========----------==========-------------======");
-  console.log(parkingAreaIds, "parkingAreaIds==========----------==========----------==========-------------======");
-  console.log(filteredSlotsCount, "filteredSlotsCount==========----------==========----------==========-------------======");
+  
   return await filterParkingSlotsRepo(slotFilterData,parkingAreaIds,filteredSlotsCount);
 };

@@ -29,7 +29,6 @@ export interface ReservationPaymentModel extends BaseDTO {
     bankName: string;
     branch: string;
     cardPaymentDetails: CardPaymentDetails;
-    transactionDate: Date;
     images: Array<string>;
     paidBy: ObjectId;
     customer: ObjectId;

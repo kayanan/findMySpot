@@ -29,12 +29,12 @@ export interface ReservationModel extends BaseDTO {
   customerMobile: string;
   startDateAndTime: Date;
   endDateAndTime?: Date;
-  advanceAmount: number;
   totalAmount: number;
   vehicleType: ObjectId | VehicleModel;
   status: ReservationStatus;
   paymentIds: ObjectId[];
   paymentStatus: PaymentStatus;
+  isParked: boolean;
   isDeleted: boolean;
   createdBy: ObjectId;
 }
@@ -50,7 +50,6 @@ const ReservationSchema = new Schema<ReservationModel>(
     customerMobile: { type: String, required: true },
     startDateAndTime: { type: Date, required: true, default: Date.now },
     endDateAndTime: { type: Date },
-    advanceAmount: { type: Number },
     vehicleType: { type: Schema.Types.ObjectId, required: true, ref: "Vehicle" },
     totalAmount: { type: Number },
     status: { 
@@ -65,7 +64,8 @@ const ReservationSchema = new Schema<ReservationModel>(
       enum: PaymentStatus,
       default: PaymentStatus.PENDING
     },
-    paymentIds: { type: [Schema.Types.ObjectId], required: true },
+    paymentIds: { type: [Schema.Types.ObjectId], required: true ,ref: "ReservationPayment"},
+    isParked: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
     createdBy: { type: Schema.Types.ObjectId, required: true, ref: "User" },
   },

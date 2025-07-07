@@ -36,7 +36,9 @@ export const createReservationPaymentService = async (data: Omit<ReservationPaym
     if (!value.success) {
       throw new Error(value.error.message);
     }
+
     const reservationPayment = await createReservationPayment(data);
+    await updateReservation(data.reservation.toString(), { $push: { paymentIds: reservationPayment._id } });
     return reservationPayment;
   } catch (error) {
     throw new Error(`Failed to create reservation payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -264,10 +266,11 @@ export const notifyPaymentService = async (body: any) => {
     try {
       await updateReservation(body?.order_id,
         {
-          $set: { paymentStatus: PaymentStatus.PAID, advanceAmount: body?.payhere_amount || 0, status: ReservationStatus.CONFIRMED },
+          $set: { status: ReservationStatus.CONFIRMED },
           $push: { paymentIds: newReservationPayment._id }
         })
       return { success: true, message: "Payment successful" };
+
     } catch (error) {
       console.log(error);
       return { success: false, message: "Payment verification failed" };
@@ -301,3 +304,5 @@ export const notifyPaymentService = async (body: any) => {
     }
   }
 };
+
+

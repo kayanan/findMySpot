@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { FaTimes, FaSpinner, FaCar, FaPhone } from 'react-icons/fa';
+import { FaTimes, FaSpinner, FaCar, FaPhone, FaClock } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import dayjs from 'dayjs';
 import 'react-toastify/dist/ReactToastify.css';
 
 const ParkingDetailsPopup = ({ 
@@ -14,6 +15,7 @@ const ParkingDetailsPopup = ({
   const [formData, setFormData] = useState({
     vehicleNumber: '',
     customerMobile: '',
+    endsAt: '',
     ...initialData
   });
   const [errors, setErrors] = useState({});
@@ -51,6 +53,14 @@ const ParkingDetailsPopup = ({
   };
 
   const handleInputChange = (e) => {
+    if(e.target.name === "endsAt"){
+      if(dayjs(e.target.value).isBefore(dayjs())){
+        setErrors({
+          endsAt: "Ends at cannot be in the past"
+        });
+        return;
+      }
+    }
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -74,11 +84,13 @@ const ParkingDetailsPopup = ({
     try {
       await onSubmit({
         vehicleNumber: formData.vehicleNumber.trim().toUpperCase(),
-        customerMobile: formData.customerMobile.trim()
+        customerMobile: formData.customerMobile.trim(),
+        endsAt: formData?.endsAt
       });
       setFormData({
         vehicleNumber: '',
         customerMobile: '',
+        endsAt: '',
         ...initialData
       });
       setErrors({});
@@ -92,6 +104,7 @@ const ParkingDetailsPopup = ({
     setFormData({
       vehicleNumber: '',
       customerMobile: '',
+      endsAt: '',
       ...initialData
     });
     setErrors({});
@@ -169,6 +182,33 @@ const ParkingDetailsPopup = ({
             )}
             <p className="text-xs text-gray-500 mt-1">
               Enter mobile number with or without country code (+94)
+            </p>
+          </div>
+          {/* Duration */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ends At (optional)
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaClock className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="datetime-local"
+                name="endsAt"
+                value={formData.endsAt}
+                onChange={handleInputChange}
+                min= {dayjs().format("YYYY-MM-DDTHH:mm")}
+                className={`w-full pl-10 pr-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent ${
+                  errors.endsAt ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+            </div>
+            {errors.endsAt && (
+              <p className="mt-1 text-sm text-red-600">{errors.endsAt}</p>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              Enter duration in format: YYYY-MM-DD HH:MM
             </p>
           </div>
 
