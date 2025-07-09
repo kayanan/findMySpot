@@ -10,11 +10,27 @@ const ReservationDetailsPopup = ({
     parkingSlotData,
     onReservationUpdate
 }) => {
-    const [reservations, setReservations] = useState(parkingSlotData?.reservationIds?.filter(reservation => reservation?.status === "confirmed" && (!reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime()+1000*60*60*1) >= new Date():true)) || []) ;
+    const getActiveReservations = (slot) => {
+        if (slot?.length > 0) {
+            const filteredReservations = slot?.filter(reservation => reservation?.status === "confirmed" && (!reservation?.isParked ? (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1)) : true))
+            return filteredReservations.sort((a, b) => new Date(a.startDateAndTime) - new Date(b.startDateAndTime))
+        }
+        else {
+            return []
+        }
+    }
+    const findCurrentReservation = (slot) => {
+        if (slot?.reservationIds?.length > 0) {
+            return slot?.reservationIds?.filter(reservation => reservation?.status === "confirmed" && !reservation?.isParked && (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1) ))
+        } else {
+            return []
+        }
+    }
+    const [reservations, setReservations] = useState(getActiveReservations(parkingSlotData?.reservationIds || []));
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState({});
     const [search, setSearch] = useState('');
-    const [filteredReservations, setFilteredReservations] = useState(parkingSlotData?.reservationIds?.filter(reservation => reservation?.status === "confirmed" && (!reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime()+1000*60*60*1) >= new Date():true)) || []) ;
+    const [filteredReservations, setFilteredReservations] = useState(getActiveReservations(parkingSlotData?.reservationIds || []));
     useEffect(() => {
         if (isOpen && parkingSlotId) {
             fetchReservations();
@@ -22,15 +38,15 @@ const ReservationDetailsPopup = ({
     }, [isOpen, parkingSlotId]);
 
 
-console.log(filteredReservations , "filteredReservations")
+
     const fetchReservations = async () => {
         setLoading(true);
         try {
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/parking-slot/${parkingSlotId}`);
-            console.log(response.data.data , "response.data.data")
-            if (response.data.success) {
-                setReservations(response.data.data.filter(reservation => reservation?.status === "confirmed" && (!reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime()+1000*60*60*1) >= new Date():true)) || []);
-                setFilteredReservations(response.data.data.filter(reservation => reservation?.status === "confirmed" && (!reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime()+1000*60*60*1) >= new Date():true)) || []);
+            if (response?.data?.success) {
+                setReservations(getActiveReservations(response?.data?.data));
+               setFilteredReservations(getActiveReservations(response?.data?.data));
+              
 
             }
         } catch (error) {
@@ -79,12 +95,12 @@ console.log(filteredReservations , "filteredReservations")
                 default:
                     throw new Error('Invalid action');
             }
-            console.log(response, "response==========----------==========----------==========-------------======");
             if (response.data.success) {
                 toast.success(`Reservation ${action} successfully to ${response?.data?.data?.parkingSlot?.slotNumber}`);
                 //fetchReservations(); // Refresh the list
                 if (onReservationUpdate) {
                     onReservationUpdate();
+                    fetchReservations();
                 }
             }
         } catch (error) {
@@ -131,6 +147,7 @@ console.log(filteredReservations , "filteredReservations")
             hour: '2-digit',
             minute: '2-digit'
         });
+        
     };
 
     const formatCurrency = (amount) => {
@@ -215,14 +232,14 @@ console.log(filteredReservations , "filteredReservations")
                                             </div>
                                         </div>
                                         <div className="flex space-x-2">
-                                        <span className={`px-3 py-1  text-xs font-medium  border-2 border-dashed border-gray-300 rounded-md ${new Date(reservation.startDateAndTime) <= new Date() && !reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime()+1000*60*60*1) >= new Date():true ? "bg-cyan-100 text-cyan-800" : "bg-red-100 text-red-800"}`}>
-                                                {new Date(reservation.startDateAndTime) <= new Date() && (!reservation?.isParked ? (new Date(new Date(reservation?.startDateAndTime).getTime()+1000*60*60*1) >= new Date()):true) ? "Current Reservation" : "Upcoming Reservation"}
+                                            <span className={`px-3 py-1  text-xs font-medium  border-2 border-dashed border-gray-300 rounded-md ${ findCurrentReservation(parkingSlotData?.reservationIds || []).includes(reservation._id) ? "bg-cyan-100 text-cyan-800" : "bg-red-100 text-red-800"}`}>
+                                                { findCurrentReservation(parkingSlotData?.reservationIds || []).includes(reservation._id) ? "Current Reservation" : "Upcoming Reservation"}
                                             </span>
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(reservation.status)}`}>
                                                 {reservation.status}
                                             </span>
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(reservation.paymentStatus)}`}>
-                                                {"Advance : "+ reservation.paymentStatus}
+                                                {"Advance : " + reservation.paymentStatus}
                                             </span>
                                         </div>
                                     </div>
@@ -301,7 +318,8 @@ console.log(filteredReservations , "filteredReservations")
                                     {/* Action Buttons */}
                                     <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
                                         {/* Complete Reservation */}
-                                        {reservation.status === 'confirmed' && (
+                                        {/* {reservation.status === 'confirmed' && ( */}
+                                        { (
                                             <button
                                                 onClick={() => handleAction('markAsOccupied', reservation._id)}
                                                 disabled={actionLoading[reservation._id]}
@@ -313,7 +331,8 @@ console.log(filteredReservations , "filteredReservations")
                                         )}
 
                                         {/* Cancel Reservation */}
-                                        {['pending', 'confirmed'].includes(reservation.status) && (
+                                        {/* {['pending', 'confirmed'].includes(reservation.status) && ( */}
+                                        { (
                                             <button
                                                 onClick={() => handleAction('cancel', reservation._id)}
                                                 disabled={actionLoading[reservation._id]}
@@ -325,7 +344,8 @@ console.log(filteredReservations , "filteredReservations")
                                         )}
 
                                         {/* Change Slot */}
-                                        {['pending', 'confirmed'].includes(reservation.status) && (
+                                        {/* {['pending', 'confirmed'].includes(reservation.status) && ( */}
+                                              { (
                                             <button
                                                 onClick={() => handleAction('slotChange', reservation._id)}
                                                 disabled={actionLoading[reservation._id]}

@@ -3,12 +3,12 @@ import { FaTimes, FaUpload, FaSpinner, FaExclamationTriangle, FaCheckCircle } fr
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const BankTransferPopup = ({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  amount, 
-  parkingAreaId, 
+const BankTransferPopup = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  amount,
+  parkingAreaId,
   parkingOwnerId,
   imagesRequired = true, // New prop to control if images are required
   maxImages = 5 // New prop to control max images
@@ -53,10 +53,10 @@ const BankTransferPopup = ({
       ...prev,
       [name]: value
     }));
-    
+
     // Mark field as touched
     setTouched(prev => ({ ...prev, [name]: true }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -66,7 +66,7 @@ const BankTransferPopup = ({
   const handleBlur = (e) => {
     const { name, value } = e.target;
     setTouched(prev => ({ ...prev, [name]: true }));
-    
+
     // Validate on blur
     const fieldError = validateField(name, value);
     if (fieldError) {
@@ -93,11 +93,11 @@ const BankTransferPopup = ({
 
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
-    
+
     // Validate file types
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     const invalidFiles = files.filter(file => !validTypes.includes(file.type));
-    
+
     if (invalidFiles.length > 0) {
       toast.error('Please upload only JPG, PNG, or WebP images');
       return;
@@ -106,12 +106,12 @@ const BankTransferPopup = ({
     // Validate file sizes (max 5MB per file)
     const maxSize = 5 * 1024 * 1024; // 5MB
     const oversizedFiles = files.filter(file => file.size > maxSize);
-    
+
     if (oversizedFiles.length > 0) {
       toast.error('Each image must be less than 5MB');
       return;
     }
-    
+
     if (files.length + formData.images.length > maxImages) {
       toast.error(`Maximum ${maxImages} images allowed`);
       return;
@@ -124,14 +124,14 @@ const BankTransferPopup = ({
         file,
         preview: URL.createObjectURL(file)
       }));
-      
+
       setFormData(prev => ({
         ...prev,
         images: [...prev.images, ...filesWithPreview]
       }));
-      
+
       toast.success(`${files.length} image(s) uploaded successfully`);
-      
+
       // Clear file input
       e.target.value = '';
     } catch (error) {
@@ -149,7 +149,7 @@ const BankTransferPopup = ({
         images: newImages
       };
     });
-    
+
     // Clear image error if images are no longer required or if we have images
     if (!imagesRequired || formData.images.length > 1) {
       setErrors(prev => ({ ...prev, images: '' }));
@@ -158,7 +158,7 @@ const BankTransferPopup = ({
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     // Validate required fields
     Object.keys(validationPatterns).forEach(fieldName => {
       const error = validateField(fieldName, formData[fieldName]);
@@ -178,7 +178,7 @@ const BankTransferPopup = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Mark all fields as touched
     setTouched({
       referenceNumber: true,
@@ -186,7 +186,7 @@ const BankTransferPopup = ({
       branch: true,
       images: true
     });
-    
+
     if (!validateForm()) {
       toast.error('Please fix the errors before submitting');
       return;
@@ -200,13 +200,22 @@ const BankTransferPopup = ({
         amount,
         images: formData.images.map(img => img.file || img) // Extract file objects
       };
-      
+
       await onSubmit(submitData);
       onClose();
     } catch (error) {
       toast.error('Failed to submit payment details');
     } finally {
       setLoading(false);
+      setFormData({
+        amount: "",
+        parkingAreaId: '',
+        parkingOwnerId: '',
+        referenceNumber: '',
+        bankName: '',
+        branch: '',
+        images: []
+      });
     }
   };
 
@@ -220,7 +229,7 @@ const BankTransferPopup = ({
   const getFieldClasses = (fieldName) => {
     const status = getFieldStatus(fieldName);
     const baseClasses = "w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200";
-    
+
     switch (status) {
       case 'error':
         return `${baseClasses} border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50`;
@@ -239,7 +248,18 @@ const BankTransferPopup = ({
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Bank Transfer Details</h2>
           <button
-            onClick={onClose}
+           onClick={() => {
+            onClose() 
+            setFormData({
+              amount: "",
+              parkingAreaId: '',
+              parkingOwnerId: '',
+              referenceNumber: '',
+              bankName: '',
+              branch: '',
+              images: []
+            });
+          }}
             className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
           >
             <FaTimes size={24} />
@@ -374,16 +394,15 @@ const BankTransferPopup = ({
                   </div>
                 ))}
               </div>
-              
+
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={formData.images.length >= maxImages || uploadingImages}
-                className={`flex items-center gap-2 px-4 py-2 border-2 border-dashed rounded-md transition-all duration-200 ${
-                  formData.images.length >= maxImages
+                className={`flex items-center gap-2 px-4 py-2 border-2 border-dashed rounded-md transition-all duration-200 ${formData.images.length >= maxImages
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-300'
                     : 'hover:bg-cyan-50 text-cyan-700 border-cyan-300 hover:border-cyan-400'
-                }`}
+                  }`}
               >
                 {uploadingImages ? (
                   <FaSpinner className="animate-spin" />
@@ -416,7 +435,18 @@ const BankTransferPopup = ({
           <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => {
+                onClose() 
+                setFormData({
+                  amount: "",
+                  parkingAreaId: '',
+                  parkingOwnerId: '',
+                  referenceNumber: '',
+                  bankName: '',
+                  branch: '',
+                  images: []
+                });
+              }}
               className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors duration-200"
             >
               Cancel

@@ -51,6 +51,8 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
         acc[vehicleType].push(slot);
         return acc;
     }, {});
+
+
     const getSlotBackgroundColor = (slot) => {
         switch (getSlotStatus(slot)) {
             case "Inactive":
@@ -73,13 +75,13 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
         else if (!slot?.reservationIds && slot?.isActive) {
             return "Available"
         }
-        else if (slot?.reservationIds?.filter(reservation => { return (reservation?.status === "confirmed" && reservation?.isParked) }).length > 0) {
+        else if (occupiedReservation(slot).length > 0) {
             return "Occupied"
         }
         else if (slot?.reservationIds?.filter(reservation => { return (reservation?.status === "pending" && new Date(reservation?.startDateAndTime) >= new Date() - 1000 * 60 * 5) }).length > 0) {
             return "Pending"
         }
-        else if (slot?.reservationIds?.filter(reservation => { return (reservation?.status === "confirmed" && !reservation?.isParked && new Date(new Date(reservation?.startDateAndTime).getTime() + 1000 * 60 * 60 * 1) >= new Date().getTime()) }).length > 0) {
+        else if (findCurrentReservation(slot).length > 0) {
             return "Reserved"
         }
 
@@ -89,17 +91,21 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
 
     }
     const getVehicleNumber = (slot) => {
-        if (slot?.reservationIds?.length > 0) {
-            return slot.reservationIds.find(reservation => reservation?.status === "confirmed" && new Date(reservation?.startDateAndTime) <= new Date() && (!reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime() + 1000 * 60 * 60 * 1) >= new Date().getTime() : true))?.vehicleNumber?.trim().toUpperCase() || "N/A"
-        }
-        else {
-            return "N/A"
-        }
+       const currentReservation = findCurrentReservation(slot);
+       if(occupiedReservation(slot).length > 0){
+        return occupiedReservation(slot)[0]?.vehicleNumber?.trim().toUpperCase() || "N/A"
+       }
+       else if(currentReservation.length > 0){
+        return currentReservation[0]?.vehicleNumber?.trim().toUpperCase() || "N/A"
+       }
+       else{
+        return "N/A"
+       }
     }
 
     const getActiveReservations = (slot) => {
         if (slot?.reservationIds?.length > 0) {
-            return slot?.reservationIds?.filter(reservation => reservation?.status === "confirmed" &&  (!reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime() + 1000 * 60 * 60 * 1) >= new Date().getTime() : true)).length
+            return slot?.reservationIds?.filter(reservation => reservation?.status === "confirmed" &&  (!reservation?.isParked ? new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1) : true)).length
         }
         else {
             return 0
@@ -114,7 +120,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
     }
     const findCurrentReservation = (slot) => {
         if (slot?.reservationIds?.length > 0) {
-            return slot?.reservationIds?.filter(reservation => reservation?.status === "confirmed" && !reservation?.isParked && (reservation?.startDateAndTime <= new Date() || reservation?.endDateAndTime ? new Date(reservation?.endDateAndTime) >= new Date() : true))
+            return slot?.reservationIds?.filter(reservation => reservation?.status === "confirmed" && !reservation?.isParked && (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1) ))
         } else {
             return []
         }
@@ -227,27 +233,26 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
     };
 
     const handleSlotClick = (slot) => {
-        // if (slot.isReservationPending) {
-        //     return;
-        // }
         setSelectedSlot(slot);
         setIsPopupOpen(true);
     };
 
     const handleStatusUpdate = async (updates) => {
         if (updates.type === "occupied") {
-            await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/${updates.data._id}`, { isParked: true });
-            toast.success("Slot occupied successfully");
-            fetchParkingSlots();
-        }
-        return
-        if (updates.isOccupied && !selectedSlot.reservationId) {
-            // Open parking details popup for reservation
-            setIsParkingDetailsOpen(true);
+            try {
+                await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/${updates.data._id}`, { isParked: true });
+                toast.success("Reservation updated successfully");
+                fetchParkingSlots();
+            } catch (error) {
+                toast.error("Failed to update reservation status");
+                console.error("Error updating reservation:", error);
+            }
+           
+            return;
         }
         else {
             try {
-                await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/${selectedSlot._id}`, updates);
+                await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-slot/${selectedSlot._id}`, updates.data);
                 toast.success("Slot status updated successfully");
                 fetchParkingSlots();
             } catch (error) {
@@ -271,8 +276,17 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
 
         try {
             const finalAmount = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/${data[0]._id}/calculate-final-amount`);
-            setFinalAmount((+finalAmount.data.data.totalAmount) - (+finalAmount.data.data.totalPaidAmount));
-            setIsPaymentOptionPopupOpen(true);
+            const totalAmount = Number(Number(finalAmount.data.data.totalAmount) - Number(finalAmount.data.data.totalPaidAmount));
+
+            setFinalAmount(totalAmount);
+            if(Number(totalAmount) > 0){    
+                setIsPaymentOptionPopupOpen(true);
+            }
+            else{
+                await handleReservationComplete(data[0]._id);
+                toast.success("Success! Payment was already made and parking is now completed.");
+                fetchParkingSlots();
+            }
 
 
 
@@ -449,22 +463,21 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
                             text: "Set Inactive",
                             variant: "danger",
                             icon: <FaTimes />,
-                            onClick: () => handleStatusUpdate({ isActive: false })
+                            onClick: () => handleStatusUpdate({data:{ isActive: false },type:"inactive"})
                         } : {},
                         !selectedSlot?.isActive ? {
                             text: "Set Active",
                             variant: "success",
                             icon: <FaCheck />,
-                            onClick: () => handleStatusUpdate({ isActive: true })
+                            onClick: () => handleStatusUpdate({data:{ isActive: true },type:"active"})
                         } : {},
-                        (selectedSlot?.isActive && getActiveReservations(selectedSlot) > 0 && (occupiedReservation(selectedSlot).length > 0)) ? {
+                        (selectedSlot?.isActive && (occupiedReservation(selectedSlot).length > 0)) ? {
                             text: "Checkout",
                             variant: "success",
                             icon: <FaCheck />,
-                            // onClick: () => handleStatusUpdate({ isActive: true, isReserved: false })
                             onClick: () => processParkingCheckout(occupiedReservation(selectedSlot))
                         } : {},
-                        (selectedSlot?.isActive && getActiveReservations(selectedSlot) > 0 && (occupiedReservation(selectedSlot).length === 0) && (findCurrentReservation(selectedSlot).length > 0)) ? {
+                        (selectedSlot?.isActive  && (occupiedReservation(selectedSlot).length === 0) && (findCurrentReservation(selectedSlot).length > 0)) ? {
                             text: "set Occupied",
                             variant: "success",
                             icon: <FaClock />,

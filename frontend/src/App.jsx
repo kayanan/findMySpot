@@ -111,6 +111,7 @@ const AppRoutes = () => {
           !isLoginPage ? (isSidebarOpen ? "ml-0 xl:ml-64" : "ml-20") : ""
         }`}
       >
+      {/* <divclassName={`flex-1 transition-all duration-300 ${!isLoginPage ? (isSidebarOpen ? "ml-0 xl:ml-64" : "ml-20") : "" }`}> */}
         {!isLoginPage && authState.isAuthenticated && (
           <Navbar
             isSidebarOpen={isSidebarOpen}

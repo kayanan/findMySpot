@@ -209,6 +209,11 @@ export const completeReservationService = async (id: string) => {
 };
 
 export const cancelReservationService = async (id: string) => {
+  const reservation = await findReservationById(id);
+  if (!reservation) {
+    throw new Error("Reservation not found");
+  }
+  await updateSlot(reservation.parkingSlot as unknown as string, { removeReservationId: reservation._id as unknown as string });
   return await updateReservation(id, { status: 'cancelled' } as Partial<ReservationModel>);
 };
 

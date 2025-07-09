@@ -93,7 +93,9 @@ export const updateParkingSlotStatus = async (parkingAreaId: string[], status: b
 };
 
 export const filterParkingSlots = async (filter: any, parkingAreaIds: any[], filteredSlotsCount: number = 10) => {
-  console.log(filter, "filter=====-------========---------========---------=========----------=========");
+  const extraCondition = filter?.endTime
+    ? [{ $lte: ["$$reservation.startDateAndTime", new Date(filter.endTime + 1000 * 60 * 60 * 2)] }]
+    : [];
 
   const parkingSlots = await ParkingSlotDTO.aggregate([
     {
@@ -141,7 +143,7 @@ export const filterParkingSlots = async (filter: any, parkingAreaIds: any[], fil
     },
     {
       $addFields: {
-        filteredReservations: {
+        rejectedreservations: {
           $filter: {
             input: '$reservations',
             as: 'reservation',
@@ -149,63 +151,86 @@ export const filterParkingSlots = async (filter: any, parkingAreaIds: any[], fil
               $or: [
                 {
                   $and: [
-                    { $eq: ["$$reservation.status", ReservationStatus.PENDING] },
-                    { $gte: ["$$reservation.createdAt", new Date(new Date().getTime() - 1000 * 60 * 5)] }
+                    { $eq: ["$$reservation.status", ReservationStatus.CONFIRMED] },
+                    { $eq: ["$$reservation.isParked", true] },
+                    { $eq: ["$$reservation.endDateAndTime", null] },
                   ]
                 },
                 {
                   $and: [
-                    { $eq: ["$$reservation.status", ReservationStatus.CONFIRMED] }
+                    { $eq: ["$$reservation.status", ReservationStatus.CONFIRMED] },
+                    { $eq: ["$$reservation.isParked", true] },
+                    { $lte: ["$$reservation.endDateAndTime", new Date()] },
                   ]
-                }
-
+                },
+                {
+                  $and: [
+                    { $eq: ["$$reservation.status", ReservationStatus.CONFIRMED] },
+                    { $eq: ["$$reservation.isParked", false] },
+                    { $gte: ["$$reservation.startDateAndTime", new Date(new Date().getTime() - 1000 * 60 * 60 * 1)] },
+                    { $eq: ["$$reservation.endDateAndTime", null] },
+                    ...extraCondition
+                  ]
+                },
+                {
+                  $and: [
+                    { $eq: ["$$reservation.status", ReservationStatus.CONFIRMED] },
+                    { $eq: ["$$reservation.isParked", false] },
+                    { $gte: ["$$reservation.startDateAndTime", new Date(new Date().getTime() - 1000 * 60 * 60 * 1)] },
+                    ...extraCondition
+                  ]
+                },
+                {
+                  $and: [
+                    { $eq: ["$$reservation.status", ReservationStatus.CONFIRMED] },
+                    { $eq: ["$$reservation.isParked", false] },
+                    { $gte: ["$$reservation.startDateAndTime", new Date(new Date().getTime() - 1000 * 60 * 60 * 1)] },
+                    { $gte: ["$$reservation.endDateAndTime", new Date(filter.startTime - 1000 * 60 * 60 * 2)] },
+                  ]
+                },
+                {
+                  $and: [
+                    { $eq: ["$$reservation.status", ReservationStatus.PENDING] },
+                    { $eq: ["$$reservation.isParked", false] },
+                    { $gte: ["$$reservation.createdAt", new Date(new Date().getTime() - 1000 * 60 * 5)] },
+                    { $eq: ["$$reservation.endDateAndTime", null] },
+                    ...extraCondition
+                  ]
+                },
+                {
+                  $and: [
+                    { $eq: ["$$reservation.status", ReservationStatus.PENDING] },
+                    { $eq: ["$$reservation.isParked", false] },
+                    { $gte: ["$$reservation.createdAt", new Date(new Date().getTime() - 1000 * 60 * 5)] },
+                    { $gte: ["$$reservation.endDateAndTime", new Date(filter.startTime - 1000 * 60 * 60 * 2)] },
+                  ]
+                },
               ]
+
+
             }
           }
-        }
+        },
+
       }
     },
     {
       $match: {
         $or: [
           { $expr: { $eq: [{ $size: "$reservations" }, 0] } },
-          { $expr: { $eq: [{ $size: "$filteredReservations" }, 0] } },
           {
             $and: [
-              { filteredReservations: { $not: { $elemMatch: { endDateAndTime: { $eq: null } } } } },
-              { filteredReservations: { $not: { $elemMatch: { isParked: { $eq: true }, endDateAndTime: { $gte: new Date(filter.startTime - 1000 * 60 * 60 * 2) } } } } },
-              { filteredReservations: { $not: { $elemMatch: { isParked: { $eq: true }, ...(filter?.endTime ? { startDateAndTime: { $lte: new Date(filter.endTime + 1000 * 60 * 60 * 2) } } : { startDateAndTime: { $gte: new Date(filter.startTime) } }) } } } },
+              { $expr: { $ne: [{ $size: "$reservations" }, 0] } },
+              { $expr: { $eq: [{ $size: "$rejectedreservations" }, 0] } },
+
             ]
           },
-          {
-            $and: [
-              { filteredReservations: { $not: { $elemMatch: { endDateAndTime: { $eq: null } } } } },
-              { filteredReservations: { $not: { $elemMatch: { isParked: { $eq: true }, endDateAndTime: { $lte: new Date() } } } } }
-
-            ]
-          }
-
-          ,
-          {
-            $and: [
-              { filteredReservations: { $not: { $elemMatch: { endDateAndTime: { $eq: null } } } } },
-              { filteredReservations: { $not: { $elemMatch: { isParked: { $ne: true }, startDateAndTime: { $gte: new Date() }} } } },
-              { filteredReservations: { $not: { $elemMatch: { isParked: { $ne: true },...(filter?.endTime ? { startDateAndTime: { $lte: new Date(filter.endTime + 1000 * 60 * 60 * 2) } } :  { startDateAndTime: { $gte: new Date(filter.startTime) } }) } } } },
-              { filteredReservations: { $not: { $elemMatch: { isParked: { $ne: true }, endDateAndTime: { $gte: new Date(filter.startTime - 1000 * 60 * 60 * 2) } } } } },
-            ]
-          },
-          {
-            $and: [
-              { filteredReservations: { $not: { $elemMatch: { endDateAndTime: { $eq: null } } } } },
-              { filteredReservations: { $not: { $elemMatch: { isParked: { $ne: true }, startDateAndTime: { $gte: new Date(new Date().getTime() - 1000 * 60 * 60 * 1) } } } } },
-            ]
-          }
-
 
 
         ]
       }
     },
+
     {
       $group: {
         _id: '$parkingAreaId',
@@ -279,9 +304,15 @@ export const filterParkingSlots = async (filter: any, parkingAreaIds: any[], fil
         }
       }
     }
+    // {
+    //   $project: {
+    //     rejectedreservations: 1,
+    //     slotNumber: 1,
+    //   }
+    // }
 
   ])
-  console.log(parkingSlots, "parkingSlots");
+  console.log(JSON.stringify(parkingSlots, null, 2), "parkingSlots");
   return parkingSlots;
 };
 
