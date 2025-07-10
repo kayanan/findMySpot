@@ -110,8 +110,43 @@ export const getAllReservationsService = async () => {
   return await findAllReservations();
 };
 
-export const getReservationsByUserService = async (userId: string) => {
-  return await findReservationsByUser(userId);
+export const getReservationsByUserService = async (filters: { userId: string, status: string, paymentStatus: string, startDate: string, endDate: string, searchTerm: string, page: number, limit: number, isParked: boolean }) => {
+  const filterData: mongoose.FilterQuery<ReservationModel> = {
+    isDeleted: { $ne: true },
+  }
+  if (filters.isParked) {
+    filterData.isParked = filters.isParked;
+  }
+  if (filters.status) {
+    if (filters.status === ReservationStatus.CANCELLED) {
+      filterData.$or = [
+        { $and: [{ status: ReservationStatus.PENDING }, { createdAt: { $lte: new Date(new Date().getTime() - 1000 * 60 * 5) } }] },
+        { status: ReservationStatus.COMPLETED },
+      ]
+    } else if (filters.status === ReservationStatus.PENDING) {
+      filterData.status = ReservationStatus.PENDING as unknown as string;
+      filterData.createdAt = { $gte: new Date(new Date().getTime() - 1000 * 60 * 5) };
+    }
+    else {
+      filterData.status = filters.status.toLowerCase() as unknown as string;
+    }
+
+  }
+  if (filters.paymentStatus) {
+    filterData.paymentStatus = filters.paymentStatus.toLowerCase() as unknown as string;
+  }
+  if (filters.startDate) {
+    filterData.startDateAndTime = { $gte: new Date(filters.startDate) };
+  }
+  if (filters.endDate) {
+    filterData.endDateAndTime = { $lte: new Date(filters.endDate) };
+  }
+  if (filters.searchTerm) {
+    filterData.$or = [
+      { vehicleNumber: { $regex: filters.searchTerm.replace(/\s+/g, ''), $options: 'i' } },
+    ]
+  }
+  return await findReservationsByUser(filterData, filters.page, filters.limit);
 };
 
 export const getReservationsByParkingAreaService = async (parkingAreaId: string) => {
@@ -122,8 +157,16 @@ export const getReservationsByParkingSlotService = async (parkingSlotId: string)
   return await findReservationsByParkingSlot(parkingSlotId);
 };
 
-export const getActiveReservationsService = async () => {
-  return await findActiveReservations();
+export const getActiveReservationsService = async (filters: mongoose.FilterQuery<ReservationModel & {page:number,limit:number,userId:string}>) => {
+  const filterData: mongoose.FilterQuery<ReservationModel> = {
+    user: filters.userId,
+    isDeleted: { $ne: true },
+    status: { $eq: ReservationStatus.CONFIRMED },
+    paymentStatus: { $eq: PaymentStatus.PENDING },
+    startDateAndTime: { $gte: new Date(new Date().getTime() - 1 * 60 * 60 * 1000) },
+
+  }
+  return await findActiveReservations(filterData,filters.page,filters.limit);
 };
 
 export const getReservationsByStatusService = async (status: string) => {
@@ -196,7 +239,7 @@ export const completeReservationService = async (id: string) => {
   if ((+paidTotalAmount) !== (+calculatedTotalAmount)) {
     throw new Error("Payment amount is not equal to the calculated total amount");
   }
-  
+
   await updateSlot(reservation.parkingSlot as unknown as string, { removeReservationId: reservation._id as unknown as string });
 
   return await updateReservation(id, {
@@ -205,7 +248,7 @@ export const completeReservationService = async (id: string) => {
     status: ReservationStatus.COMPLETED,
     paymentStatus: PaymentStatus.PAID,
   } as Partial<ReservationModel>);
-  
+
 };
 
 export const cancelReservationService = async (id: string) => {

@@ -78,9 +78,9 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
         else if (occupiedReservation(slot).length > 0) {
             return "Occupied"
         }
-        else if (slot?.reservationIds?.filter(reservation => { return (reservation?.status === "pending" && new Date(reservation?.startDateAndTime) >= new Date() - 1000 * 60 * 5) }).length > 0) {
-            return "Pending"
-        }
+        // else if (slot?.reservationIds?.filter(reservation => { return (reservation?.status === "pending" && new Date(reservation?.startDateAndTime) >= new Date() - 1000 * 60 * 5) }).length > 0) {
+        //     return "Pending"
+        // }
         else if (findCurrentReservation(slot).length > 0) {
             return "Reserved"
         }
@@ -120,7 +120,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
     }
     const findCurrentReservation = (slot) => {
         if (slot?.reservationIds?.length > 0) {
-            return slot?.reservationIds?.filter(reservation => reservation?.status === "confirmed" && !reservation?.isParked && (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1) ))
+            return slot?.reservationIds?.filter(reservation => reservation?.status === "confirmed" && !reservation?.isParked && (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1) ) && (new Date(reservation?.startDateAndTime) <= new Date()) )
         } else {
             return []
         }
@@ -430,20 +430,20 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
                                         <div className="space-y-1 text-[10px]">
                                             <div className="flex justify-between items-center bg-white px-1.5 py-0.5 rounded">
                                                 <span className="text-gray-600">Vehicle Number:</span>
-                                                <span className="w-1/2 font-bold text-2xltext-cyan-600">{getVehicleNumber(slot)}</span>
+                                                <span className="w-1/2 font-bold text-2xltext-cyan-600 ml-4">{getVehicleNumber(slot)}</span>
                                             </div>
 
                                         </div>
 
                                     </div>
-                                    <div className="flex justify-between items-center bg-white px-1.5 py-0.5 rounded mt-2" onClick={() => {
+                                    <div className="flex justify-between items-center bg-cyan-100 px-1.5 py-0.5 rounded mt-2 cursor-pointer hover:bg-cyan-200 transition-all duration-300 hover:scale-105" onClick={() => {
                                         setIsReservationDetailsOpen(true)
                                         setSelectedSlot(slot)
                                     }
                                     }>
-                                        <span className="text-gray-600 text-[10px]">{"Confirmed Reservations: "}</span>
-                                        <span className="w-1/2 font-bold text-cyan-800 text-xs">{slot?.reservationIds?.length > 0 ? getActiveReservations(slot) : 0}</span>
-                                    </div>
+                                        <span className=" text-[10px] text-cyan-800">{"Reservations: "}</span>
+                                        <span className="w-1/2 font-bold text-cyan-800 text-sm ml-4">{slot?.reservationIds?.length > 0 ? getActiveReservations(slot) : 0}</span>
+                                    </div> 
                                 </div>
                             ))}
                         </div>

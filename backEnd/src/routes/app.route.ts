@@ -9,6 +9,7 @@ import subscriptionPaymentAppRoute from "../modules/parkingSubscriptionFee/route
 import reservationAppRouter from "../modules/reservation/routes/app/v1/reservation.app.router";
 import reservationPaymentAppRouter from "../modules/reservation/routes/app/v1/reservationPayment.app.router";
 import roleRouter from "@/modules/user/routes/app/v1/role.route";
+import ratingAppRouter from "@/modules/parkingArea/routes/app/v1/rating.app.router";
 const appRouter: Router = Router();
  appRouter.use('/v1/user', userRouter);
  appRouter.use('/v1/role', roleRouter);
@@ -23,5 +24,6 @@ appRouter.use("/v1/parking-slot",parkingSlotAppRoute);
 appRouter.use("/v1/subscription-payment",subscriptionPaymentAppRoute);
 appRouter.use("/v1/reservation",reservationAppRouter);
 appRouter.use("/v1/reservation-payment",reservationPaymentAppRouter);
+appRouter.use("/v1/rating",ratingAppRouter);
 
 export default appRouter;

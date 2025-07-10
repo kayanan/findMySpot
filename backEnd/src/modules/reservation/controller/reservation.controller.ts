@@ -195,14 +195,15 @@ export const getAllReservationsHandler = async (req: Request, res: Response) => 
 
 export const getReservationsByUserHandler = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
-    const reservations = await getReservationsByUserService(userId);
+    
+    const reservations = await getReservationsByUserService(req.query as unknown as { userId: string, status: string, paymentStatus: string, startDate: string, endDate: string, searchTerm: string, page: number, limit: number ,isParked:boolean});
     res.status(200).json({
       success: true,
-      count: reservations.length,
-      data: reservations
+      count: reservations.count,
+      data: reservations.result
     });
   } catch (error: unknown) {
+    console.log(error);
     if (error instanceof Error) {
       res.status(500).json({ 
         success: false,
@@ -267,11 +268,11 @@ export const getReservationsByParkingSlotHandler = async (req: Request, res: Res
 
 export const getActiveReservationsHandler = async (req: Request, res: Response) => {
   try {
-    const reservations = await getActiveReservationsService();
+    const reservations = await getActiveReservationsService(req.query as unknown as {  page: number, limit: number,userId:string });
     res.status(200).json({
       success: true,
-      count: reservations.length,
-      data: reservations
+      count: reservations.count,
+      data: reservations.result
     });
   } catch (error: unknown) {
     if (error instanceof Error) {

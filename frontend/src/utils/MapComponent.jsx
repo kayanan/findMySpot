@@ -58,7 +58,6 @@ const MapComponent = forwardRef(({ setPosition, position, zoom=15, width="100%",
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    toast.success('Location fetched successfully');
                     const { latitude, longitude } = position.coords;
                     setLocation({ latitude, longitude, error: null });
                     setPosition({ lat: latitude, lng: longitude });
@@ -67,11 +66,14 @@ const MapComponent = forwardRef(({ setPosition, position, zoom=15, width="100%",
                 (error) => {
                     toast.error(error.message);
                     setLocation({ ...location, error: error.message });
+                   
+                    
                 }
             );
         } else {
             toast.error('Geolocation is not supported by this browser.');
             setLocation({ ...location, error: 'Geolocation is not supported by this browser.' });
+            
         }
     };
 

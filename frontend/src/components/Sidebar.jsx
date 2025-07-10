@@ -19,7 +19,7 @@ import {
   ShieldCheckIcon,
   LocationMarkerIcon,
   CashIcon,
-  
+  HomeIcon,
 } from "@heroicons/react/outline";
 
 import { useAuth } from "../context/AuthContext";
@@ -37,6 +37,7 @@ const Sidebar = ({ isOpen }) => {
 
   // Define the navigation links, including children for "Branch Transactions"
   const navLinks = [
+    { name: "Dashboard", path: "/dashboard", icon: ChartBarIcon },
     { name: "Location Management", path: "/province", icon: MapIcon },
     { name: "Subscription Management", path: "/parking-subscription-fee", icon: CalendarIcon },
     {
@@ -54,8 +55,8 @@ const Sidebar = ({ isOpen }) => {
      // privilege: "View TempTransfer",
       children: [
         { name: "Parking Payments", path: "/reports/parking-payments", icon: CashIcon },
-        { name: "Parking Reservations", path: "/reports/parking-reservations", icon: ChartBarIcon },
-        { name: "Parking Slots", path: "/reports/parking-slots", icon: ChartBarIcon },
+        { name: "Admin Report", path: "/reports/admin", icon: ChartBarIcon },
+        { name: "Parking Owner Report", path: "/reports/parking-owner", icon: ChartBarIcon },
 
       ],
     },

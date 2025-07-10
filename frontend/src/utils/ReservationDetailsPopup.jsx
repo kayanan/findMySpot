@@ -19,9 +19,24 @@ const ReservationDetailsPopup = ({
             return []
         }
     }
-    const findCurrentReservation = (slot) => {
-        if (slot?.reservationIds?.length > 0) {
-            return slot?.reservationIds?.filter(reservation => reservation?.status === "confirmed" && !reservation?.isParked && (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1) ))
+    const findCurrentReservation = (reservations) => {
+        if (reservations?.length > 0) {
+            return reservations?.filter(reservation => reservation?.status === "confirmed" && !reservation?.isParked && (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1) ) && (new Date(reservation?.startDateAndTime) <= new Date()) )
+        } else {
+            return []
+        }
+    }
+    const findUpcommingReservations = (reservations) => {
+        console.log(reservations)
+        if (reservations?.length > 0) {
+            return reservations?.filter(reservation => reservation?.status === "confirmed" && !reservation?.isParked && (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1) ) )
+        } else {
+            return []
+        }
+    }
+    const occupiedReservation = (reservations) => {
+        if (reservations?.length > 0) {
+            return reservations?.filter(reservation => reservation?.status === "confirmed" && reservation?.isParked)
         } else {
             return []
         }
@@ -37,7 +52,7 @@ const ReservationDetailsPopup = ({
         }
     }, [isOpen, parkingSlotId]);
 
-
+console.log(filteredReservations,"filteredReservations")
 
     const fetchReservations = async () => {
         setLoading(true);
@@ -232,14 +247,14 @@ const ReservationDetailsPopup = ({
                                             </div>
                                         </div>
                                         <div className="flex space-x-2">
-                                            <span className={`px-3 py-1  text-xs font-medium  border-2 border-dashed border-gray-300 rounded-md ${ findCurrentReservation(parkingSlotData?.reservationIds || []).includes(reservation._id) ? "bg-cyan-100 text-cyan-800" : "bg-red-100 text-red-800"}`}>
-                                                { findCurrentReservation(parkingSlotData?.reservationIds || []).includes(reservation._id) ? "Current Reservation" : "Upcoming Reservation"}
+                                            <span className={`px-3 py-1  text-xs font-medium  border-2 border-dashed border-gray-300 rounded-md ${ findCurrentReservation(filteredReservations).map(reservation => reservation._id).includes(reservation._id) ? "bg-cyan-100 text-cyan-800" : "bg-red-100 text-red-800"}`}>
+                                                { findCurrentReservation(filteredReservations).map(reservation => reservation._id).includes(reservation._id) ? "Current Reservation" : "Upcoming Reservation"}
                                             </span>
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(reservation.status)}`}>
                                                 {reservation.status}
                                             </span>
-                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(reservation.paymentStatus)}`}>
-                                                {"Advance : " + reservation.paymentStatus}
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${reservation.paymentIds?.length > 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                                {"Advance : " + (reservation.paymentIds?.length > 0 ? "Paid" : "Pending")}
                                             </span>
                                         </div>
                                     </div>
@@ -319,7 +334,7 @@ const ReservationDetailsPopup = ({
                                     <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
                                         {/* Complete Reservation */}
                                         {/* {reservation.status === 'confirmed' && ( */}
-                                        { (
+                                        {findCurrentReservation(filteredReservations).map(reservation => reservation._id).includes(reservation._id) && occupiedReservation(filteredReservations).map(reservation => reservation._id).includes(reservation._id) && (
                                             <button
                                                 onClick={() => handleAction('markAsOccupied', reservation._id)}
                                                 disabled={actionLoading[reservation._id]}
@@ -332,7 +347,7 @@ const ReservationDetailsPopup = ({
 
                                         {/* Cancel Reservation */}
                                         {/* {['pending', 'confirmed'].includes(reservation.status) && ( */}
-                                        { (
+                                        {findCurrentReservation(filteredReservations).map(reservation => reservation._id).includes(reservation._id) && !occupiedReservation(filteredReservations).map(reservation => reservation._id).includes(reservation._id) && (
                                             <button
                                                 onClick={() => handleAction('cancel', reservation._id)}
                                                 disabled={actionLoading[reservation._id]}
@@ -345,7 +360,7 @@ const ReservationDetailsPopup = ({
 
                                         {/* Change Slot */}
                                         {/* {['pending', 'confirmed'].includes(reservation.status) && ( */}
-                                              { (
+                                              {findUpcommingReservations(filteredReservations).map(reservation => reservation._id).includes(reservation._id) && (
                                             <button
                                                 onClick={() => handleAction('slotChange', reservation._id)}
                                                 disabled={actionLoading[reservation._id]}

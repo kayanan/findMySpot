@@ -308,7 +308,7 @@ const ViewParkingOwner = () => {
                 <div className="p-4 bg-green-50 rounded-lg border border-green-100">
                   <p className="text-green-800 text-sm">This parking owner has been approved. You can manage their active status below.</p>
                 </div>
-                <button
+                  <button
                   onClick={() => initiateStatusChange(!owner.isActive)}
                   className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg transition duration-300 hover:shadow-lg font-semibold ${
                     owner.isActive
@@ -327,7 +327,7 @@ const ViewParkingOwner = () => {
                       <span>Activate Parking Owner</span>
                     </>
                   )}
-                </button>
+                  </button>
               </div>
             )}
           </div>

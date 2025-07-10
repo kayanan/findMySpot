@@ -76,8 +76,10 @@ import ParkingOwnerReport from "./pages/Report/ParkingOwnerReport/ParkingOwnerRe
 // customer import start
 import CustomerLandingPage from "./pages/CustomerUi/CustomerLandingPage";
 import FindParkingSpot from "./pages/CustomerUi/FindParkingSpot";
+import ReservationHistory from "./pages/CustomerUi/ReservationHistory";
+import ActiveReservation from "./pages/CustomerUi/ActiveReservation";
+import UpcommingReservation from "./pages/CustomerUi/UpcommingReservation";
 // customer import end
-
 
 const ProtectedRoute = ({ children }) => {
   const { authState } = useAuth();
@@ -125,9 +127,9 @@ const AppRoutes = () => {
             <Route path="/profile" element={<Profile />} />
             {/* ------------Location Route Start-------- */}
             {/* admin dashboard route start */}
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-            <Route path="/manager/dashboard" element={<ManagerDashboard />} />
+           {authState.user?.roles?.includes("ADMIN") && ( <Route path="/dashboard" element={<AdminDashboard />} />)}
+           {authState.user?.roles?.includes("CUSTOMER") && ( <Route path="/dashboard" element={<CustomerDashboard />} />)}
+           {authState.user?.roles?.includes("PARKING_OWNER") && ( <Route path="/dashboard" element={<ManagerDashboard />} />)}
             {/* admin dashboard route end */}
             {/* province route start */}
             <Route path="/province" element={<ProvinceList />} />
@@ -202,7 +204,10 @@ const AppRoutes = () => {
 
             {/* customer route start */}
             <Route path="/customer-landing-page" element={<CustomerLandingPage />} />
-            <Route path="/customer/find-parking-spot" element={<FindParkingSpot />} />
+            <Route path="/reservation/find-parking-spot" element={<FindParkingSpot />} />
+            <Route path="/reservation/history" element={<ReservationHistory />} />
+            <Route path="/reservation/active" element={<ActiveReservation />} />
+            <Route path="/reservation/upcoming" element={<UpcommingReservation />} />
             {/* customer route end */}
 
             <Route path="/" element={<Navigate to="/login" replace />} />

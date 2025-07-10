@@ -149,6 +149,8 @@ export const getReservationPaymentByIdHandler = async (req: Request, res: Respon
 export const getAllReservationPaymentsHandler = async (req: Request, res: Response) => {
   try {
     const { 
+      page = 1,
+      limit = 10,
       startDate, 
       endDate, 
       parkingArea, 
@@ -161,81 +163,69 @@ export const getAllReservationPaymentsHandler = async (req: Request, res: Respon
     } = req.query;
 
     let payments;
+    const currentPage = Number(page);
+    const itemsPerPage = Number(limit);
 
-    // Apply filters based on query parameters
+    // Get all payments first
+    payments = await getAllReservationPaymentsService();
+
+    // Apply filters
     if (startDate && endDate) {
-      // Filter by date range
       const start = new Date(startDate as string);
       const end = new Date(endDate as string);
-      payments = await getReservationPaymentsByDateRangeService(start, end);
-    }
-    //  else if (parkingArea) {
-    //   // Filter by parking area
-    //   payments = await getReservationPaymentsByParkingAreaService(parkingArea as string);
-    // } 
-    else if (paymentStatus) {
-      // Filter by payment status
-      payments = await getReservationPaymentsByPaymentStatusService(paymentStatus as string);
-    } else if (paymentMethod) {
-      // Filter by payment method
-      payments = await getReservationPaymentsByPaymentMethodService(paymentMethod as string);
-    } else if (customer) {
-      // Filter by customer
-      payments = await getReservationPaymentsByCustomerService(customer as string);
-    } else if (paidBy) {
-      // Filter by paid by
-      payments = await getReservationPaymentsByPaidByService(paidBy as string);
-    } else if (minAmount && maxAmount) {
-      // Filter by amount range
-      payments = await getReservationPaymentsByAmountRangeService(
-        parseFloat(minAmount as string), 
-        parseFloat(maxAmount as string)
-      );
-    } else {
-      // Get all payments
-      payments = await getAllReservationPaymentsService();
+      payments = payments.filter(p => {
+        const paymentDate = new Date(p.paymentDate);
+        return paymentDate >= start && paymentDate <= end;
+      });
     }
 
-    // Apply additional filters if multiple filters are provided
-    if (payments && payments.length > 0) {
-      // if (parkingArea && !startDate && !endDate && !paymentStatus && !paymentMethod && !customer && !paidBy && !minAmount) {
-      //   // Already filtered by parking area
-      // } 
-      // else if (parkingArea) {
-      //   payments = payments.filter(p => p.reservation?.parkingAreaId?.toString() === parkingArea);
-      // }
+    // Note: parkingArea filter requires population of reservation field
+    // if (parkingArea) {
+    //   payments = payments.filter(p => p.reservation?.parkingArea?.toString() === parkingArea);
+    // }
 
-      if (paymentStatus && !startDate && !endDate && !parkingArea && !paymentMethod && !customer && !paidBy && !minAmount) {
-        // Already filtered by payment status
-      } else if (paymentStatus) {
-        payments = payments.filter(p => p.paymentStatus === paymentStatus);
-      }
-
-      if (paymentMethod && !startDate && !endDate && !parkingArea && !paymentStatus && !customer && !paidBy && !minAmount) {
-        // Already filtered by payment method
-      } else if (paymentMethod) {
-        payments = payments.filter(p => p.paymentMethod === paymentMethod);
-      }
-
-      if (customer && !startDate && !endDate && !parkingArea && !paymentStatus && !paymentMethod && !paidBy && !minAmount) {
-        // Already filtered by customer
-      } else if (customer) {
-        payments = payments.filter(p => p.customer?.toString() === customer);
-      }
-
-      if (paidBy && !startDate && !endDate && !parkingArea && !paymentStatus && !paymentMethod && !customer && !minAmount) {
-        // Already filtered by paid by
-      } else if (paidBy) {
-        payments = payments.filter(p => p.paidBy?.toString() === paidBy);
-      }
+    if (paymentStatus) {
+      payments = payments.filter(p => p.paymentStatus === paymentStatus);
     }
+
+    if (paymentMethod) {
+      payments = payments.filter(p => p.paymentMethod === paymentMethod);
+    }
+
+    if (customer) {
+      payments = payments.filter(p => p.customer?.toString() === customer);
+    }
+
+    if (paidBy) {
+      payments = payments.filter(p => p.paidBy?.toString() === paidBy);
+    }
+
+    if (minAmount && maxAmount) {
+      const min = parseFloat(minAmount as string);
+      const max = parseFloat(maxAmount as string);
+      payments = payments.filter(p => p.paymentAmount >= min && p.paymentAmount <= max);
+    }
+
+    const totalItems = payments.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const skip = (currentPage - 1) * itemsPerPage;
+    
+    // Apply pagination
+    const paginatedPayments = payments.slice(skip, skip + itemsPerPage);
 
     res.status(200).json({
       success: true,
-      count: payments.length,
-      data: payments
+      count: paginatedPayments.length,
+      data: paginatedPayments,
+      pagination: {
+        currentPage,
+        totalPages,
+        totalItems,
+        itemsPerPage
+      }
     });
   } catch (error: unknown) {
+    console.log(error);
     if (error instanceof Error) {
       res.status(500).json({ 
         success: false,
@@ -260,6 +250,7 @@ export const getReservationPaymentsByReservationHandler = async (req: Request, r
       data: payments
     });
   } catch (error: unknown) {
+    console.log(error);
     if (error instanceof Error) {
       res.status(500).json({ 
         success: false,

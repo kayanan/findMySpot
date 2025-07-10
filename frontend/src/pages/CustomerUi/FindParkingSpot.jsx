@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MapComponent from '../../utils/MapComponent';
-import { FaMapMarkerAlt, FaCar, FaMotorcycle, FaBus, FaSearch } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaCar, FaMotorcycle, FaBus, FaSearch, FaArrowLeft } from 'react-icons/fa';
 import CustomPointsMapContainer from '../../utils/CustomPointsMapContainer';
 import SpotDetailsPopup from '../../utils/SpotDetailsPopup';
 import { toast, ToastContainer } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import handlePayment from '../../utils/payherePaymentOption';
 import axios from 'axios';
+import dayjs from 'dayjs'
 
 
 const vehicleTypes = [
@@ -29,6 +30,7 @@ const FindParkingSpot = () => {
     const [parkingSpots, setParkingSpots] = useState([]);
     const [position, setPosition] = useState(positionFromState || null);
     const [zoom, setZoom] = useState(12);
+    const [isMapWorking, setIsMapWorking] = useState(false);
     const [filters, setFilters] = useState({
         startTime: startDateAndTime ? new Date(startDateAndTime) : null,
         endTime: endDateAndTime ? new Date(endDateAndTime) : null,
@@ -46,8 +48,8 @@ const FindParkingSpot = () => {
 
     useEffect(() => {
         setFilters(prev => ({ ...prev, coords: position }));
-    }, [position]); 
-    
+    }, [position]);
+
     useEffect(() => {
         if (selectedArea && position) {
             const getDistance = async () => {
@@ -123,10 +125,12 @@ const FindParkingSpot = () => {
         try {
 
             const setTimeOut = setTimeout(() => {
-                getParkingSpots();
+                if (filters.vehicleType && filters.startTime) {
+                    getParkingSpots();
+                }
             }, 1000)
 
-           
+
             return () => clearTimeout(setTimeOut);
 
 
@@ -163,7 +167,7 @@ const FindParkingSpot = () => {
             const data = {
                 parkingArea: selectedArea.id,
                 startDateAndTime: filters?.startTime ? new Date(filters?.startTime) : new Date(),
-                endDateAndTime:  filters?.endTime ? new Date(filters?.endTime) : null,
+                endDateAndTime: filters?.endTime ? new Date(filters?.endTime) : null,
                 user: authState.user.userId,
                 type: "pre_booking",
                 vehicleNumber: reservationData.vehicleNumber.replace(/\s+/g, ''),
@@ -173,7 +177,7 @@ const FindParkingSpot = () => {
                 customerMobile: reservationData.customerMobile,
                 createdBy: authState.user.userId,
             }
-           
+
             const response = await axios.post(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/pre-booking`, data)
             const paymentDetails = {
                 order_id: response.data.data._id,
@@ -217,166 +221,460 @@ const FindParkingSpot = () => {
         setSelectedArea(null);
     };
 
+    const handleFilterSubmit = () => {
+        const errors = {};
+        if (!filters.startTime) {
+            errors.startTime = "Arrival time is required";
+        }
+        if (filters.startTime && dayjs(filters.startTime).isBefore(dayjs())) {
+            errors.startTime = "Arrival time must be in the future";
+        }
+        if (!filters.vehicleType) {
+            errors.vehicleType = "Vehicle type is required";
+        }
+        if (filters.endTime && dayjs(filters.endTime).isBefore(dayjs(filters.startTime))) {
+            errors.endTime = "Departure time must be after arrival time";
+        }
+        setErrors(errors);
+        if (Object.keys(errors).length === 0) {
+            getParkingSpots();
+        }
+
+    }
+
 
 
     return (
-        <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+        <div className="min-h-screen bg-gray-100">
+            {/* Back Arrow Navigation */}
+            <div className="max-w-7xl mx-auto">
+                <button
+                    className="flex items-center gap-2 mt-4 ml-2 text-white bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 font-semibold text-lg rounded-full px-4 py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 lg:mt-8 lg:ml-0"
+                    onClick={() => navigate('/customer-landing-page')}
+                >
+                    <FaArrowLeft className="text-xl" />
+                    <span className="hidden sm:inline">Back to Home</span>
+                </button>
+            </div>
+            {/* Loading Overlay */}
             {isLoading && (
-                <div className="flex items-center justify-center h-screen">
-                    <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-cyan-500"></div>
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-cyan-500 border-t-transparent"></div>
+                        <p className="text-gray-600 font-medium">Finding parking spots...</p>
+                    </div>
                 </div>
             )}
-            {(
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex flex-col md:flex-row gap-6">
-                        {/* Map: always on top for mobile, right for desktop */}
-                        {parkingSpots?.length > 0 &&(<div className="grid grid-cols-1 order-1 md:order-2 w-full md:w-1/2 flex items-center justify-center">
 
-                            <div className="w-full max-w-xl bg-white rounded-xl shadow-lg p-2 md:p-4 h-56 xs:h-64 sm:h-72 md:h-[500px] flex items-center z-0">
-                                <CustomPointsMapContainer parkingSpots={parkingSpots} setSelectedArea={setSelectedArea} currentPosition={position} zoom={zoom} />
-                            </div>
-                            <div className=" bottom-4 left-4 right-4 bg-white p-4 rounded-lg shadow-md z-0 ml-2 mt-2 mr-6">
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-sm font-medium text-gray-700">
-                                        Filter Radius: {filters.radius / 1000 || 0} km
-                                    </label>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="300"
-                                        value={filters.radius / 1000 || 0}
-                                        onChange={(e) => setFilters(f => ({ ...f, radius: parseInt(e.target.value) * 1000 }))}
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            {/* Mobile Layout */}
+            <div className="lg:hidden max-w-md mx-auto bg-white min-h-screen shadow-lg">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 p-6 text-white">
+                    <h1 className="text-2xl font-bold text-center">Find Parking</h1>
+                    <p className="text-center text-cyan-100 mt-1">Discover available spots near you</p>
+                </div>
+
+                {/* Main Content */}
+                <div className="p-3 space-y-3">
+                    {/* Search Form Section */}
+                    {(!vehicleType || !position) && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                            {/* Location Map */}
+                          <div className="relative">
+                                <div className="h-40 bg-gray-50 z-0 relative">
+                                    <MapComponent
+                                        ref={mapRef}
+                                        position={position}
+                                        setPosition={setPosition}
+                                        zoom={12}
+                                        height="100%"
+                                        message="Tap to set your location"
+                                        setIsMapWorking
                                     />
-                                    <div className="flex justify-between text-xs text-gray-500">
-                                        <span>0 km</span>
-                                        <span>300 km</span>
+                                </div>
+                                <div className="absolute top-2 left-2 right-2">
+                                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-2">
+                                        <p className="text-xs text-gray-600 text-center">Tap on the map to select your location</p>
                                     </div>
                                 </div>
                             </div>
 
-                        </div>)}
-
-                        {/* Filter: below map on mobile, left on desktop */}
-                        <div className="order-2 md:order-1 w-full md:w-1/2 flex flex-col gap-6">
-                            {(!vehicleType || !position) && (<div className="bg-white rounded-xl shadow-md p-4">
-                                <h2 className="text-xl font-bold text-cyan-700 mb-4 flex items-center gap-2 justify-center">
-                                    {("Schedule a Parking").toUpperCase()}
-                                </h2>
-                                <div className="grid grid-cols-1   gap-4">
-                                    <div className="flex flex-col gap-2">
-                                        <div className=" relative z-0">
-                                            <MapComponent ref={mapRef} position={position} setPosition={setPosition} zoom={12} height="300px" message={`Help us find the best spot for you – \n pick your current location.`} />
-                                        </div>
-                                        <div className="grid grid-cols-1 gap-2 ">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-2 mt-4 justify-center">
-                                                <div className="flex flex-col gap-2 w-full">
-                                                    <label className="text-sm font-bold text-black">{("Longitude").toUpperCase()}</label>
-                                                    <input type="text" placeholder="longitude" className=" p-2 h-10 rounded-md border-2 border-gray-300 text-center text-black" value={position?.lng || ""} disabled />
-                                                </div>
-                                                <div className="flex flex-col gap-2 w-full">
-                                                    <label className="text-sm font-bold text-black">{("Latitude").toUpperCase()}</label>
-                                                    <input type="text" placeholder="latitude" className="p-2 h-10 rounded-md border-2 border-gray-300 text-center text-black" value={position?.lat || ""} disabled />
-                                                </div>
-                                                <button className=" flex flex-col bg-cyan-500 text-white px-2 py-1 rounded-md hover:bg-cyan-600 transition-all duration-300  flex items-center justify-center mt-7 h-10 " onClick={() => mapRef.current.getLocation()}>
-                                                    <span className="text-xs font-bold ">Reset Location</span>
-                                                </button>
-                                            </div>
-
-
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col gap-2">
+                            {/* Coordinates Display */}
+                            <div className="p-3 space-y-2">
+                                <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                            <label className="text-sm font-bold text-black">{("Select Vehicle Type").toUpperCase()}</label>
-                                            <select
-                                                value={filters.vehicleType}
-                                                onChange={e => setFilters(f => ({ ...f, vehicleType: e.target.value }))}
-                                                className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 col-span-2"
-                                                placeholder="Select Vehicle Type"
-                                            >
-                                                {vehicleTypes.map(type => (
-                                                    <option key={type.value} value={type.value}>{type.label}</option>
-                                                ))}
-                                            </select>
-                                            {errors.vehicleType && <p className="text-red-500 text-sm">{errors.vehicleType}</p>}
-                                        </div>
-                                        <div className="grid grid-cols-1  lg:grid-cols-2  gap-2 mt-4 justify-center">
-                                            <div>
-                                                <label className="text-sm font-bold text-black">{("Arrival Date and Time").toUpperCase()}</label>
-                                                <input
-                                                    type="datetime-local"
-                                                    value={filters.startTime}
-                                                    onChange={e => setFilters(f => ({ ...f, startTime: e.target.value }))}
-                                                    className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
-                                                />
-                                            </div>
-                                            {errors.startDateAndTime && <p className="text-red-500 text-sm">{errors.startDateAndTime}</p>}
-                                            <div>
-                                                <label className="text-sm font-bold text-black">{("Departure Date and Time").toUpperCase() + "(optional)"}</label>
-                                                <input
-                                                    type="datetime-local"
-                                                    value={filters.endTime}
-                                                    onChange={e => setFilters(f => ({ ...f, endTime: e.target.value }))}
-                                                    className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
-                                                />
-
-                                            </div>
-                                            {errors.endDateAndTime && <p className="text-red-500 text-sm">{errors.endDateAndTime}</p>}
-                                        </div>
-                                        {/* <input
-                                            type="time"
-                                            value={filters.time}
-                                            onChange={e => setFilters(f => ({ ...f, time: e.target.value }))}
-                                            className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
-                                        /> */}
-                                        
+                                        <label className="text-xs font-medium text-gray-600 mb-1 block">Longitude</label>
+                                        <input
+                                            type="text"
+                                            className="w-full p-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-center"
+                                            value={Number(position?.lng)?.toFixed(6)}
+                                            onChange={(e) => { setPosition({ ...position, lng: Number(e.target.value) }) }}
+                                            disabled={position?false:true}
+                                        />
                                     </div>
-                                    <button className=" flex flex-col bg-emerald-500 text-white p-2 rounded-md hover:bg-emerald-600 transition-all duration-300  flex items-center justify-center mt-2  h-12"
-                                        onClick={() =>{ 
-                                            getParkingSpots();
-                                            //navigate("/customer/find-parking-spot", { state: { ...filters }, key: filters?.startDateAndTime })
-                                            }}>
-
-
-                                        <span className="text-sm font-bold ">Find Parking Spot</span>
-                                    </button>
+                                    <div>
+                                        <label className="text-xs font-medium text-gray-600 mb-1 block">Latitude</label>
+                                        <input
+                                            type="text"
+                                            className="w-full p-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-center"
+                                            value={Number(position?.lat)?.toFixed(6)}
+                                            onChange={(e) => { setPosition({ ...position, lat: Number(e.target.value) }) }}
+                                            disabled={position?false:true}
+                                        />
+                                    </div>
                                 </div>
-                            </div>)}
-                            {/* Results List */}
-                           {parkingSpots?.length > 0 &&( <div className="bg-white rounded-xl shadow-md p-4">
-                                <h3 className="text-lg font-bold text-cyan-700 mb-4">Available Spots</h3>
-                                <div className="flex flex-col gap-4">
-                                    {parkingSpots.length === 0 && (
-                                        <div className="text-gray-500 text-center">No spots found for your filters.</div>
-                                    )}
+                                (isMapWorking && <button
+                                    className="w-full p-2 bg-cyan-500 text-white rounded-lg text-sm font-medium active:bg-cyan-600 transition-colors"
+                                    onClick={() => mapRef.current.getLocation()}
+                                >
+                                    📍 Use Current Location
+                                </button>)
+                            </div>
+
+                            {/* Booking Form */}
+                            <div className="p-3 space-y-3 border-t border-gray-100">
+                                <h3 className="text-lg font-semibold text-gray-800">Booking Details</h3>
+
+                                {/* Vehicle Type */}
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700 mb-1 block">Vehicle Type</label>
+                                    <select
+                                        value={filters.vehicleType}
+                                        onChange={e => setFilters(f => ({ ...f, vehicleType: e.target.value }))}
+                                        className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                                    >
+                                        <option value="">Select your vehicle</option>
+                                        {vehicleTypes.map(type => (
+                                            <option key={type.value} value={type.value}>{type.label}</option>
+                                        ))}
+                                    </select>
+                                    {errors.vehicleType && <p className="text-red-500 text-sm">{errors.vehicleType}</p>}
+                                </div>
+
+                                {/* Date and Time */}
+                                <div className="space-y-2">
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700 mb-1 block">Arrival Time</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={filters.startTime}
+                                            onChange={e => setFilters(f => ({ ...f, startTime: e.target.value }))}
+                                            min={new Date().toISOString().slice(0, 16)}
+                                            className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                                        />
+                                        {errors.startTime && <p className="text-red-500 text-sm">{errors.startTime}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700 mb-1 block">Departure Time (Optional)</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={filters.endTime}
+                                            onChange={e => setFilters(f => ({ ...f, endTime: e.target.value }))}
+                                            className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                                        />
+                                        {errors.endTime && <p className="text-red-500 text-sm">{errors.endTime}</p>}
+                                    </div>
+                                </div>
+
+                                {/* Search Button */}
+                                <button
+                                    className="w-full p-3 bg-emerald-500 text-white rounded-lg font-semibold text-lg active:bg-emerald-600 transition-colors shadow-lg"
+                                    onClick={() => handleFilterSubmit()}
+                                >
+                                    🔍 Find Parking Spots
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Results Section */}
+                    {parkingSpots?.length > 0 && (
+                        <div className="space-y-3">
+                            {/* Map View */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                <div className="h-52 bg-gray-50  z-0 relative">
+                                    <CustomPointsMapContainer
+                                        parkingSpots={parkingSpots}
+                                        setSelectedArea={setSelectedArea}
+                                        currentPosition={position}
+                                        zoom={zoom}
+                                    />
+                                </div>
+
+                                {/* Radius Filter */}
+                                <div className="p-3 border-t border-gray-100">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-sm font-medium text-gray-700">Search Radius</label>
+                                            <span className="text-sm font-bold text-cyan-600">{filters.radius / 1000} km</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="300"
+                                            value={filters.radius / 1000 || 0}
+                                            onChange={(e) => setFilters(f => ({ ...f, radius: parseInt(e.target.value) * 1000 }))}
+                                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                        />
+                                        <div className="flex justify-between text-xs text-gray-500">
+                                            <span>0 km</span>
+                                            <span>300 km</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Parking Spots List */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                <div className="p-3 border-b border-gray-100">
+                                    <h3 className="text-lg font-semibold text-gray-800">Available Spots</h3>
+                                    <p className="text-sm text-gray-500 mt-1">Found {parkingSpots.length} parking areas</p>
+                                </div>
+
+                                <div className="divide-y divide-gray-100">
                                     {parkingSpots.map(spot => (
                                         <div
                                             key={spot.id}
-                                            className={`border rounded-lg p-3 flex items-center gap-4 cursor-pointer hover:shadow-md transition ${selectedSpotData?.id === spot.id ? 'border-cyan-500 bg-cyan-50' : 'border-gray-200 bg-white'}`}
-                                            onClick={() => setSelectedArea(spot)
-
-                                            }
+                                            className={`p-3 active:bg-gray-50 transition-colors ${selectedSpotData?.id === spot.id
+                                                    ? 'bg-cyan-50 border-l-4 border-l-cyan-500'
+                                                    : ''
+                                                }`}
+                                            onClick={() => setSelectedArea(spot)}
                                         >
-                                            <div className="text-cyan-500 text-2xl">
-                                                {vehicleTypes.find(v => v.value === spot.vehicleType)?.icon}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="font-semibold text-gray-800">{spot.name}</div>
-                                                <div className="text-sm text-gray-500">{spot.address}</div>
-                                                <div className="text-xs text-gray-400">{spot.city}, {spot.district}, {spot.province}</div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="font-bold text-cyan-700">Rs.{spot?.price?.toFixed(2) || "N/A"}/hr</div>
-                                                <div className={`text-xs ${spot.slotCount > 5 ? 'text-green-600' : 'text-red-500'}`}>{spot.slotCount > 5 ? 'Available' : 'Limited Slots'}</div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="text-cyan-500 text-2xl">
+                                                    {vehicleTypes.find(v => v.value === spot.vehicleType)?.icon}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-semibold text-gray-800 truncate">{spot.name}</div>
+                                                    <div className="text-sm text-gray-600 truncate">{spot.address}</div>
+                                                    <div className="text-xs text-gray-500">{spot.city}, {spot.district}</div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-bold text-cyan-600 text-lg">Rs.{spot?.price?.toFixed(0)}</div>
+                                                    <div className="text-xs text-gray-500">per hour</div>
+                                                    <div className={`text-xs font-medium px-2 py-1 rounded-full mt-1 ${spot.slotCount > 5
+                                                            ? 'text-green-700 bg-green-100'
+                                                            : 'text-orange-700 bg-orange-100'
+                                                        }`}>
+                                                        {spot.slotCount > 5 ? 'Available' : 'Limited'}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
-                            </div>)}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Desktop Layout */}
+            <div className="hidden lg:block min-h-screen bg-gray-50">
+                <div className="max-w-7xl mx-auto p-4">
+                    <div className="flex gap-4">
+                        {/* Left Side - Search Form */}
+                        {!position || !vehicleType &&(<div className="w-1/3">
+                            <div className="bg-white rounded-xl shadow-lg p-4 sticky top-4">
+                                <h2 className="text-2xl font-bold text-cyan-700 mb-4">Find Parking</h2>
+
+                                {/* Location Selection */}
+                                <div className="space-y-3 mb-4">
+                                    <h3 className="text-lg font-semibold text-gray-800">Location</h3>
+                                   <div className="bg-gray-50 rounded-lg p-3 h-40 z-0 relative">
+                                        <MapComponent
+                                            ref={mapRef}
+                                            position={position}
+                                            setPosition={setPosition}
+                                            zoom={12}
+                                            height="100%"
+                                            message="Click to set your location"
+                                            setIsMapWorking
+                                            
+                                        />
+                                    </div>
+
+                                    {/* Coordinates */}
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-700 mb-1 block">Longitude</label>
+                                            <input
+                                                type="number"
+                                                className="w-full p-2 border border-gray-200 rounded-lg bg-gray-50 text-center text-sm"
+                                                value={position?.lng?.toFixed(6)}
+                                                onChange={(e) => { setPosition({ ...position, lng: e.target.value }) }}
+                                                disabled={position?.lng}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-700 mb-1 block">Latitude</label>
+                                            <input
+                                                type="number"
+                                                className="w-full p-2 border border-gray-200 rounded-lg bg-gray-50 text-center text-sm"
+                                                value={position?.lat?.toFixed(6)}
+                                                onChange={(e) => { setPosition({ ...position, lat: e.target.value }) }}
+                                                disabled={!isMapWorking}
+                                            />
+                                        </div>
+                                    </div>
+                                    <button
+                                        className="w-full p-2 bg-cyan-500 text-white rounded-lg text-sm font-medium hover:bg-cyan-600 transition-colors"
+                                        onClick={() => mapRef.current.getLocation()}
+                                    >
+                                        📍 Use Current Location
+                                    </button>
+                                </div>
+
+                                {/* Booking Details */}
+                                <div className="space-y-3">
+                                    <h3 className="text-lg font-semibold text-gray-800">Booking Details</h3>
+
+                                    {/* Vehicle Type */}
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700 mb-1 block">Vehicle Type</label>
+                                        <select
+                                            value={filters.vehicleType}
+                                            onChange={e => setFilters(f => ({ ...f, vehicleType: e.target.value }))}
+                                            className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                                        >
+                                            <option value="">Select your vehicle</option>
+                                            {vehicleTypes.map(type => (
+                                                <option key={type.value} value={type.value}>{type.label}</option>
+                                            ))}
+                                        </select>
+                                        {errors.vehicleType && <p className="text-red-500 text-sm">{errors.vehicleType}</p>}
+                                    </div>
+
+                                    {/* Date and Time */}
+                                    <div className="space-y-2">
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-700 mb-1 block">Arrival Time</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={filters.startTime}
+                                                onChange={e => setFilters(f => ({ ...f, startTime: e.target.value, endTime: "" }))}
+                                                min={dayjs().format('YYYY-MM-DDTHH:mm')}
+                                                className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                                            />
+                                            {errors.startTime && <p className="text-red-500 text-sm">{errors.startTime}</p>}
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-700 mb-1 block">Departure Time (Optional)</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={filters.endTime}
+                                                onChange={e => setFilters(f => ({ ...f, endTime: e.target.value }))}
+                                                min={dayjs(filters.startTime).format('YYYY-MM-DDTHH:mm')}
+                                                disabled={!filters.startTime}
+                                                className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                                            />
+                                            {errors.endTime && <p className="text-red-500 text-sm">{errors.endTime}</p>}
+                                        </div>
+                                    </div>
+
+                                    {/* Search Button */}
+                                    <button
+                                        className="w-full p-3 bg-emerald-500 text-white rounded-lg font-semibold text-lg hover:bg-emerald-600 transition-colors shadow-lg"
+                                        onClick={() => handleFilterSubmit()}
+                                    >
+                                        🔍 Find Parking Spots
+                                    </button>
+                                </div>
+                            </div>
+                        </div>)}
+
+                        {/* Right Side - Results */}
+                        <div className="w-2/3">
+                            {parkingSpots?.length > 0 ? (
+                                <div className="space-y-4">
+                                    {/* Map View */}
+                                    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                                        <div className="h-80 z-0 relative">
+                                            <CustomPointsMapContainer
+                                                parkingSpots={parkingSpots}
+                                                setSelectedArea={setSelectedArea}
+                                                currentPosition={position}
+                                                zoom={zoom}
+                                            />
+                                        </div>
+
+                                        {/* Radius Filter */}
+                                        <div className="p-3 border-t border-gray-100">
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between items-center">
+                                                    <label className="text-sm font-medium text-gray-700">Search Radius</label>
+                                                    <span className="text-sm font-bold text-cyan-600">{filters.radius / 1000} km</span>
+                                                </div>
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="300"
+                                                    value={filters.radius / 1000 || 0}
+                                                    onChange={(e) => setFilters(f => ({ ...f, radius: parseInt(e.target.value) * 1000 }))}
+                                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                                />
+                                                <div className="flex justify-between text-xs text-gray-500">
+                                                    <span>0 km</span>
+                                                    <span>300 km</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Parking Spots List */}
+                                    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                                        <div className="p-4 border-b border-gray-100">
+                                            <h3 className="text-xl font-semibold text-gray-800">Available Parking Spots</h3>
+                                            <p className="text-gray-500 mt-1">Found {parkingSpots.length} parking areas</p>
+                                        </div>
+
+                                        <div className="divide-y divide-gray-100">
+                                            {parkingSpots.map(spot => (
+                                                <div
+                                                    key={spot.id}
+                                                    className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${selectedSpotData?.id === spot.id
+                                                            ? 'bg-cyan-50 border-l-4 border-l-cyan-500'
+                                                            : ''
+                                                        }`}
+                                                    onClick={() => setSelectedArea(spot)}
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="text-cyan-500 text-3xl">
+                                                            {vehicleTypes.find(v => v.value === spot.vehicleType)?.icon}
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <div className="font-semibold text-gray-800 text-lg">{spot.name}</div>
+                                                            <div className="text-gray-600">{spot.address}</div>
+                                                            <div className="text-sm text-gray-500">{spot.city}, {spot.district}, {spot.province}</div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="font-bold text-cyan-600 text-xl">Rs.{spot?.price?.toFixed(0)}</div>
+                                                            <div className="text-sm text-gray-500">per hour</div>
+                                                            <div className={`text-sm font-medium px-3 py-1 rounded-full mt-2 ${spot.slotCount > 5
+                                                                    ? 'text-green-700 bg-green-100'
+                                                                    : 'text-orange-700 bg-orange-100'
+                                                                }`}>
+                                                                {spot.slotCount > 5 ? 'Available' : 'Limited Slots'}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                                    <div className="text-gray-400 text-6xl mb-4">🚗</div>
+                                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Find Your Perfect Parking Spot</h3>
+                                    <p className="text-gray-500">Fill out the form on the left and click "Find Parking Spots" to discover available parking areas near you.</p>
+                                </div>
+                            )}
                         </div>
                     </div>
-                </div>)}
+                </div>
+            </div>
 
             {/* Spot Details Popup */}
             <SpotDetailsPopup
