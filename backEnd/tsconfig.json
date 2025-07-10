@@ -20,7 +20,7 @@
       "@/types/*": ["src/types/*"],
       "package": ["package.json"]
     },
-    "types": ["node"]
+    "types": ["node", "jest"]
   },
   "include": ["src", "src/types", "*.js", "package.json"],
   "exclude": ["node_modules", ".vscode", "dist", "tests"]
