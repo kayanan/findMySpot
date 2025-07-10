@@ -12,7 +12,7 @@ const ReservationDetailsPopup = ({
 }) => {
     const getActiveReservations = (slot) => {
         if (slot?.length > 0) {
-            const filteredReservations = slot?.filter(reservation => reservation?.status === "confirmed" && (!reservation?.isParked ? (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1)) : true))
+            const filteredReservations = slot?.filter(reservation => ((reservation?.status === "confirmed" && !reservation?.isParked && (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1)) )||((reservation?.status === "completed" || reservation?.status === "confirmed") && reservation?.isParked && reservation?.paymentStatus === "pending")))
             return filteredReservations.sort((a, b) => new Date(a.startDateAndTime) - new Date(b.startDateAndTime))
         }
         else {
@@ -21,7 +21,7 @@ const ReservationDetailsPopup = ({
     }
     const findCurrentReservation = (reservations) => {
         if (reservations?.length > 0) {
-            return reservations?.filter(reservation => reservation?.status === "confirmed" && !reservation?.isParked && (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1) ) && (new Date(reservation?.startDateAndTime) <= new Date()) )
+            return reservations?.filter(reservation => reservation?.status === "confirmed" && !reservation?.isParked && (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1)) && (new Date(reservation?.startDateAndTime) <= new Date()))
         } else {
             return []
         }
@@ -29,14 +29,14 @@ const ReservationDetailsPopup = ({
     const findUpcommingReservations = (reservations) => {
         console.log(reservations)
         if (reservations?.length > 0) {
-            return reservations?.filter(reservation => reservation?.status === "confirmed" && !reservation?.isParked && (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1) ) )
+            return reservations?.filter(reservation => reservation?.status === "confirmed" && !reservation?.isParked && (new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1)))
         } else {
             return []
         }
     }
     const occupiedReservation = (reservations) => {
         if (reservations?.length > 0) {
-            return reservations?.filter(reservation => reservation?.status === "confirmed" && reservation?.isParked)
+            return reservations?.filter(reservation => ((reservation?.status === "confirmed" && reservation?.isParked)||(reservation?.status === "completed" && reservation?.isParked && reservation?.paymentStatus === "pending")))
         } else {
             return []
         }
@@ -52,7 +52,7 @@ const ReservationDetailsPopup = ({
         }
     }, [isOpen, parkingSlotId]);
 
-console.log(filteredReservations,"filteredReservations")
+    console.log(filteredReservations, "filteredReservations")
 
     const fetchReservations = async () => {
         setLoading(true);
@@ -60,8 +60,8 @@ console.log(filteredReservations,"filteredReservations")
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/parking-slot/${parkingSlotId}`);
             if (response?.data?.success) {
                 setReservations(getActiveReservations(response?.data?.data));
-               setFilteredReservations(getActiveReservations(response?.data?.data));
-              
+                setFilteredReservations(getActiveReservations(response?.data?.data));
+
 
             }
         } catch (error) {
@@ -162,7 +162,7 @@ console.log(filteredReservations,"filteredReservations")
             hour: '2-digit',
             minute: '2-digit'
         });
-        
+
     };
 
     const formatCurrency = (amount) => {
@@ -247,8 +247,8 @@ console.log(filteredReservations,"filteredReservations")
                                             </div>
                                         </div>
                                         <div className="flex space-x-2">
-                                            <span className={`px-3 py-1  text-xs font-medium  border-2 border-dashed border-gray-300 rounded-md ${ findCurrentReservation(filteredReservations).map(reservation => reservation._id).includes(reservation._id) ? "bg-cyan-100 text-cyan-800" : "bg-red-100 text-red-800"}`}>
-                                                { findCurrentReservation(filteredReservations).map(reservation => reservation._id).includes(reservation._id) ? "Current Reservation" : "Upcoming Reservation"}
+                                            <span className={`px-3 py-1  text-xs font-medium  border-2 border-dashed border-gray-300 rounded-md ${findCurrentReservation(filteredReservations).map(reservation => reservation._id).includes(reservation._id) || occupiedReservation(filteredReservations).map(reservation => reservation._id).includes(reservation._id) ? "bg-cyan-100 text-cyan-800" : "bg-red-100 text-red-800"}`}>
+                                                {findCurrentReservation(filteredReservations).map(reservation => reservation._id).includes(reservation._id) || occupiedReservation(filteredReservations).map(reservation => reservation._id).includes(reservation._id) ? "Current Reservation" : "Upcoming Reservation"}
                                             </span>
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(reservation.status)}`}>
                                                 {reservation.status}
@@ -360,7 +360,7 @@ console.log(filteredReservations,"filteredReservations")
 
                                         {/* Change Slot */}
                                         {/* {['pending', 'confirmed'].includes(reservation.status) && ( */}
-                                              {findUpcommingReservations(filteredReservations).map(reservation => reservation._id).includes(reservation._id) && (
+                                        {findUpcommingReservations(filteredReservations).map(reservation => reservation._id).includes(reservation._id) && (
                                             <button
                                                 onClick={() => handleAction('slotChange', reservation._id)}
                                                 disabled={actionLoading[reservation._id]}

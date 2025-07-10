@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom';
 
 const SubscriptionDetails = () => {
   const { id } = useParams();
+  const userType = useLocation().state.userType;
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

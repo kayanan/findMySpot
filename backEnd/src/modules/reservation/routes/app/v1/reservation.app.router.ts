@@ -18,7 +18,7 @@ import {
   updatePaymentStatusHandler,
   createPreBookingReservationHandler,
   changeSlotHandler,
-  calculateFinalAmountHandler
+  calculateFinalAmountHandler,
 } from "../../../controller/reservation.controller";
 
 const router = Router();
@@ -76,6 +76,7 @@ router.post("/pre-booking", createPreBookingReservationHandler as RequestHandler
 
 // Change slot
 router.patch("/:id/change-slot", changeSlotHandler as RequestHandler);
+
 
 // Calculate final amount
 router.get("/:id/calculate-final-amount", calculateFinalAmountHandler as RequestHandler);

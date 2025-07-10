@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaCar, FaTruck, FaBus, FaMotorcycle, FaCheck, FaTimes, FaClock, FaPlus, FaEdit, FaUniversity, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
+import { FaCar, FaTruck, FaBus, FaMotorcycle, FaCheck, FaTimes, FaClock, FaPlus, FaEdit, FaUniversity, FaUser, FaMoneyBillWave } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useAuth } from '../../../../context/AuthContext';
 import axios from "axios";
@@ -35,7 +35,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
     useEffect(() => {
 
         if (searchReservation) {
-            const filteredSlots = slots.filter(slot => slot?.reservationIds?.some(reservation => reservation?.vehicleNumber?.toLowerCase().includes(searchReservation.toLowerCase()) && reservation?.status === "confirmed" && new Date(reservation?.startDateAndTime) <= new Date() && (!reservation?.isParked ? new Date(new Date(reservation?.startDateAndTime).getTime() + 1000 * 60 * 60 * 1) >= new Date().getTime() : true)));
+            const filteredSlots = slots.filter(slot => slot?.reservationIds?.some(reservation => reservation?.vehicleNumber?.toLowerCase().includes(searchReservation.toLowerCase()) && ((reservation?.status === "confirmed" && new Date(reservation?.startDateAndTime) <= new Date() && !reservation?.isParked && new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime()-1000*60*60*1) ) || (reservation?.status === "completed" && reservation?.isParked && reservation?.paymentStatus === "pending"))));
             setFilteredSlots(filteredSlots);
         }
         else {
@@ -105,7 +105,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
 
     const getActiveReservations = (slot) => {
         if (slot?.reservationIds?.length > 0) {
-            return slot?.reservationIds?.filter(reservation => reservation?.status === "confirmed" &&  (!reservation?.isParked ? new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1) : true)).length
+            return slot?.reservationIds?.filter(reservation => ((reservation?.status === "confirmed" &&  !reservation?.isParked && new Date(reservation?.startDateAndTime) >= new Date(new Date().getTime() - 1000 * 60 * 60 * 1)) || ((reservation?.status === "completed" || reservation?.status === "confirmed") && reservation?.isParked && reservation?.paymentStatus === "pending"))).length
         }
         else {
             return 0
@@ -113,7 +113,7 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
     }
     const occupiedReservation = (slot) => {
         if (slot?.reservationIds?.length > 0) {
-            return slot?.reservationIds?.filter(reservation => reservation?.status === "confirmed" && reservation?.isParked)
+            return slot?.reservationIds?.filter(reservation => ((reservation?.status === "confirmed" && reservation?.isParked)||((reservation?.status === "completed" || reservation?.status === "confirmed") && reservation?.isParked && reservation?.paymentStatus === "pending")) )
         } else {
             return false
         }
@@ -139,10 +139,10 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
             id: "bank_transfer"
         },
         {
-            name: "Card",
-            icon: FaCreditCard,
+            name: "Paid Customer",
+            icon: FaUser,
             color: "text-cyan-700",
-            id: "card"
+            id: "customer"
         },
     ]
 
@@ -335,31 +335,32 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
         else if (data.paymentMethod === "bank_transfer") {
             setIsBankTransferPopupOpen(true);
         }
-        else if (data.paymentMethod === "card") {
-            const paymentDetails = {
-                order_id: occupiedReservation(selectedSlot)[0]._id,
-                amount: finalAmount.toFixed(2),
-                currency: "LKR",
-                return_url: `/customer/find-parking-spot`,
-                cancel_url: `/customer/find-parking-spot`,
-                notify_url: `${import.meta.env.VITE_BACKEND_APP_URL_PUBLIC}/api/v1/reservation-payment/notify`,
-                first_name: authState.user.firstName,
-                last_name: authState.user.lastName,
-                email: authState.user.email,
-                phone: authState.user.phoneNumber,
-                address: parkingArea?.addressLine1 || "No Address",
-                city: parkingArea?.city || "No City",
-                country: "Sri Lanka",
-                items: "Parking Reservation",
-                custom_1: authState.user.userId,
-                // custom_2: response.data.data.parkingSlot,
-            }
-            handlePayment(
-                {
-                    paymentDetails,
-                    onComplete: async () => { await handleReservationComplete(occupiedReservation(selectedSlot)[0]._id) },
-                    hashUrl: `/v1/reservation-payment/generate-hash`
-                })
+        else if (data.paymentMethod === "customer") {
+            await handlePaymentByCustomer(occupiedReservation(selectedSlot)[0]._id)
+            // const paymentDetails = {
+            //     order_id: occupiedReservation(selectedSlot)[0]._id,
+            //     amount: finalAmount.toFixed(2),
+            //     currency: "LKR",
+            //     return_url: `/customer/find-parking-spot`,
+            //     cancel_url: `/customer/find-parking-spot`,
+            //     notify_url: `${import.meta.env.VITE_BACKEND_APP_URL_PUBLIC}/api/v1/reservation-payment/notify`,
+            //     first_name: authState.user.firstName,
+            //     last_name: authState.user.lastName,
+            //     email: authState.user.email,
+            //     phone: authState.user.phoneNumber,
+            //     address: parkingArea?.addressLine1 || "No Address",
+            //     city: parkingArea?.city || "No City",
+            //     country: "Sri Lanka",
+            //     items: "Parking Reservation",
+            //     custom_1: authState.user.userId,
+            //     // custom_2: response.data.data.parkingSlot,
+            // }
+            // handlePayment(
+            //     {
+            //         paymentDetails,
+            //         onComplete: async () => { await handleReservationComplete(occupiedReservation(selectedSlot)[0]._id) },
+            //         hashUrl: `/v1/reservation-payment/generate-hash`
+            //     })
 
         }
     }
@@ -369,6 +370,14 @@ const ListParkingSlots = ({ slots, fetchParkingSlots, parkingArea }) => {
         toast.success("Reservation completed successfully");
         fetchParkingSlots();
     }
+
+    const handlePaymentByCustomer = async (reservationId) => {
+        await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/${reservationId}`,{status:"completed"});
+        toast.success("Payment by customer successfully");
+        fetchParkingSlots();
+    }
+
+
 
     return (
         <>

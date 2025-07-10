@@ -61,7 +61,9 @@ export const AuthProvider = ({ children }) => {
           email: data.email,
           roles: data.roles,
           mobileNumber: data?.mobileNumber || '',
+
         },
+        token: data.accessToken,
         privilegeList: data.roles || [],
       });
       console.log("Login successful:", data);

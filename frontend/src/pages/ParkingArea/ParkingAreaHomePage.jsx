@@ -5,6 +5,8 @@ import axios from 'axios';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../../context/AuthContext';
 
+import ParkingAreaList from "../User/ParkingOwner/ParkingArea/ParkingAreaList";
+
 const ParkingAreaHomePage = () => {
     const [parkingAreas, setParkingAreas] = useState([]);
     const [staffMembers, setStaffMembers] = useState([]);
@@ -18,9 +20,8 @@ const ParkingAreaHomePage = () => {
     const [roles, setRoles] = useState([]);
     const [submittingParkingArea, setSubmittingParkingArea] = useState(false);
     const [submittingStaff, setSubmittingStaff] = useState(false);
+    const [parkingOwner, setParkingOwner] = useState(null);
     const { authState } = useAuth();
-    console.log("authState--------------------------------", authState);
-
     // Form states
     const [parkingAreaForm, setParkingAreaForm] = useState({
         name: '',
@@ -41,6 +42,7 @@ const ParkingAreaHomePage = () => {
     });
 
     useEffect(() => {
+        fetchParkingOwner();
         fetchParkingAreas();
         fetchStaffMembers();
         fetchRoles();
@@ -59,7 +61,6 @@ const ParkingAreaHomePage = () => {
         setLoading(true);
         try {
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/parking-area/owner/${authState.user.userId}`);
-            console.log("response--------------------------------", response);
             setParkingAreas(response.data.data || []);
         } catch (error) {
             console.error('Error fetching parking areas:', error);
@@ -78,6 +79,16 @@ const ParkingAreaHomePage = () => {
             toast.error('Failed to fetch staff members');
         }
     };
+
+    const fetchParkingOwner = async () => {
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/profile/${authState.user.userId}`);
+            setParkingOwner(response.data.user || []);
+        } catch (error) {
+            console.error('Error fetching parking owner:', error);
+    }
+    }
+    
 
     const handleAddParkingArea = async (e) => {
         e.preventDefault();
@@ -234,98 +245,101 @@ const ParkingAreaHomePage = () => {
 
                 {/* Tab Content */}
                 <div className="p-6">
-                    {activeTab === 'parking-areas' && (
-                        <div>
-                            {/* Header with Add Button */}
-                            <div className="flex justify-between items-center mb-6">
-                                <div className="flex items-center space-x-4">
-                                    <div className="relative">
-                                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search parking areas..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                                        />
-                                    </div>
-                                    <select
-                                        value={filterStatus}
-                                        onChange={(e) => setFilterStatus(e.target.value)}
-                                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                                    >
-                                        <option value="all">All Status</option>
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                        <option value="maintenance">Maintenance</option>
-                                    </select>
-                                </div>
-                                <button
-                                    onClick={() => setShowAddModal(true)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors"
-                                >
-                                    <FaPlus />
-                                    Add Parking Area
-                                </button>
-                            </div>
+                    {activeTab === 'parking-areas' && parkingOwner && (
+                        // <div>
+                        //     {/* Header with Add Button */}
+                        //     <div className="flex justify-between items-center mb-6">
+                        //         <div className="flex items-center space-x-4">
+                        //             <div className="relative">
+                        //                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        //                 <input
+                        //                     type="text"
+                        //                     placeholder="Search parking areas..."
+                        //                     value={searchTerm}
+                        //                     onChange={(e) => setSearchTerm(e.target.value)}
+                        //                     className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                        //                 />
+                        //             </div>
+                        //             <select
+                        //                 value={filterStatus}
+                        //                 onChange={(e) => setFilterStatus(e.target.value)}
+                        //                 className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                        //             >
+                        //                 <option value="all">All Status</option>
+                        //                 <option value="active">Active</option>
+                        //                 <option value="inactive">Inactive</option>
+                        //                 <option value="maintenance">Maintenance</option>
+                        //             </select>
+                        //         </div>
+                        //         <button
+                        //             onClick={() => setShowAddModal(true)}
+                        //             className="flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors"
+                        //         >
+                        //             <FaPlus />
+                        //             Add Parking Area
+                        //         </button>
+                        //     </div>
 
-                            {/* Parking Areas Grid */}
-                            {loading ? (
-                                <div className="text-center py-8">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto"></div>
-                                    <p className="mt-4 text-gray-600">Loading parking areas...</p>
-                                </div>
-                            ) : filteredParkingAreas.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <FaMapMarkerAlt className="mx-auto h-12 w-12 text-gray-400" />
-                                    <h3 className="mt-2 text-sm font-medium text-gray-900">No parking areas found</h3>
-                                    <p className="mt-1 text-sm text-gray-500">Get started by creating a new parking area.</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {filteredParkingAreas.map((area) => (
-                                        <div key={area._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                                            <div className="p-6">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <h3 className="text-lg font-semibold text-gray-900">{area.name}</h3>
-                                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(area.status)}`}>
-                                                        {area.status}
-                                                    </span>
-                                                </div>
-                                                <p className="text-gray-600 mb-4">{area.address}</p>
-                                                <div className="grid grid-cols-2 gap-4 mb-4">
-                                                    <div>
-                                                        <p className="text-sm text-gray-500">Total Slots</p>
-                                                        <p className="font-semibold text-gray-900">{area.totalSlots || 'N/A'}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-gray-500">Hourly Rate</p>
-                                                        <p className="font-semibold text-gray-900">LKR {area.hourlyRate || 'N/A'}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex space-x-2">
-                                                    <button
-                                                        onClick={() => handleStaffButton(area)}
-                                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors text-sm"
-                                                    >
-                                                        <FaUsers />
-                                                        Staff
-                                                    </button>
-                                                    <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
-                                                        <FaEdit />
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleDeleteParkingArea(area._id)}
-                                                        className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-                                                    >
-                                                        <FaTrash />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                        //     {/* Parking Areas Grid */}
+                        //     {loading ? (
+                        //         <div className="text-center py-8">
+                        //             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto"></div>
+                        //             <p className="mt-4 text-gray-600">Loading parking areas...</p>
+                        //         </div>
+                        //     ) : filteredParkingAreas.length === 0 ? (
+                        //         <div className="text-center py-8">
+                        //             <FaMapMarkerAlt className="mx-auto h-12 w-12 text-gray-400" />
+                        //             <h3 className="mt-2 text-sm font-medium text-gray-900">No parking areas found</h3>
+                        //             <p className="mt-1 text-sm text-gray-500">Get started by creating a new parking area.</p>
+                        //         </div>
+                        //     ) : (
+                        //         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        //             {filteredParkingAreas.map((area) => (
+                        //                 <div key={area._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                        //                     <div className="p-6">
+                        //                         <div className="flex items-center justify-between mb-4">
+                        //                             <h3 className="text-lg font-semibold text-gray-900">{area.name}</h3>
+                        //                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(area.status)}`}>
+                        //                                 {area.status}
+                        //                             </span>
+                        //                         </div>
+                        //                         <p className="text-gray-600 mb-4">{area.address}</p>
+                        //                         <div className="grid grid-cols-2 gap-4 mb-4">
+                        //                             <div>
+                        //                                 <p className="text-sm text-gray-500">Total Slots</p>
+                        //                                 <p className="font-semibold text-gray-900">{area.totalSlots || 'N/A'}</p>
+                        //                             </div>
+                        //                             <div>
+                        //                                 <p className="text-sm text-gray-500">Hourly Rate</p>
+                        //                                 <p className="font-semibold text-gray-900">LKR {area.hourlyRate || 'N/A'}</p>
+                        //                             </div>
+                        //                         </div>
+                        //                         <div className="flex space-x-2">
+                        //                             <button
+                        //                                 onClick={() => handleStaffButton(area)}
+                        //                                 className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors text-sm"
+                        //                             >
+                        //                                 <FaUsers />
+                        //                                 Staff
+                        //                             </button>
+                        //                             <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+                        //                                 <FaEdit />
+                        //                             </button>
+                        //                             <button 
+                        //                                 onClick={() => handleDeleteParkingArea(area._id)}
+                        //                                 className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                        //                             >
+                        //                                 <FaTrash />
+                        //                             </button>
+                        //                         </div>
+                        //                     </div>
+                        //                 </div>
+                        //             ))}
+                        //         </div>
+                        //     )}
+                        // </div>
+                        <div>
+                          <ParkingAreaList parkingOwner={parkingOwner} userType="owner" />
                         </div>
                     )}
 

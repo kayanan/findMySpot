@@ -94,8 +94,8 @@ export const updateReservationService = async (id: string, reservationData: Part
   const valResult = ReservationValidator.updateReservationValidator(reservationData);
   if (valResult.error) {
     throw new Error(valResult.error.message);
-  }
-  return await updateReservation(id, reservationData);
+  };
+  return await updateReservation(id, {$set:reservationData});
 };
 
 export const deleteReservationService = async (id: string) => {
@@ -161,9 +161,22 @@ export const getActiveReservationsService = async (filters: mongoose.FilterQuery
   const filterData: mongoose.FilterQuery<ReservationModel> = {
     user: filters.userId,
     isDeleted: { $ne: true },
-    status: { $eq: ReservationStatus.CONFIRMED },
+    status: { $in: [ReservationStatus.CONFIRMED,ReservationStatus.COMPLETED] },
     paymentStatus: { $eq: PaymentStatus.PENDING },
-    startDateAndTime: { $gte: new Date(new Date().getTime() - 1 * 60 * 60 * 1000) },
+    $or:[
+      {$and:[
+        {isParked: { $eq: false }},
+        { startDateAndTime: { $gte: new Date(new Date().getTime() - 1 * 60 * 60 * 1000) }},
+        { startDateAndTime: { $lte: new Date() }},
+
+      ]},
+      {$and:[
+        {isParked: { $eq: true }},
+
+      ]}
+    ],
+   
+   
 
   }
   return await findActiveReservations(filterData,filters.page,filters.limit);
@@ -242,12 +255,12 @@ export const completeReservationService = async (id: string) => {
 
   await updateSlot(reservation.parkingSlot as unknown as string, { removeReservationId: reservation._id as unknown as string });
 
-  return await updateReservation(id, {
+  return await updateReservation(id, {$set:{
     endDateAndTime: new Date(),
     totalAmount: paidTotalAmount,
     status: ReservationStatus.COMPLETED,
     paymentStatus: PaymentStatus.PAID,
-  } as Partial<ReservationModel>);
+  } } as Partial<mongoose.UpdateQuery<ReservationModel>>);
 
 };
 
@@ -257,11 +270,11 @@ export const cancelReservationService = async (id: string) => {
     throw new Error("Reservation not found");
   }
   await updateSlot(reservation.parkingSlot as unknown as string, { removeReservationId: reservation._id as unknown as string });
-  return await updateReservation(id, { status: 'cancelled' } as Partial<ReservationModel>);
+  return await updateReservation(id, {$set:{ status: 'cancelled' } } as Partial<mongoose.UpdateQuery<ReservationModel>>);
 };
 
 export const updatePaymentStatusService = async (id: string, paymentStatus: string) => {
-  return await updateReservation(id, { paymentStatus } as Partial<ReservationModel>);
+  return await updateReservation(id, {$set:{ paymentStatus } } as Partial<mongoose.UpdateQuery<ReservationModel>>);
 };
 
 
@@ -294,7 +307,7 @@ export const changeSlotService = async (reservationId: string) => {
   const [slotRes, slotRes2, reservationRes] = await Promise.all([
     updateSlot(reservation.parkingSlot as unknown as string, { removeReservationId: reservationId }),
     updateSlot(parkingSlotId, { addReservationId: reservationId, isOccupied: true }),
-    updateReservation(reservationId, { parkingSlot: parkingSlotId } as Partial<ReservationModel>)
+    updateReservation(reservationId, {$set:{ parkingSlot: parkingSlotId } } as Partial<mongoose.UpdateQuery<ReservationModel>>)
   ])
   return reservationRes;
 };

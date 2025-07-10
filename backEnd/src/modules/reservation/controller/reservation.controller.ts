@@ -275,6 +275,7 @@ export const getActiveReservationsHandler = async (req: Request, res: Response) 
       data: reservations.result
     });
   } catch (error: unknown) {
+    console.log(error);
     if (error instanceof Error) {
       res.status(500).json({ 
         success: false,

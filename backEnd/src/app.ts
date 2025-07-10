@@ -10,13 +10,21 @@ import cookieParser from "cookie-parser";
 
 const appMiddleware = (app: Application) => {
   app.use(cors({
-   // origin: 'http://192.168.8.130:5173', // Allow from any origin
-    origin: true, // Allow from any origin
+  //origin: 'http://192.168.8.130:5173', 
+   origin: true,  // Allow from any origin
     credentials: true, // Allow cookies & authentication headers
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allowed HTTP methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
   }));
-//  app.use(cors());
+  // app.use(cors(
+  //   {
+  //     //origin: 'http://192.168.8.130:5173', 
+  //     origin: true,
+  //     credentials: true, // Allow cookies & authentication headers
+  //     //methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allowed HTTP methods
+  //     //allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+  //   }
+  // ));
 
   app.use(express.json({ limit: "10mb" }));
 
