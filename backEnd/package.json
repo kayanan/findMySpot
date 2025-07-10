@@ -4,12 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "build": "tsc",
-    "test:coverage": "jest --coverage",
-    "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register -r dotenv/config src/index.ts"
-  },
+  "test": "jest",
+  "test:watch": "jest --watch",
+  "build": "tsc",
+  "start": "node dist/index.js",
+  "test:coverage": "jest --coverage",
+  "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register -r dotenv/config src/index.ts"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
