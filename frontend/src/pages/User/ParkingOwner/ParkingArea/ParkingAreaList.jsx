@@ -7,6 +7,7 @@ import BankTransferPopup from "../../../../utils/BankTransferPopup";
 import dayjs from "dayjs";
 import handlePayment from "../../../../utils/payherePaymentOption";
 import PaymentOptionPopup from "../../../../utils/PaymentOptionPopup";
+import { useAuth } from "../../../../context/AuthContext";
 
 const getSlotTypeCount = (slots) => {
   const countByType = {};
@@ -29,7 +30,7 @@ const calculateAmount = (parkingArea, subscriptionFee) => {
   return amount;
 }
 
-const ParkingAreaList = ({ parkingOwner, userType = "admin" }) => {
+const ParkingAreaList = ({ parkingOwner }) => {
   const [isBankTransferOpen, setIsBankTransferOpen] = useState(false);
   const [parkingAreas, setParkingAreas] = useState([]);
   const [selectedParkingArea, setSelectedParkingArea] = useState(null);
@@ -39,10 +40,12 @@ const ParkingAreaList = ({ parkingOwner, userType = "admin" }) => {
   const [error, setError] = useState(null);
   const [isPaymentOptionPopupOpen, setIsPaymentOptionPopupOpen] = useState(false);
   const paymentOptions = [
+
     { id: 'card', name: 'Card Payment', icon: FaCreditCard, color: 'text-blue-600' },
     { id: 'bank_transfer', name: 'Bank Transfer', icon: FaUniversity, color: 'text-purple-600' },
   ]
 
+  const { authState } = useAuth();
   const handleBankTransferSubmit = async (formData) => {
     
 try{
@@ -326,7 +329,7 @@ try{
               <div className="flex flex-row gap-2 pt-4 mt-auto">
                 <Link
                   to={`/parking-area/view/${area?._id}`}
-                  state={{ slots: area?.slots, parkingOwnerId: parkingOwner?._id, userType: userType }}
+                  state={{ slots: area?.slots, parkingOwnerId: parkingOwner?._id, }}
                   className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white text-center py-2 rounded-lg transition duration-300 font-medium"
                 >
                   View Details
