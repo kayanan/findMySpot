@@ -22,6 +22,9 @@ import {
   HomeIcon,
 } from "@heroicons/react/outline";
 
+import { FaParking } from "react-icons/fa";
+
+
 import { useAuth } from "../context/AuthContext";
 
 // If you're not using Next.js or a framework requiring "use client", remove this line.
@@ -68,6 +71,7 @@ const Sidebar = ({ isOpen }) => {
         { name: "Staffs", privilege: ["ADMIN", "PARKING_OWNER"], path: "/parking-staff", icon: IdentificationIcon },
       ],
     },
+    { name: "Parking Slot", path: `/parking-slot/${authState.user.userId}`, icon: FaParking, privilege: ["ADMIN", "PARKING_MANAGER", "PARKING_OWNER"] },
     { name: "Customer", path: "/customer-landing-page", icon: UserCircleIcon, privilege: ["ADMIN",  "CUSTOMER"] },
 
   ];

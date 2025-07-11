@@ -80,6 +80,9 @@ import ReservationHistory from "./pages/CustomerUi/ReservationHistory";
 import ActiveReservation from "./pages/CustomerUi/ActiveReservation";
 import UpcommingReservation from "./pages/CustomerUi/UpcommingReservation";
 // customer import end
+// parking slot import start
+import ParkingSlot from "./pages/ParkingSlot/ParkingSlot";
+// parking slot import end
 
 // login as import start
 import LoginAs from "./pages/auth/LoginAs";
@@ -223,6 +226,10 @@ const AppRoutes = () => {
             <Route path="/reservation/active" element={<ProtectedRoute privilege={["ADMIN", "CUSTOMER"]}><ActiveReservation /></ProtectedRoute>} />
             <Route path="/reservation/upcoming" element={<ProtectedRoute privilege={["ADMIN", "CUSTOMER"]}><UpcommingReservation /></ProtectedRoute>} />
             {/* customer route end */}
+
+            {/* parking slot route start */}
+            <Route path="/parking-slot" element={<ProtectedRoute privilege={["ADMIN", "PARKING_MANAGER", "PARKING_OWNER"]}><ParkingSlot /></ProtectedRoute>} />
+            {/* parking slot route end */}
 
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<NotFound />} />
