@@ -116,12 +116,12 @@ const AppRoutes = () => {
 //--------------------------------
   return (
     <div className="flex">
-      {!isLoginPage && authState.isAuthenticated && (
+      {!isLoginPage && authState.isAuthenticated && authState.privilege !== "CUSTOMER" && (
         <Sidebar isOpen={isSidebarOpen} />
       )}
       <div
         className={`flex-1 transition-all duration-300 ${
-          !isLoginPage ? (isSidebarOpen ? "ml-0 xl:ml-64" : "ml-20") : ""
+          (!isLoginPage && authState.privilege !== "CUSTOMER") ? (isSidebarOpen ? "ml-0 xl:ml-64" : "ml-20") : ""
         }`}
       >
       {/* <divclassName={`flex-1 transition-all duration-300 ${!isLoginPage ? (isSidebarOpen ? "ml-0 xl:ml-64" : "ml-20") : "" }`}> */}
