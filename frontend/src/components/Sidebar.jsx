@@ -67,11 +67,11 @@ console.log(authState, "authState");
       privilege: ["ADMIN", "PARKING_OWNER"],
       children: [
         { name: "Parking Areas", privilege: ["ADMIN", "PARKING_OWNER"], path: "/parking-area-home", icon: MapIcon },
-        { name: "Staffs", privilege: ["ADMIN", "PARKING_OWNER"], path: "/parking-staff", icon: IdentificationIcon },
       ],
     },
-    { name: "Parking Slot", path: `/parking-slot/${authState.user.parkingAreaId}`, icon: FaParking, privilege: ["ADMIN", "PARKING_MANAGER", "PARKING_OWNER"] },
+    { name: "Parking Slot", path: `/parking-slot/${authState.user.parkingAreaId}`, icon: FaParking, privilege: ["PARKING_MANAGER"] },
     { name: "Customer", path: "/customer-landing-page", icon: UserCircleIcon, privilege: ["ADMIN",  "CUSTOMER"] },
+    { name: "Parking Payments", path: "/reports/parking-payments", icon: CashIcon, privilege: ["PARKING_MANAGER"] },
 
   ];
 

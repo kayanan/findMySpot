@@ -8,4 +8,6 @@ export interface UserListRequest extends ListRequest {
   isDeleted?: string;
   parkingOwnerId?: string;
   parkingAreaId?: string;
+  page?: number;
+  limit?: number;
 }

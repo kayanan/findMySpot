@@ -59,29 +59,33 @@ async function findUsers(
     query.isDeleted = listReq.isDeleted === 'true';
   }
   const total = await findTotalUsers(query);
-
-
-  const users = await UserDTO.aggregate([
+  console.log(listReq?.page, listReq.limit,"total");
+  const users = await UserDTO.find(query).skip(HelperUtil.pageSkip(
+    Number(listReq?.page)  ?? 0,
+    Number(listReq?.limit) ?? Number(process.env.PAGINATION_LIMIT)
+  )).limit(Number(listReq?.limit) ?? Number(process.env.PAGINATION_LIMIT) ?? 10);
+  console.log(users,"users");
+  // const users = await UserDTO.aggregate([
     
-    {
-      $match:query
-    },
-    {
-      $project: {
+  //   {
+  //     $match:query
+  //   },
+  //   {
+  //     $project: {
     
-        password: 0,
-        otp: 0,
-        otpExpiresAt: 0,
-        isDeleted: 0,
-        __v: 0,}
-      },
-      {$skip:HelperUtil.pageSkip(
-        listReq.skip ?? 0,
-        listReq.limit ?? Number(process.env.PAGINATION_LIMIT)
-      )},
-      {$limit:listReq.limit ?? Number(process.env.PAGINATION_LIMIT)},
+  //       password: 0,
+  //       otp: 0,
+  //       otpExpiresAt: 0,
+  //       isDeleted: 0,
+  //       __v: 0,}
+  //     },
+  //     {$skip:HelperUtil.pageSkip(
+  //       Number(listReq?.page) ?? 0,
+  //       Number(listReq?.limit) ?? Number(process.env.PAGINATION_LIMIT)
+  //     )},
+  //     {$limit:Number(listReq?.limit) ?? Number(process.env.PAGINATION_LIMIT) ?? 10},
     
-  ]);
+  // ]);
   return { total, users };
 }
 

@@ -211,7 +211,7 @@ const AppRoutes = () => {
             <Route path="/parking-subscription-fee/update/:id" element={<ProtectedRoute privilege={["ADMIN"]}><UpdateSubscriptionFee /></ProtectedRoute>} />
             {/* parking subscription fee route end */}
             {/* reports route start */}
-            <Route path="/reports/parking-payments" element={<ProtectedRoute privilege={["ADMIN", "PARKING_OWNER"]}><ListParkingPayments /></ProtectedRoute>} />
+            <Route path="/reports/parking-payments" element={<ProtectedRoute privilege={["ADMIN", "PARKING_OWNER","PARKING_MANAGER"]}><ListParkingPayments /></ProtectedRoute>} />
             <Route path="/reports/admin" element={<ProtectedRoute privilege={["ADMIN"]}><AdminReport /></ProtectedRoute>} />
             <Route path="/reports/parking-owner" element={<ProtectedRoute privilege={["ADMIN", "PARKING_OWNER"]}><ParkingOwnerReport /></ProtectedRoute>} />
             {/* <Route path="/reports/parking-reservations" element={<ListParkingReservations />} />
