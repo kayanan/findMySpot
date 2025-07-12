@@ -8,11 +8,12 @@ import {
   CreateUserRequest,
   UpdateUserRequest,
 } from '../../controller/request/create.user.request';
+import { RoleDTO } from '../dtos/role.dto';
 
 async function findUsers(
   listReq: UserListRequest
 ): Promise<UserListResponse> {
-  const query = { isDeleted: false } as any;
+  const query = { isDeleted: {$ne: true} } as any;
   if (listReq.search) {
     query.$or = [
       {
@@ -35,6 +36,12 @@ async function findUsers(
       },
     ];
   }
+  if(listReq.parkingOwnerId){
+    query["parkingAreaID.parkingOwnerId"] = listReq.parkingOwnerId
+  }
+  if(listReq.parkingAreaId){
+    query["parkingAreaID"] = listReq.parkingAreaId
+  }
   
   if (listReq.approvalStatus != null) {
     query.approvalStatus = listReq.approvalStatus === 'true';
@@ -43,12 +50,10 @@ async function findUsers(
     query.isActive = listReq.isActive === 'true';
   }
   if (listReq.role) {
-    if(listReq.role === "PARKING_OWNER"){
-      query["role.type"]=listReq.role
-    }
-    else if(listReq.role === "CUSTOMER"){
-      query["role.type"]=listReq.role
-    }
+   const role = await RoleDTO.findOne({type:listReq.role})
+   if(role){
+    query.role = {$in:[role._id]}
+   }
   }
   if (listReq.isDeleted != null) {
     query.isDeleted = listReq.isDeleted === 'true';
@@ -58,18 +63,6 @@ async function findUsers(
 
   const users = await UserDTO.aggregate([
     
-   
-    {
-      $lookup: {
-        from: 'roles',
-        localField: 'role',
-        foreignField: '_id',
-        as: 'role'
-      }
-    },
-     {$unwind: '$role'},
-    
-
     {
       $match:query
     },
@@ -102,7 +95,7 @@ async function saveUser(
 
 async function findById(id: string): Promise<UserModel | null> {
   const user: UserModel | null = await UserDTO.findById(new mongoose.Types.ObjectId(id))
-    .populate('role', '_id city district province')
+    .populate('role city district province parkingAreaId', '_id name address parkingOwnerId')
     .select('-password -__v -createdAt -updatedAt -isDeleted -otp -otpExpiresAt ');
   return user as UserModel;
 }
@@ -118,7 +111,7 @@ async function findByMobileNumber(mobileNumber: string): Promise<UserModel | nul
 async function findByEmail(email: string): Promise<UserModel | null> {
   //make sure to delete the password attribute before return to the api calls.
   return UserDTO.findOne({
-    email,
+    email:email.toLowerCase(),
     isDeleted: {$ne: true},
   });
 }
@@ -194,11 +187,29 @@ async function changePassword(
   }
 }
 
+async function updatePassword(
+  userId: string,
+  plainPassword: string
+): Promise<boolean> {
+  try {
+    const user = await UserDTO.findById(new mongoose.Types.ObjectId(userId));
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    user.password = plainPassword; // Plain password, pre-save hook will hash it
+    const result = await user.save();
+    return result != null;
+  } catch (e) {
+    throw e as Error;
+  }
+}
+
 async function updateUser(
   userPayload: UpdateUserRequest,
   userId: string
-): Promise<string | null> {
-  const updateUser = (await UserDTO.findOneAndUpdate(
+): Promise<  string  | null> {
+  const updateUser:any = (await UserDTO.findOneAndUpdate(
     { _id: userId },
     userPayload,
     {
@@ -206,7 +217,7 @@ async function updateUser(
     }
   )) as unknown as UpdateUserRequest;
 
-  return updateUser.id!;
+  return updateUser._id as unknown as string;
 }
 
 async function adminUpdateUser(
@@ -262,6 +273,7 @@ export default {
   findTotalUsers,
   resetPasswordResetOtp,
   changePassword,
+  updatePassword,
   updateUser,
   adminUpdateUser,
   findByRole,

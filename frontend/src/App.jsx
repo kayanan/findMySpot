@@ -10,6 +10,7 @@ import { useState } from "react";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import Login from "./pages/auth/Login";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 import NotFound from "./pages/NotFound"; // Make sure NotFound is imported
 // profile import start
 import Profile from "./pages/Profile/Profile";
@@ -112,7 +113,7 @@ const AppRoutes = () => {
   
 
 
-  const isLoginPage = window.location.pathname === "/login" || window.location.pathname === "/parking-owner/spot-details" || window.location.pathname === "/customer/register" || window.location.pathname === "/login-as"; 
+  const isLoginPage = window.location.pathname === "/login" || window.location.pathname === "/parking-owner/spot-details" || window.location.pathname === "/customer/register" || window.location.pathname === "/login-as" || window.location.pathname === "/forgot-password";
   //for testing purpose
   // const isLoginPage = false;
   // authState.isAuthenticated = true;
@@ -140,6 +141,8 @@ const AppRoutes = () => {
             <Route path="/login-as" element={<LoginAs  />} />
             <Route path="/login" element={<Login />} />
             <Route path="/customer/register" element={<Register />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/profile" element={<Profile />} />
             {/* ------------Location Route Start-------- */}
             {/* admin dashboard route start */}
@@ -228,7 +231,7 @@ const AppRoutes = () => {
             {/* customer route end */}
 
             {/* parking slot route start */}
-            <Route path="/parking-slot" element={<ProtectedRoute privilege={["ADMIN", "PARKING_MANAGER", "PARKING_OWNER"]}><ParkingSlot /></ProtectedRoute>} />
+            <Route path="/parking-slot/:id" element={<ProtectedRoute privilege={["ADMIN", "PARKING_MANAGER", "PARKING_OWNER"]}><ViewParkingArea /></ProtectedRoute>} />
             {/* parking slot route end */}
 
             <Route path="/" element={<Navigate to="/login" replace />} />
