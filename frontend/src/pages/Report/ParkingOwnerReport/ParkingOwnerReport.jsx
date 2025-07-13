@@ -806,16 +806,7 @@ const ParkingOwnerReport = () => {
                         <div className="space-y-6">
                             <div className="flex justify-between items-center">
                                 <h3 className="text-lg font-semibold text-gray-900">Reservation Payment Summary</h3>
-                                <div className="flex space-x-2">
-                                    <button className="bg-cyan-600 text-white px-4 py-2 rounded-lg hover:bg-cyan-700 flex items-center space-x-2">
-                                        <FaPrint />
-                                        <span>Export</span>
-                                    </button>
-                                    <button className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center space-x-2">
-                                        <FaPrint />
-                                        <span>Print</span>
-                                    </button>
-                                </div>
+                                
                             </div>
 
                             <FilterSection title="Filter Reservation Payments" />
@@ -866,16 +857,7 @@ const ParkingOwnerReport = () => {
                         <div className="space-y-6">
                             <div className="flex justify-between items-center">
                                 <h3 className="text-lg font-semibold text-gray-900">Subscription Payment Report</h3>
-                                <div className="flex space-x-2">
-                                    <button className="bg-cyan-600 text-white px-4 py-2 rounded-lg hover:bg-cyan-700 flex items-center space-x-2">
-                                        <FaPrint />
-                                        <span>Export</span>
-                                    </button>
-                                    <button className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center space-x-2">
-                                        <FaPrint />
-                                        <span>Print</span>
-                                    </button>
-                                </div>
+                                
                             </div>
 
                             <FilterSection title="Filter Subscription Payments" />

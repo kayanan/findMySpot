@@ -30,7 +30,7 @@ const CityList = ({ District, Province }) => {
       setLoading(true);
       try {
         const { data } = await axios.get(
-          `${import.meta.env.VITE_BACKEND_APP_URL}/v1/city`,
+          `${import.meta.env.VITE_BACKEND_APP_URL}/v1/city?districtId=${District._id}`,
           { withCredentials: true }
         );
         setCities(data.cities);

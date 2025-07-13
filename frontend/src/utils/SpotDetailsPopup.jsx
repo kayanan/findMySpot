@@ -14,7 +14,7 @@ const SpotDetailsPopup = ({
     const [formData, setFormData] = useState({
         vehicleNumber: '',
         customerMobile: userData?.mobileNumber || '',
-        customerName: userData?.firstName + " " + userData?.lastName || ''
+        customerName: userData?.firstName + " " + userData?.lastName || '',
     });
     const [errors, setErrors] = useState({});
 
@@ -23,7 +23,7 @@ const SpotDetailsPopup = ({
             setFormData({
                 vehicleNumber: '',
                 customerMobile: userData?.mobileNumber || '',
-                customerName: userData?.firstName + " " + userData?.lastName || ''
+                customerName: userData?.firstName + " " + userData?.lastName || '',
             });
             setErrors({});
         }
@@ -281,7 +281,7 @@ const SpotDetailsPopup = ({
                         </div>
 
                         {/* Duration */}
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Duration (Hours)
                             </label>
@@ -302,10 +302,10 @@ const SpotDetailsPopup = ({
                                     ))}
                                 </select>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Total Price */}
-                        <div className="bg-cyan-50 p-4 rounded-lg">
+                        {/* <div className="bg-cyan-50 p-4 rounded-lg">
                             <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-700">Estimated Total Price:</span>
                                 <span className="text-xl font-bold text-cyan-600">
@@ -315,7 +315,7 @@ const SpotDetailsPopup = ({
                             <p className="text-xs text-gray-500 mt-1">
                                 {formData.duration} hour(s) × Rs. {spotData.price}/hour
                             </p>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 

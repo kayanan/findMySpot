@@ -31,7 +31,7 @@ const DistrictList = ({ Province }) => {
       setLoading(true);
       try {
         const { data } = await axios.get(
-          `${import.meta.env.VITE_BACKEND_APP_URL}/v1/district`,
+          `${import.meta.env.VITE_BACKEND_APP_URL}/v1/district/${Province._id}`,
           { withCredentials: true }
         );
         setDistricts(data.districts);

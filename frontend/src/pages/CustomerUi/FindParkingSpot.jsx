@@ -609,18 +609,19 @@ const FindParkingSpot = () => {
                                                 <input
                                                     type="range"
                                                     min="0"
-                                                    max="300"
+                                                    max="500"
                                                     value={filters.radius / 1000 || 0}
                                                     onChange={(e) => setFilters(f => ({ ...f, radius: parseInt(e.target.value) * 1000 }))}
                                                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                                                 />
                                                 <div className="flex justify-between text-xs text-gray-500">
                                                     <span>0 km</span>
-                                                    <span>300 km</span>
+                                                    <span>500 km</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    
 
                                     {/* Parking Spots List */}
                                     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -669,6 +670,27 @@ const FindParkingSpot = () => {
                                     <div className="text-gray-400 text-6xl mb-4">🚗</div>
                                     <h3 className="text-xl font-semibold text-gray-800 mb-2">Find Your Perfect Parking Spot</h3>
                                     <p className="text-gray-500">Fill out the form on the left and click "Find Parking Spots" to discover available parking areas near you.</p>
+                                    {/* Radius Filter */}
+                                    <div className="p-3 border-t border-gray-100">
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between items-center">
+                                                    <label className="text-sm font-medium text-gray-700">Search Radius</label>
+                                                    <span className="text-sm font-bold text-cyan-600">{filters.radius / 1000} km</span>
+                                                </div>
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="500"
+                                                    value={filters.radius / 1000 || 0}
+                                                    onChange={(e) => setFilters(f => ({ ...f, radius: parseInt(e.target.value) * 1000 }))}
+                                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                                />
+                                                <div className="flex justify-between text-xs text-gray-500">
+                                                    <span>0 km</span>
+                                                    <span>500 km</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                 </div>
                             )}
                         </div>

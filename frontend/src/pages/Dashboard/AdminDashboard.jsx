@@ -435,49 +435,10 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
-                {/* System Alerts */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900">System Alerts</h3>
-                    </div>
-                    <div className="p-6 space-y-4">
-                        {mockData.alerts.map((alert) => (
-                            <div key={alert.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                                <div className="flex-shrink-0 mt-1">
-                                    {getAlertIcon(alert.type)}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm text-gray-900">{alert.message}</p>
-                                    <p className="text-xs text-gray-500 mt-1">{alert.time}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                
             </div>
 
-            {/* Quick Actions */}
-            <div className="mt-8 bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <button className="flex items-center justify-center p-4 bg-cyan-50 text-cyan-700 rounded-lg hover:bg-cyan-100 transition-colors">
-                        <FaDownload className="mr-2" />
-                        Export Report
-                    </button>
-                    <button className="flex items-center justify-center p-4 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
-                        <FaFilter className="mr-2" />
-                        Filter Data
-                    </button>
-                    <button className="flex items-center justify-center p-4 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors">
-                        <FaUsers className="mr-2" />
-                        Manage Users
-                    </button>
-                    <button className="flex items-center justify-center p-4 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors">
-                        <FaParking className="mr-2" />
-                        Add Spot
-                    </button>
-                </div>
-            </div>
+            
         </div>
     );
 };

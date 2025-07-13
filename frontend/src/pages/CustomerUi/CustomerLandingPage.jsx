@@ -1,7 +1,9 @@
-import React, { useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Car, Truck, Bike, Bus, HelpCircle } from "lucide-react"
+import axios from 'axios';
+import dayjs from 'dayjs';
 
 import {
     FaParking,
@@ -50,64 +52,107 @@ const CustomerLandingPage = () => {
     const [activeTab, setActiveTab] = useState('home');
     const navigate = useNavigate();
     const mapRef = useRef(null);
-    const [totalSpent, setTotalSpent] = useState(3500);
+    const [activeReservations, setActiveReservations] = useState(0);
+    const [upcomingReservations, setUpcomingReservations] = useState(0);
+    const [completedReservations, setCompletedReservations] = useState(0);
+    const [totalSpent, setTotalSpent] = useState(0);
 
-    console.log(position);
+    useEffect(()=>{
+        fetchActiveReservations();
+        fetchUpcomingReservations();
+        fetchReservations();
+        
+    },[])
 
-    // Mock data for customer dashboard
-    const activeReservations = [
-        {
-            id: 1,
-            location: 'Downtown Parking',
-            date: '2024-01-15',
-            time: '14:00',
-            duration: '2 hours',
-            status: 'Active',
-            spotNumber: 'A-12'
-        },
-        {
-            id: 2,
-            location: 'Airport Parking',
-            date: '2024-01-16',
-            time: '09:00',
-            duration: '4 hours',
-            status: 'Active',
-            spotNumber: 'B-05'
+
+    const fetchActiveReservations = async () => {
+        try {
+            
+            
+            const response = await axios.get(
+                `${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/active`,
+                {
+                    params: {
+                        userId: authState.user.userId,
+                        page: 1,
+                        limit: 9999
+                    },
+                    withCredentials: true
+                }
+            );
+            
+            if (response.data.success) {
+                setActiveReservations(response.data.data);
+            }
+        } catch (err) {
+           
+        } 
+    };
+    const fetchUpcomingReservations = async () => {
+        try {
+
+
+
+            // Get user's reservations and filter for upcoming ones
+            const response = await axios.get(
+                `${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/user/${authState.user.userId}`,
+                {
+                    params: {
+                        status: 'confirmed',
+                        isParked: false,
+                        startDate: dayjs().format('YYYY-MM-DD'),
+                        page: 1,
+                        limit: 50
+                    },
+                    withCredentials: true
+                }
+            );
+
+            if (response.data.success) {
+                // Filter for upcoming reservations (not started yet)
+                const upcomingReservations = response.data.data.filter(reservation => {
+                    const now = new Date();
+                    const startTime = new Date(reservation.startDateAndTime);
+
+                    // Reservation is upcoming if it hasn't started yet
+                    return startTime > now;
+                });
+                console.log(upcomingReservations)
+                setUpcomingReservations(upcomingReservations);
+            } else {
+            }
+        } catch (err) {
+            
         }
-    ];
+    };
 
-    const upcomingReservations = [
-        {
-            id: 3,
-            location: 'Shopping Mall Parking',
-            date: '2024-01-18',
-            time: '16:00',
-            duration: '3 hours',
-            status: 'Upcoming',
-            spotNumber: 'C-08'
-        }
-    ];
 
-    const recentHistory = [
-        {
-            id: 4,
-            location: 'University Parking',
-            date: '2024-01-10',
-            time: '10:00',
-            duration: '2 hours',
-            status: 'Completed',
-            amount: '$5.00'
-        },
-        {
-            id: 5,
-            location: 'Hospital Parking',
-            date: '2024-01-08',
-            time: '13:00',
-            duration: '1 hour',
-            status: 'Completed',
-            amount: '$3.00'
-        }
-    ];
+    const fetchReservations = async () => {
+        try {
+            
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/reservation/user/${authState.user.userId}`, {
+                params: {
+                    status: 'completed',
+                    paymentStatus: 'paid',
+                    isParked: true,
+                    page: 1,
+                    limit: 9999
+                },
+                withCredentials: true
+            });
+            
+            if (response.data.success) {
+                setCompletedReservations(response.data.count);
+                const total = response.data.data.reduce((acc, reservation) => acc + reservation.totalAmount, 0);
+                setTotalSpent(total);
+            }
+        } catch (err) {
+            
+        } 
+    };
+
+
+
 
     const quickActions = [
         {
@@ -155,27 +200,8 @@ const CustomerLandingPage = () => {
         }
     }
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        console.log('Search:', { searchLocation, searchDate, searchTime });
-    };
+ 
 
-    const handleLogout = () => {
-        logout(true);
-    };
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'Active':
-                return 'bg-green-100 text-green-800';
-            case 'Upcoming':
-                return 'bg-blue-100 text-blue-800';
-            case 'Completed':
-                return 'bg-gray-100 text-gray-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
-    };
 
     const selectedVehicleType = (type) => {
         setSelectedVehicle(type);
@@ -196,86 +222,6 @@ const CustomerLandingPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col mt-[-20px]">
-            {/* Mobile Header */}
-            {/* <header className="bg-white shadow-sm sticky top-0 z-50 md:hidden">
-                <div className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center space-x-3">
-                        <FaParking className="h-6 w-6 text-cyan-600" />
-                        <span className="text-lg font-bold text-gray-900">FindMySpot</span>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                        <button className="p-2">
-                            <FaBell className="h-5 w-5 text-gray-600" />
-                        </button>
-                        <button 
-                            className="p-2"
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        >
-                            {isMobileMenuOpen ? (
-                                <FaTimes className="h-5 w-5 text-gray-600" />
-                            ) : (
-                                <FaBars className="h-5 w-5 text-gray-600" />
-                            )}
-                        </button>
-                    </div>
-                </div>
-
-               
-                {isMobileMenuOpen && (
-                    <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-200">
-                        <div className="px-4 py-3 border-b border-gray-100">
-                            <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
-                                    <FaUser className="text-cyan-600" />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-gray-900">
-                                        {authState.user?.firstName} {authState.user?.lastName}
-                                    </p>
-                                    <p className="text-sm text-gray-500">{authState.user?.email}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="py-2">
-                            <Link to="/customer/profile" className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50">
-                                <FaUser className="mr-3 text-gray-400" />
-                                Profile
-                            </Link>
-                            <Link to="/customer/settings" className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50">
-                                <FaCog className="mr-3 text-gray-400" />
-                                Settings
-                            </Link>
-                            <button 
-                                onClick={handleLogout}
-                                className="flex items-center w-full px-4 py-3 text-red-600 hover:bg-red-50"
-                            >
-                                <FaSignOutAlt className="mr-3" />
-                                Logout
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </header> */}
-
-            {/* Desktop Header */}
-            {/* <header className="hidden md:block bg-white shadow-sm sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <FaParking className="h-8 w-8 text-cyan-600" />
-                            <span className="text-xl font-bold text-gray-900">FindMySpot</span>
-                        </div>
-                        <nav className="flex items-center space-x-6">
-                            <Link to="/customer" className="text-cyan-600 font-medium">Dashboard</Link>
-                            <Link to="/customer/history" className="text-gray-600 hover:text-cyan-600">History</Link>
-                            <Link to="/customer/profile" className="text-gray-600 hover:text-cyan-600">Profile</Link>
-                            <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
-                                Logout
-                            </button>
-                        </nav>
-                    </div>
-                </div>
-            </header> */}
 
             {/* Main Content */}
             <main className="flex-1 pb-20 md:pb-0">
@@ -420,73 +366,12 @@ const CustomerLandingPage = () => {
                                 </Link>
                             ))}
                         </div>
-                        {/* <div className="fixed bottom-0 left-0 w-full bg-white shadow-md z-50">
-                            <div className="grid grid-cols-4 md:grid-cols-4 gap-3 md:gap-6 p-4">
-                                {quickActions.map((action, index) => (
-                                    <Link
-                                        key={index}
-                                        to={action.link}
-                                        className={`${action.color} text-white rounded-xl p-4 md:p-6 text-center hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95`}
-                                    >
-                                        <div className="flex justify-center mb-3">
-                                            {action.icon}
-                                        </div>
-                                        <h3 className="text-sm md:text-lg font-semibold mb-1">{action.title}</h3>
-                                        <p className="text-xs md:text-sm opacity-90">{action.description}</p>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div> */}
+                       
 
                     </div>
                 </section>
 
-                {/* Reservations Section */}
-                <section className="py-6 md:py-12 bg-gray-50">
-                    <div className="max-w-7xl mx-auto px-4">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl md:text-3xl font-bold text-gray-900">
-                                Active Reservations
-                            </h2>
-                            <Link
-                                to="/reservation/active"
-                                className="text-cyan-600 hover:text-cyan-700 font-medium flex items-center text-sm"
-                            >
-                                View All <FaArrowRight className="ml-1" />
-                            </Link>
-                        </div>
-
-                        <div className="space-y-3 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:space-y-0">
-                            {activeReservations.map((reservation) => (
-                                <div key={reservation.id} className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div className="flex items-center space-x-2">
-                                            <FaTicketAlt className="text-cyan-500" />
-                                            <h3 className="font-semibold text-gray-900 text-sm md:text-base">{reservation.location}</h3>
-                                        </div>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(reservation.status)}`}>
-                                            {reservation.status}
-                                        </span>
-                                    </div>
-                                    <div className="space-y-2 text-xs md:text-sm text-gray-600">
-                                        <div className="flex items-center">
-                                            <FaCalendarAlt className="mr-2 text-gray-400" />
-                                            {reservation.date}
-                                        </div>
-                                        <div className="flex items-center">
-                                            <FaClock className="mr-2 text-gray-400" />
-                                            {reservation.time} ({reservation.duration})
-                                        </div>
-                                        <div className="flex items-center">
-                                            <FaMapPin className="mr-2 text-gray-400" />
-                                            Spot: {reservation.spotNumber}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
+                
 
                 {/* Stats Section */}
                 <section className="py-6 md:py-12 bg-white">
@@ -497,15 +382,15 @@ const CustomerLandingPage = () => {
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
                             <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-xl p-4 text-center">
-                                <div className="text-2xl md:text-3xl font-bold mb-1">{activeReservations.length}</div>
+                                <div className="text-2xl md:text-3xl font-bold mb-1">{activeReservations?.length}</div>
                                 <div className="text-cyan-100 text-xs md:text-sm">Active</div>
                             </div>
                             <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-4 text-center">
-                                <div className="text-2xl md:text-3xl font-bold mb-1">{upcomingReservations.length}</div>
+                                <div className="text-2xl md:text-3xl font-bold mb-1">{upcomingReservations?.length}</div>
                                 <div className="text-blue-100 text-xs md:text-sm">Upcoming</div>
                             </div>
                             <div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl p-4 text-center">
-                                <div className="text-2xl md:text-3xl font-bold mb-1">{recentHistory.length}</div>
+                                <div className="text-2xl md:text-3xl font-bold mb-1">{completedReservations}</div>
                                 <div className="text-green-100 text-xs md:text-sm">Completed</div>
                             </div>
                             <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl p-4 text-center">
@@ -517,36 +402,7 @@ const CustomerLandingPage = () => {
                 </section>
             </main>
 
-            {/* Mobile Bottom Navigation */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-                <div className="flex items-center justify-around">
-                    <BottomNavItem
-                        icon={<FaHome />}
-                        label="Home"
-                        isActive={activeTab === 'home'}
-                        onClick={() => setActiveTab('home')}
-                    />
-                    <BottomNavItem
-                        icon={<FaSearch />}
-                        label="Find"
-                        isActive={activeTab === 'find'}
-                        onClick={() => setActiveTab('find')}
-                    />
-                    <BottomNavItem
-                        icon={<FaTicketAlt />}
-                        label="Bookings"
-                        isActive={activeTab === 'bookings'}
-                        onClick={() => setActiveTab('bookings')}
-                    />
-                    <BottomNavItem
-                        icon={<FaUser />}
-                        label="Profile"
-                        isActive={activeTab === 'profile'}
-                        onClick={() => setActiveTab('profile')}
-                    />
-                </div>
-            </nav>
-
+            
             <ToastContainer />
         </div>
     );

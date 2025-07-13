@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FaUser, FaEnvelope, FaPhone, FaIdCard, FaMapMarkerAlt, FaEdit, FaCar, FaCreditCard, FaUniversity, FaKey, FaCheckCircle, FaSave, FaTimes, FaPlus, FaTrash, FaArrowLeft
 } from 'react-icons/fa';
@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
 import myImage from '../../assets/user.png';  // adjust the path as needed
 import { useAuth } from '../../context/AuthContext';
+import { profileService } from '../../services/profile.service';
 
 
 // Sri Lankan provinces, districts, and cities data
@@ -45,44 +46,7 @@ const sriLankanData = {
   }
 };
 
-const mockUser = {
-  firstName: 'Kayanan',
-  lastName: 'Srikumaran',
-  email: 'kayanann@gmail.com',
-  phoneNumber: '+94 71 234 5678',
-  nic: '1962501761V',
-  profileImage: myImage,
-  isActive: true,
-  approvalStatus: true,
-  address: {
-    line1: 'No. 12, Potpathy road',
-    line2: '',
-    city: 'Jaffna',
-    district: 'Jaffna',
-    province: 'Northern Province'
-  },
-  vehicles: [
-    { vehicleNumber: 'CAG-1234', isDefault: true },
-    { vehicleNumber: 'WP-4567', isDefault: false }
-  ],
-  cardDetails: [
-    {
-      nameOnCard: 'Kayanan Srikumaran',
-      cardNumber: '**** **** **** 1234',
-      expiryDate: '08/27',
-      isDefault: true
-    }
-  ],
-  accountDetails: [
-    {
-      accountHolderName: 'Kayanan Srikumaran',
-      accountNumber: '1234567890',
-      bankName: 'Commercial Bank',
-      branchName: 'Colombo 07',
-      isDefault: true
-    }
-  ]
-};
+
 
 const Profile = () => {
   const [editMode, setEditMode] = useState(false);
@@ -90,19 +54,22 @@ const Profile = () => {
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [showCardForm, setShowCardForm] = useState(false);
   const [showBankForm, setShowBankForm] = useState(false);
-  const [profileImage, setProfileImage] = useState(mockUser.profileImage);
+  const [profileImage, setProfileImage] = useState(myImage);
   const [previewImage, setPreviewImage] = useState(null);
-  const [user, setUser] = useState(mockUser);
-  const [selectedProvince, setSelectedProvince] = useState(user.address.province);
-  const [selectedDistrict, setSelectedDistrict] = useState(user.address.district);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedProvince, setSelectedProvince] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
   const navigate = useNavigate();
   const { authState } = useAuth();
+  
 
   // Fallback image for when profile image is not available
   const fallbackImage = 'https://via.placeholder.com/112x112/06b6d4/ffffff?text=User';
 
   const { register, handleSubmit, control, reset, setValue, getValues, formState: { errors, isSubmitting } } = useForm({
-    defaultValues: user
+    defaultValues: user || {}
   });
 
   const { fields: vehicleFields, append: appendVehicle, remove: removeVehicle } = useFieldArray({
@@ -117,6 +84,84 @@ const Profile = () => {
     control,
     name: 'accountDetails',
   });
+
+  // Fetch user data on component mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Check if user is authenticated
+        if (!authState.isAuthenticated) {
+          setError('Please log in to view your profile.');
+          setLoading(false);
+          return;
+        }
+        
+        // Check if backend is available
+        const isBackendAvailable = await profileService.checkBackendHealth();
+        if (!isBackendAvailable) {
+          setError('Backend server is not available. Please ensure the server is running.');
+          setLoading(false);
+          return;
+        }
+        
+        // Get current user data
+        const response = await profileService.getCurrentUser();
+        
+        if (response.status && response.user) {
+          const userData = response.user;
+          
+          // Transform backend data to match frontend format
+          const transformedUser = {
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            email: userData.email || '',
+            phoneNumber: userData.phoneNumber || '',
+            nic: userData.nic || '',
+            profileImage: userData.profileImage || myImage,
+            isActive: userData.isActive || false,
+            approvalStatus: userData.approvalStatus || false,
+            address: {
+              line1: userData.line1 || '',
+              line2: userData.line2 || '',
+              city: userData.city || '',
+              district: userData.district || '',
+              province: userData.province || ''
+            },
+            vehicles: userData.vehicle || [],
+            cardDetails: userData.cardDetails || [],
+            accountDetails: userData.accountDetails || []
+          };
+          
+          setUser(transformedUser);
+          setSelectedProvince(transformedUser.address.province);
+          setSelectedDistrict(transformedUser.address.district);
+          reset(transformedUser);
+        } else {
+          setError('Invalid response from server. Please try again.');
+        }
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        if (err.message.includes('log in')) {
+          setError(err.message);
+        } else if (err.response?.status === 404) {
+          setError('User profile not found. Please contact support.');
+        } else if (err.response?.status === 500) {
+          setError('Server error. Please try again later.');
+        } else if (err.code === 'ERR_NETWORK') {
+          setError('Network error. Please check your connection and try again.');
+        } else {
+          setError('Failed to load user data. Please try again.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [reset, authState.isAuthenticated]);
 
   const handleEdit = () => {
     setEditMode(true);
@@ -166,10 +211,10 @@ const Profile = () => {
     }
 
     try {
-      await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/change-password`, {
+      await profileService.changePassword({
         currentPassword,
         newPassword
-      }, { withCredentials: true });
+      });
       toast.success('Password changed successfully!');
       setShowPasswordForm(false);
       e.target.reset();
@@ -224,19 +269,67 @@ const Profile = () => {
           formData.append(key, value);
         }
       });
-      // Replace with your actual API endpoint
-      await axios.patch('/api/user/profile', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        withCredentials: true,
-      });
+      
+      // Update user profile
+      if (!authState.user.userId) {
+        toast.error('User ID not found. Please log in again.');
+        return;
+      }
+      await profileService.updateUserProfile(authState.user.userId, formData);
       toast.success('Profile updated successfully!');
       setUser({ ...user, ...data, profileImage: previewImage || profileImage });
       setEditMode(false);
       setPreviewImage(null);
     } catch (error) {
-      toast.error('Failed to update profile.');
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update profile.';
+      toast.error(errorMessage);
+      console.error('Profile update error:', error);
     }
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading profile data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Profile</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-cyan-600 text-white px-4 py-2 rounded-lg hover:bg-cyan-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no user data
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-500 text-6xl mb-4">👤</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">No Profile Data</h2>
+          <p className="text-gray-600 mb-4">Unable to load profile information.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -445,7 +538,7 @@ const Profile = () => {
         </div>
 
         {/* Vehicles */}
-        <div className="mb-8">
+        {/* <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <FaCar className="text-cyan-600 mr-2" /> Vehicles
@@ -465,10 +558,10 @@ const Profile = () => {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
 
         {/* Card Details */}
-        <div className="mb-8">
+        {/* <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <FaCreditCard className="text-cyan-600 mr-2" /> Card Details
@@ -488,10 +581,10 @@ const Profile = () => {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
 
         {/* Bank Details */}
-        <div className="mb-8">
+        {/* <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <FaUniversity className="text-cyan-600 mr-2" /> Bank Accounts
@@ -511,7 +604,7 @@ const Profile = () => {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
 
         {/* Change Password */}
         <div className="mb-8">
