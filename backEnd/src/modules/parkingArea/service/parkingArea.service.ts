@@ -24,6 +24,7 @@ import mongoose from "mongoose";
 export const createParkingArea = async (parkingAreaData: Partial<CreateUpdateParkingAreaRequest & { longitude: number, latitude: number, slot: { type: string, count: number }[] }>) => {
     const { error } = validateCreateParkingArea(parkingAreaData);
     if (error) {
+        console.log(error);
         throw new Error('Validation failed');
     }
     parkingAreaData.location = {

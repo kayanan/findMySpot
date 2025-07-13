@@ -3,11 +3,9 @@ import { Types } from 'mongoose';
 const phoneNumberPattern =
  /^07[01245678][0-9]{7}$/;
 const nicPattern = /^([0-9]{9}[vVxX]|[0-9]{12})$/;
-const addressPattern = /^[a-zA-Z0-9\s]+$/;
-const expiryDatePattern = /^(0[1-9]|1[0-2])\/\d{2}$/;
-const cvvPattern = /^[0-9]{3}$/;
-const cardNumberPattern = /^[0-9]{16}$/;
 const zipCodePattern = /^[0-9]{5}$/;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const passwordPattern = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/;
 const loginValidator = (data: any) => {
   const schema = z.object({
     email: z
@@ -26,7 +24,7 @@ const loginValidator = (data: any) => {
         invalid_type_error: `Password should be a type of 'string'`,
       })
       .regex(
-        new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$'),
+        new RegExp(passwordPattern),
         {
           message:
             'Password must be at least 8 characters and contain an uppercase letter, lowercase letter, and number',
@@ -56,8 +54,7 @@ const resetPasswordValidator = (data: any) => {
         required_error: 'Password is required',
         invalid_type_error: `Password should be a type of 'string'`,
       })
-      .regex(
-        new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$'),
+      .regex(passwordPattern,
         {
           message:
             'Password must be at least 8 characters and contain an uppercase letter, lowercase letter, and number',
@@ -93,8 +90,7 @@ const changePasswordValidator = (data: any) => {
         required_error: 'New password is required',
         invalid_type_error: `New password should be a type of 'string'`,
       })
-      .regex(
-        new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$'),
+      .regex(passwordPattern,
         {
           message:
             'Password must be at least 8 characters and contain an uppercase letter, lowercase letter, and number',
@@ -144,13 +140,11 @@ const saveUserValidator = (data: any) => {
         required_error: 'Password is required',
         invalid_type_error: `Password should be a type of 'string'`,
       })
-      .regex(
-        new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$'),
+      .regex(passwordPattern,
         {
           message:
             'Password must be at least 8 characters and contain an uppercase letter, lowercase letter, and number',
-        }
-      )
+        })
       .nonempty({
         message: 'Password cannot be an empty field ',
       }).optional().nullable(),

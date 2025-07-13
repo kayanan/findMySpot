@@ -232,7 +232,7 @@ const ParkingSpotDetails = () => {
       toast.success("Registration completed successfully", {
         onClose: () => {
           if (ownerId) {
-            navigate(authState.privilege === "ADMIN" ? `/owner/view/${ownerId}` : `/parking-area-home`);
+            navigate(authState?.privilege === "ADMIN" ?  `/owner/view/${ownerId}` : authState?.isAuthenticated  ?`/parking-area-home` : `/`);
           }
           else {
             navigate("/");

@@ -61,8 +61,7 @@ const UserSchema = new Schema<UserModel>(
       toLowerCase: true,
       required: true,
       unique: true,
-      match: [
-        /^(\d{9}[V|v])|(\d{4}\s?\d{4}\s?\d{4})$/,
+      match: [ /^([0-9]{9}[vVxX]|[0-9]{12})$/,
         "Please enter a valid Sri Lankan NIC number.",
       ],
     },
@@ -72,8 +71,7 @@ const UserSchema = new Schema<UserModel>(
       trim: true,
       required: false,
       unique: true,
-      match:
-        /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/,
+      match:/^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     },
     password: { type: String, required: false },
     line1: { type: String, required: false },

@@ -14,13 +14,14 @@ const ParkingOwnerList = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const usersPerPage = 5;
 
   const [filters, setFilters] = useState( {
     role: "PARKING_OWNER",
     approvalStatus: "true",
     isActive: "true",
-    page: 1,
-    limit: 10
+    page: currentPage,
+    limit: usersPerPage
   });
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,7 +41,8 @@ const ParkingOwnerList = () => {
         );
         setParkingOwners(res.data.users);
         setFilteredOwners(res.data.users);
-        setTotalPages(res.data.totalPages);
+        const totalPages = Math.ceil(res.data?.totalCount / usersPerPage);
+        setTotalPages(totalPages);
       } catch (error) {
         console.error("Error fetching parking owners:", error.message);
       } finally {
@@ -49,6 +51,9 @@ const ParkingOwnerList = () => {
     };
 
     fetchData();
+  }, [filters]);
+  useEffect(() => {
+    setCurrentPage(1);
   }, [filters]);
 
   // Filter owners based on search term

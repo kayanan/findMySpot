@@ -61,6 +61,12 @@ export default function CustomerRegistration() {
     }
 
     const sendOTP = async (data) => {
+        
+        const result = await handelCheckDuplicateEntry({phoneNumber:data});
+        if (result) {
+            return;
+        }
+        
         if (!data) {
             setError("phoneNumber", { message: "Mobile number is required" });
             return;
@@ -104,6 +110,42 @@ export default function CustomerRegistration() {
             toast.error(error.message || "Failed to send OTP. Please try again.");
         }
     };
+    const getUserByEmail = async (email) => {
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/email/${email}`);
+            if (response?.data) {
+                if ((response.data.role).includes(roles.find(role => role?.type === signupAs)._id)) {
+                    toast.info(`Already registered with this email as ${signupAs.replace("_", " ")} please login to continue`);
+                    setTimeout(() => {
+                        navigate("/");
+                    }, 4000);
+                } else {
+                    try{
+                    const updateUser = await axios.patch(`${import.meta.env.VITE_BACKEND_APP_URL}/v1/user/update/${response.data._id}`, {
+                        addRole: [roles.find(role => role?.type === signupAs)._id]
+                    });
+                    if (updateUser.data.status !== true) {
+                        toast.error(updateUser.data.message);
+
+                    } else {
+                        toast.success("Your already a customer  New Role Added SucesFully use your existing username & password to continue")
+                        setTimeout(()=>{navigate("/login")},5000)
+                    }
+                }catch(error){
+                    toast.error("Unexpectd Error Occure")
+                    console.log(error)
+
+                }
+            }
+            }
+            else {
+                setIsEmailVerified(true);
+                return false;
+            }
+        } catch (error) {
+            toast.error(error.message || "Failed to get user by email. Please try again.");
+        }
+    }
 
     const handelCheckDuplicateEntry = async (data) => {
         try {
@@ -128,6 +170,7 @@ export default function CustomerRegistration() {
     }
 
     const onSubmit = async (data) => {
+        console.log(data);
         try {
             const result = await handelCheckDuplicateEntry(data);
             if (result) {
@@ -151,6 +194,7 @@ export default function CustomerRegistration() {
                 onClose: () => {
                     setSignupAs(null);
                     reset();
+                    navigate("/");
                 },
                 autoClose: 1500,
             });
@@ -205,7 +249,7 @@ export default function CustomerRegistration() {
                             {`${signupAs?.split("_").join(" ").charAt(0).toUpperCase() + signupAs?.split("_").join(" ").slice(1).toLowerCase()} Registration`}
                         </h2>
                         <p className="text-center text-gray-500">
-                           { `${signupAs === "CUSTOMER" ? "Register to find your perfect parking spot" : "List your spot. Start earning."}`}
+                            {`${signupAs === "CUSTOMER" ? "Register to find your perfect parking spot" : "List your spot. Start earning."}`}
                         </p>
                     </div>
 
@@ -227,7 +271,8 @@ export default function CustomerRegistration() {
 
                             />
                             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
-                            <button type="button" className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200 my-10 disabled:opacity-50 disabled:cursor-not-allowed " onClick={() => handelCheckDuplicateEntry({ email: getValues("email") })} disabled={!getValues("email") || !!errors.email}>Next</button>
+                            <button type="button" className="w-full p-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all duration-200 my-10 disabled:opacity-50 disabled:cursor-not-allowed "
+                                onClick={() => getUserByEmail(getValues("email"))} disabled={!getValues("email") || !!errors.email}>Next</button>
                         </div>)
                             : (<>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -378,11 +423,11 @@ export default function CustomerRegistration() {
                                 >
                                     Next
                                 </button>}
-                                </>)}
-                                <Link to="/" className="block text-center text-gray-600 rounded-lg p-2 hover:text-gray-800">
-                                    Already have an account? <span className="text-cyan-500">Sign in here</span>
-                                </Link>
-                           
+                            </>)}
+                        <Link to="/" className="block text-center text-gray-600 rounded-lg p-2 hover:text-gray-800">
+                            Already have an account? <span className="text-cyan-500">Sign in here</span>
+                        </Link>
+
                     </form>
                 </div>)}
 

@@ -20,7 +20,7 @@ const CustomerList = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const usersPerPage = 10;
+  const usersPerPage = 8;
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -40,7 +40,8 @@ const CustomerList = () => {
         );
         console.log(data.users);
         setUsers(data.users);
-        setTotalPages(data.totalPages);
+        const totalPages = Math.ceil(data?.totalCount / usersPerPage);
+        setTotalPages(totalPages);
       } catch (error) {
         console.error("Error fetching users:", error.message);
         toast.error("Failed to fetch users. Please try again.");
@@ -49,6 +50,10 @@ const CustomerList = () => {
       }
     };
     fetchUsers();
+  }, [status, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
   }, [status]);
 
   const filteredUsers = users.filter(

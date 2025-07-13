@@ -16,25 +16,64 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error,setError]= useState();
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const passwordPattern = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/;
 
   const handleChange = (e) => {
     setCredentials((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
+    setError(prev=>{
+      return {
+        ...prev, [e.target.name]:""
+      }
+    })
   };
+const validateInput=()=>{
+  const newError={}
+  if(credentials.username===""){
+    newError.username="Email Is Required"
+  }
+  else if(!credentials.username.match(emailPattern)){
+    newError.username="Must Be a Valid Email Address (example@example.com)"
+    
+  }
+  if(credentials.password===""){
+    newError.password="Password Is Required"
+  }
+  else if(!credentials.password.match(passwordPattern)){
+    newError.password="Must Be a Valid Pasword (At least 8 characters and contain an uppercase letter, lowercase letter, and number)"
+    
+  }
+  if(Object.keys(newError).length>0){
+    console.log(newError)
+    setError(newError)
+    return false
+  }
+  else{
+    return true
+  }
+  
+  }
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if(!validateInput()){
+        return
+    }
     setIsLoading(true);
   
-    // 1) Re‑fetch actual email from DOM (covers autofill)
+    // Re fetch actual email from DOM 
     const realEmail = document.getElementById("email").value.trim();
     if (realEmail && realEmail !== credentials.username) {
       setCredentials(prev => ({ ...prev, username: realEmail }));
     }
   
-    // 2) Finally, attempt login
+    // attempt login
     try {
       await login(credentials);
       toast.success("Login successful!", {
@@ -42,6 +81,7 @@ const Login = () => {
         autoClose: 3000,
       });
     } catch (error) {
+      console.log(error)
       if (error.response) {
         // inactive
         if (error.response.status === 403) {
@@ -114,9 +154,9 @@ const Login = () => {
                 placeholder="Enter your email"
                 value={credentials.username}
                 onChange={handleChange}
-                required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
               />
+              {error?.username &&(<p className="pl-1 block text-sm font-medium text-red-500">*{error.username}</p>)}
             </div>
             <div className="space-y-2">
               <label
@@ -133,7 +173,6 @@ const Login = () => {
                   placeholder="Enter your password"
                   value={credentials.password}
                   onChange={handleChange}
-                  required
                   className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500"
                 />
                 <button
@@ -147,6 +186,7 @@ const Login = () => {
                     <FaEyeSlash className="h-5 w-5" />
                   )}
                 </button>
+                {error?.password && (<p className=" pl-1 block text-sm font-medium text-red-500">*{error.password}</p>)}
               </div>
             </div>
             <button

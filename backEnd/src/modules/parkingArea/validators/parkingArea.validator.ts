@@ -48,7 +48,7 @@ const createParkingAreaSchema = z.object({
   }),
   contactNumber: z.string().min(1, "Contact number is required"),
   email: z.string().email("Invalid email format").optional(),
-  images: z.array(z.string().url("Invalid image URL")),
+  images: z.array(z.string().optional()).optional(),
   description: z.string().optional(),
   addressLine1: z.string().min(1, "Line 1 is required"),
   addressLine2: z.string().optional(),

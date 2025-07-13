@@ -195,7 +195,7 @@ const AppRoutes = () => {
             <Route path="/owner" element={<ProtectedRoute privilege={["ADMIN", "PARKING_OWNER"]}><ParkingOwnerList /></ProtectedRoute>} />
             <Route path="/owner/view/:id" element={<ProtectedRoute><ViewParkingOwner /></ProtectedRoute>} />
             <Route path="/owner/update/:id" element={<ProtectedRoute><UpdateParkingOwner /></ProtectedRoute>} />
-            <Route path="/parking-owner/spot-details" element={<ProtectedRoute><ParkingSpotDetails /></ProtectedRoute>} />
+            <Route path="/parking-owner/spot-details" element={<ParkingSpotDetails />} />
             <Route path="/owner/pending-request" element={<ProtectedRoute><PendingRequest /></ProtectedRoute>} />
             {/* parking owner route end */}
 
