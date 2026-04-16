@@ -15,6 +15,7 @@ build/
 # Environment variables
 .env.local
 .env.*.local
+.env
 
 # Temporary files
 tmp/
